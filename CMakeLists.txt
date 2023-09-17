@@ -11,6 +11,8 @@ find_package(OpenGL REQUIRED)
 
 add_executable(castle_defense_game ${HEADER_FILES} ${SOURCE_FILES})
 
+set_property(TARGET castle_defense_game PROPERTY C_STANDARD 99)
+
 target_include_directories(castle_defense_game PRIVATE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
