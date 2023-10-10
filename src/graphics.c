@@ -206,10 +206,7 @@ void _free_gl_resources()
 
 void _free_entries32()
 {
-	for (int i = 0; i < g_UnitsNum32; i++)
-	{
-		free(VertexData32 + i);
-	}
+	free(VertexData32);
 }
 
 // ----------------------- PUBLIC FUNCTIONS ----------------------- //
