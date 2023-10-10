@@ -214,6 +214,19 @@ void _free_entries32()
 
 // ----------------------- PUBLIC FUNCTIONS ----------------------- //
 
+int graphics_should_be_terminated()
+{
+	return glfwWindowShouldClose(_window);
+}
+
+void graphics_free_resources()
+{
+	_free_gl_resources();
+	_free_entries32();
+
+	glfwTerminate();
+}
+
 int draw_triangle(float* vertices[], int len)
 {
 	VertexUnit32* entry         = _create_entry32(vertices, len);
@@ -227,7 +240,7 @@ int draw_triangle(float* vertices[], int len)
 
 	// TODO: handle different attributes
 	glVertexAttribPointer(0,                   // vertex attribute index
-						  3,                   // size of vertex attribute (vec3)
+                          3,                   // size of vertex attribute (vec3)
 		                  GL_FLOAT,            // data type
                           GL_FALSE,            // normalize?
 		                  3 * sizeof(float),   // stride
@@ -256,29 +269,21 @@ void set_background_color(BackgroundColor b_color)
 
 int draw()
 {
-	while (!glfwWindowShouldClose(_window))
+	process_input(_window);
+
+	glClearColor(g_BColor.R, g_BColor.G, g_BColor.B, g_BColor.A);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	for (int i = 0; i < g_UnitsNum32; i++)
 	{
-		process_input(_window);
-
-		glClearColor(g_BColor.R, g_BColor.G, g_BColor.B, g_BColor.A);
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		for (int i = 0; i < g_UnitsNum32; i++)
-		{
-			VertexUnit32* entry = VertexData32 + i;
-			glUseProgram(entry->shader_prog);
-			glBindVertexArray(entry->vao);
-			glDrawArrays(GL_TRIANGLES, 0, 3);
-		}
-
-		glfwSwapBuffers(_window);
-		glfwPollEvents();
+		VertexUnit32* entry = VertexData32 + i;
+		glUseProgram(entry->shader_prog);
+		glBindVertexArray(entry->vao);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
 	}
 
-	_free_gl_resources();
-	_free_entries32();
-
-	glfwTerminate();
+	glfwSwapBuffers(_window);
+	glfwPollEvents();
 	
 	return 0;
 }
