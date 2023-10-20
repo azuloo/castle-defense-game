@@ -5,6 +5,7 @@
 #include "GLFW/glfw3.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #define CLOSE_GLFW_WINDOW 1
 #define LIB_MAJOR_VER 3
@@ -13,6 +14,9 @@
 #define WINDOW_DEFAULT_RES_W 1280
 #define WINDOW_DEFAULT_RES_H 800
 #define WINDOW_DEFUALT_NAME "Application"
+#define GRAPHICS_TERMINATE_SUCCESS_CODE EXIT_SUCCESS
+#define GRAPHICS_TERMINATE_ERR_CODE EXIT_FAILURE
+
 #define CHECK_PROG_IV(prog, opcode, msg) { \
 								int success; \
 								char infoLog[512]; \

@@ -100,7 +100,7 @@ static void _set_context_current(GLFWwindow* window)
 static GLFWwindow* _create_window()
 {
 	GLFWwindow* window = glfwCreateWindow(WINDOW_DEFAULT_RES_W, WINDOW_DEFAULT_RES_H, WINDOW_DEFUALT_NAME, NULL, NULL);
-	if (window == NULL)
+	if (NULL == window)
 	{
 		PRINT_ERR("Failed to init window.");
 		glfwTerminate();
@@ -139,15 +139,22 @@ static void _create_vao(unsigned int* vao)
 	glBindVertexArray(*vao);
 }
 
-void _init_vertex_array32()
+static void _graphics_terminate(int code)
 {
-	// TODO: free memoty
+	graphics_free_resources();
+	exit(code);
+}
+
+static void _init_vertex_array32()
+{
 	// TODO: resolve capacity thing
 	g_VertexDataCapacity32 *= 2;
 	VertexUnit32* unit_arr = (VertexUnit32*) realloc(VertexData32, g_VertexDataCapacity32 * sizeof(VertexUnit32));
-	if (unit_arr == NULL)
+	if (NULL == unit_arr)
 	{
-		// TODO: print err and terminate
+		PRINT_ERR("Failed to allocate sufficient memory chunk for VertexUnit32 elements.");
+		_graphics_terminate(GRAPHICS_TERMINATE_ERR_CODE);
+		return;
 	}
 
 	VertexData32 = unit_arr;
@@ -176,7 +183,7 @@ VertexUnit32* _create_vertex_array32_entry()
 
 VertexUnit32* _create_entry32(float* vertices, int len)
 {
-	if (VertexData32 == NULL)
+	if (NULL == VertexData32)
 	{
 		_init_vertex_array32();
 	}
@@ -226,6 +233,8 @@ void graphics_free_resources()
 
 int draw_triangle(float* vertices[], int len)
 {
+	// TODO: Do we need to create a new 32 entry for each supplied number of vertices?
+	// Probablty not and we sholud probably bind minimum a couple of vertices batches to the same vao, vbo and shader_prog
 	VertexUnit32* entry         = _create_entry32(vertices, len);
 
 	unsigned int vertexShader   = _create_vertex_shader(k_vertexShaderSource);
