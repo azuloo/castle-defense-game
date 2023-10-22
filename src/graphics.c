@@ -6,6 +6,7 @@ static GLFWwindow* _window = NULL;
 typedef struct {
 	unsigned int  vbo;
 	unsigned int  vao;
+	unsigned int  ebo;
 	unsigned int  shader_prog;
 	float         data[32];
 } VertexUnit32;
@@ -130,13 +131,20 @@ static void _create_vbo(unsigned int* vbo, float* vertices, int len)
 {
 	glGenBuffers(1, vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, *vbo);
-	glBufferData(GL_ARRAY_BUFFER, len * sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices) * len, vertices, GL_STATIC_DRAW);
 }
 
 static void _create_vao(unsigned int* vao)
 {
 	glGenVertexArrays(1, vao);
 	glBindVertexArray(*vao);
+}
+
+static void _create_ebo(unsigned int* ebo, unsigned int* indices, int len)
+{
+	glGenBuffers(1, ebo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices) * len, indices, GL_STATIC_DRAW);
 }
 
 static void _graphics_terminate(int code)
@@ -149,7 +157,7 @@ static void _init_vertex_array32()
 {
 	// TODO: resolve capacity thing
 	g_VertexDataCapacity32 *= 2;
-	VertexUnit32* unit_arr = (VertexUnit32*) realloc(VertexData32, g_VertexDataCapacity32 * sizeof(VertexUnit32));
+	VertexUnit32* unit_arr = (VertexUnit32*) realloc(VertexData32, sizeof(VertexUnit32) * g_VertexDataCapacity32);
 	if (NULL == unit_arr)
 	{
 		PRINT_ERR("Failed to allocate sufficient memory chunk for VertexUnit32 elements.");
@@ -170,6 +178,7 @@ VertexUnit32* _create_vertex_array32_entry()
 	VertexUnit32* unit  = VertexData32 + g_UnitsNum32;
 	unit->vbo           = 0;
 	unit->vao           = 0;
+	unit->ebo           = 0;
 	unit->shader_prog   = 0;
 	for (int i = 0.f; i < 32; i++)
 	{
@@ -231,27 +240,28 @@ void graphics_free_resources()
 	glfwTerminate();
 }
 
-int draw_triangle(float* vertices[], int len)
+int draw_triangle(float vertices[], int vertices_len, unsigned int indices[], int indices_len)
 {
 	// TODO: Do we need to create a new 32 entry for each supplied number of vertices?
 	// Probablty not and we sholud probably bind minimum a couple of vertices batches to the same vao, vbo and shader_prog
-	VertexUnit32* entry         = _create_entry32(vertices, len);
+	VertexUnit32* entry         = _create_entry32(vertices, vertices_len);
 
 	unsigned int vertexShader   = _create_vertex_shader(k_vertexShaderSource);
 	unsigned int fragmentShader = _create_fragment_shader(k_fragShaderSource);
 	unsigned int shaderProg     = _compile_shader_program(&entry->shader_prog, vertexShader, fragmentShader);
 
 	_create_vao(&entry->vao);
-	_create_vbo(&entry->vbo, entry->data, len);
+	_create_vbo(&entry->vbo, entry->data, vertices_len);
+	_create_ebo(&entry->ebo, indices, indices_len);
 
 	// TODO: handle different attributes
-	glVertexAttribPointer(0,                   // vertex attribute index
-                          3,                   // size of vertex attribute (vec3)
-		                  GL_FLOAT,            // data type
-                          GL_FALSE,            // normalize?
-		                  3 * sizeof(float),   // stride
-		                  (void*)0             // position data offset
-	                      );
+	glVertexAttribPointer(0,	// vertex attribute index
+		3,						// size of vertex attribute (vec3)
+		GL_FLOAT,				// data type
+		GL_FALSE,				// normalize?
+		sizeof(float) * 3,		// stride
+		(void*)0				// position data offset
+	);
 	glEnableVertexAttribArray(0);
 	glBindVertexArray(0);
 
@@ -285,7 +295,12 @@ int draw()
 		VertexUnit32* entry = VertexData32 + i;
 		glUseProgram(entry->shader_prog);
 		glBindVertexArray(entry->vao);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+
+		//glDrawArrays(GL_TRIANGLES, 0, 3);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, entry->ebo);
+		// TODO: Get the number of vertices from the entry
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 	}
 
 	glfwSwapBuffers(_window);

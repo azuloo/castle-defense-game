@@ -3,21 +3,15 @@
 
 // TEMP
 static float vertices[] = {
-	-0.5f, -0.5f, 0.0f,
 	0.5f, -0.5f, 0.0f,
-	0.0f, 0.5f, 0.0f
+	-0.5f, -0.5f, 0.0f,
+	0.5f, 0.5f, 0.0f,
+	-0.5f, 0.5f, 0.0f
 };
 
-static float vertices2[] = {
-	-0.5f, -0.25f, 0.0f,
-	0.5f, -0.25f, 0.0f,
-	0.0f, 0.75f, 0.0f
-};
-
-static float vertices3[] = {
-	-0.5f, -0.75f, 0.0f,
-	0.5f, -0.75f, 0.0f,
-	0.0f, 0.25f, 0.0f
+static unsigned int indices[] = {
+	1, 3, 2,
+	2, 1, 0
 };
 
 static bool should_be_terminated()
@@ -37,9 +31,7 @@ int main(int argc, int* argv[])
 
 	set_background_color(b_Color);
 
-	draw_triangle(vertices, 9);
-	draw_triangle(vertices2, 9);
-	draw_triangle(vertices3, 9);
+	draw_triangle(vertices, 12, indices, 6);
 
 	while (!should_be_terminated())
 	{

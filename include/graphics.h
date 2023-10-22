@@ -42,7 +42,7 @@ extern int init_graphics();
 extern void set_background_color(BackgroundColor b_color);
 extern int graphics_should_be_terminated();
 extern void graphics_free_resources();
-extern int draw_triangle(float* vertices[], int len);
+extern int draw_triangle(float vertices[], int vertices_len, unsigned int indices[], int indices_len);
 extern int draw();
 
 #endif // _GRAPHICS_H
