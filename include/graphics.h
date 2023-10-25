@@ -14,8 +14,6 @@
 #define WINDOW_DEFAULT_RES_W 1280
 #define WINDOW_DEFAULT_RES_H 800
 #define WINDOW_DEFUALT_NAME "Application"
-#define GRAPHICS_TERMINATE_SUCCESS_CODE EXIT_SUCCESS
-#define GRAPHICS_TERMINATE_ERR_CODE EXIT_FAILURE
 
 #define CHECK_PROG_IV(prog, opcode, msg) { \
 								int success; \
@@ -28,8 +26,9 @@
 								} \
 							}
 
+// TODO: __VA_ARGS__
 #define PRINT_ERR(msg) \
-    fprintf(stderr, "ERR: %s:%d: %s", __FILE__, __LINE__, msg);
+    fprintf(stderr, "ERR: %s:%d: %s\n", __FILE__, __LINE__, msg);
 
 typedef struct {
 	float R;

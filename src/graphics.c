@@ -1,4 +1,7 @@
 #include "graphics.h"
+#include "utils.h"
+#include "file_reader.h"
+
 #include <stdlib.h>
 
 static GLFWwindow* _window = NULL;
@@ -16,24 +19,31 @@ static int g_UnitsNum32 = 0;
 static VertexUnit32* VertexData32 = NULL;
 static BackgroundColor g_BColor = { 0.2f, 0.3f, 0.3f, 1.0f };
 
-static const char* k_vertexShaderSource =
-"#version 330 core\n"
-"layout (location = 0) in vec3 aPos;\n"
-"void main()\n"
-"{\n"
-"gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0f);\n"
-"}\0";
+static void _graphics_terminate(int code)
+{
+	graphics_free_resources();
+	exit(code);
+}
 
-static const char* k_fragShaderSource =
-"#version 330 core\n"
-"out vec4 FragColor;\n"
-"void main()\n"
-"{\n"
-"FragColor = vec4(1.0f, 0.5f, 0.5f, 1.0f);\n"
-"}\n"
-"";
+static char* _get_shader_source(const char* name)
+{
+	char* vertex_source_path = str_concat(STRVAL(SOURCE_ROOT), name);
+	char* data_buf = '\0';
+	size_t shader_size = 0;
 
-_compile_shader_program(unsigned int* prog, unsigned int vertexShader, unsigned int fragShader)
+	int res_code = readall(vertex_source_path, &data_buf, &shader_size);
+	free(vertex_source_path);
+	if (READ_OK != res_code)
+	{
+		// TODO: Use "name" and "res_code" once PRINT_ERR allows for it
+		PRINT_ERR("Failed to load vertex source");
+		_graphics_terminate(TERMINATE_ERR_CODE);
+	}
+
+	return data_buf;
+}
+
+static void _compile_shader_program(unsigned int* prog, unsigned int vertexShader, unsigned int fragShader)
 {
 	*prog = glCreateProgram();
 	glAttachShader(*prog, vertexShader);
@@ -46,12 +56,12 @@ _compile_shader_program(unsigned int* prog, unsigned int vertexShader, unsigned 
 	glDeleteShader(fragShader);
 }
 
-unsigned int _create_vertex_shader(const char* source)
+unsigned int _create_vertex_shader(const char** source)
 {
 	unsigned int shader;
 
 	shader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(shader, 1, &source, NULL);
+	glShaderSource(shader, 1, source, NULL);
 	glCompileShader(shader);
 
 	CHECK_PROG_IV(shader, GL_COMPILE_STATUS, "ERROR::SHADER::PROGRAM::COMPILATION_FAILED: %s\n");
@@ -59,12 +69,12 @@ unsigned int _create_vertex_shader(const char* source)
 	return shader;
 }
 
-unsigned int _create_fragment_shader(const char* source)
+unsigned int _create_fragment_shader(const char** source)
 {
 	unsigned int shader;
 
 	shader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(shader, 1, &source, NULL);
+	glShaderSource(shader, 1, source, NULL);
 	glCompileShader(shader);
 
 	CHECK_PROG_IV(shader, GL_COMPILE_STATUS, "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED: %s\n");
@@ -72,12 +82,12 @@ unsigned int _create_fragment_shader(const char* source)
 	return shader;
 }
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+static void _framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
 }
 
-void process_input(GLFWwindow* window)
+static void _process_input(GLFWwindow* window)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 	{
@@ -108,7 +118,7 @@ static GLFWwindow* _create_window()
 	}
 
 	_set_context_current(window);
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetFramebufferSizeCallback(window, _framebuffer_size_callback);
 
 	return window;
 }
@@ -147,12 +157,6 @@ static void _create_ebo(unsigned int* ebo, unsigned int* indices, int len)
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices) * len, indices, GL_STATIC_DRAW);
 }
 
-static void _graphics_terminate(int code)
-{
-	graphics_free_resources();
-	exit(code);
-}
-
 static void _init_vertex_array32()
 {
 	// TODO: resolve capacity thing
@@ -161,7 +165,7 @@ static void _init_vertex_array32()
 	if (NULL == unit_arr)
 	{
 		PRINT_ERR("Failed to allocate sufficient memory chunk for VertexUnit32 elements.");
-		_graphics_terminate(GRAPHICS_TERMINATE_ERR_CODE);
+		_graphics_terminate(TERMINATE_ERR_CODE);
 		return;
 	}
 
@@ -200,6 +204,7 @@ VertexUnit32* _create_entry32(float* vertices, int len)
 	// TODO: assert len <= 32
 
 	VertexUnit32* entry = _create_vertex_array32_entry();
+	// TODO: Do we need to save vertex data?
 	float* vertex_data = entry->data;
 	for (int i = 0; i < len; i++)
 	{
@@ -244,11 +249,16 @@ int draw_triangle(float vertices[], int vertices_len, unsigned int indices[], in
 {
 	// TODO: Do we need to create a new 32 entry for each supplied number of vertices?
 	// Probablty not and we sholud probably bind minimum a couple of vertices batches to the same vao, vbo and shader_prog
-	VertexUnit32* entry         = _create_entry32(vertices, vertices_len);
+	VertexUnit32* entry = _create_entry32(vertices, vertices_len);
 
-	unsigned int vertexShader   = _create_vertex_shader(k_vertexShaderSource);
-	unsigned int fragmentShader = _create_fragment_shader(k_fragShaderSource);
-	unsigned int shaderProg     = _compile_shader_program(&entry->shader_prog, vertexShader, fragmentShader);
+	// TODO: Move it from here
+	const char* vertex_shader_source = _get_shader_source("/res/vertex_source.TXT");
+	const char* fragment_shader_source = _get_shader_source("/res/fragment_source.TXT");
+
+	unsigned int vertex_shader = _create_vertex_shader(&vertex_shader_source);
+	unsigned int fragment_shader = _create_fragment_shader(&fragment_shader_source);
+
+	_compile_shader_program(&entry->shader_prog, vertex_shader, fragment_shader);
 
 	_create_vao(&entry->vao);
 	_create_vbo(&entry->vbo, entry->data, vertices_len);
@@ -259,12 +269,21 @@ int draw_triangle(float vertices[], int vertices_len, unsigned int indices[], in
 		3,						// size of vertex attribute (vec3)
 		GL_FLOAT,				// data type
 		GL_FALSE,				// normalize?
-		sizeof(float) * 3,		// stride
+		sizeof(float) * 6,		// stride
 		(void*)0				// position data offset
 	);
 	glEnableVertexAttribArray(0);
-	glBindVertexArray(0);
 
+	glVertexAttribPointer(1,	     // vertex attribute index
+		3,						     // size of vertex attribute (vec3)
+		GL_FLOAT,				     // data type
+		GL_FALSE,				     // normalize?
+		sizeof(float) * 6,		     // stride
+		(void*)(sizeof(float) * 3)   // position data offset
+	);
+	glEnableVertexAttribArray(1);
+
+	glBindVertexArray(0);
 	return 0;
 }
 
@@ -285,7 +304,7 @@ void set_background_color(BackgroundColor b_color)
 
 int draw()
 {
-	process_input(_window);
+	_process_input(_window);
 
 	glClearColor(g_BColor.R, g_BColor.G, g_BColor.B, g_BColor.A);
 	glClear(GL_COLOR_BUFFER_BIT);

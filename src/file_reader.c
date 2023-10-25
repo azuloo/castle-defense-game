@@ -1,5 +1,6 @@
-#include <stdlib.h>
 #include "file_reader.h"
+
+#include <stdlib.h>
 
 int readall(char* path, char** data_ptr, size_t* size_ptr)
 {
