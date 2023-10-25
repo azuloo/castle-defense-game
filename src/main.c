@@ -1,12 +1,16 @@
 #include "graphics.h"
-#include <stdbool.h>
+#include "file_reader.h"
+#include "utils.h"
+
+#include <string.h>
 
 // TEMP
 static float vertices[] = {
-	0.5f, -0.5f, 0.0f,
-	-0.5f, -0.5f, 0.0f,
-	0.5f, 0.5f, 0.0f,
-	-0.5f, 0.5f, 0.0f
+	// Position            // Color
+	0.5f, -0.5f, 0.0f,     0.5f, 0.5f, 0.0f,
+	-0.5f, -0.5f, 0.0f,    0.0f, 0.5f, 0.5f,
+	0.5f, 0.5f, 0.0f,      0.5f, 0.0f, 0.5f,
+	-0.5f, 0.5f, 0.0f,     0.5f, 0.5f, 0.5f
 };
 
 static unsigned int indices[] = {
@@ -14,7 +18,7 @@ static unsigned int indices[] = {
 	2, 1, 0
 };
 
-static bool should_be_terminated()
+static int should_be_terminated()
 {
 	return graphics_should_be_terminated();
 }
@@ -31,7 +35,7 @@ int main(int argc, int* argv[])
 
 	set_background_color(b_Color);
 
-	draw_triangle(vertices, 12, indices, 6);
+	draw_triangle(vertices, 24, indices, 6);
 
 	while (!should_be_terminated())
 	{
