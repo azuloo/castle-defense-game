@@ -15,7 +15,7 @@ int readall(char* path, char** data_ptr, size_t* size_ptr)
     size_t n;
 
     FILE* in = fopen(path, "rb");
-    if (ferror(in))
+    if (NULL == in || ferror(in))
     {
         return READ_ERR;
     }
