@@ -47,8 +47,7 @@ static char* _get_shader_source(const char* name)
 	free(vertex_source_path);
 	if (READ_OK != res_code)
 	{
-		// TODO: Use "name" and "res_code" once PRINT_ERR allows for it
-		PRINT_ERR("Failed to load vertex source");
+		PRINT_ERR_VARGS("Failed to load vertex source '%s', err code: %d.", name, res_code);
 		_graphics_terminate(TERMINATE_ERR_CODE);
 	}
 
