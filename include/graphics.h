@@ -15,20 +15,8 @@
 #define WINDOW_DEFAULT_RES_H 800
 #define WINDOW_DEFUALT_NAME "Application"
 
-#define CHECK_PROG_IV(prog, opcode, msg) { \
-								int success; \
-								char infoLog[512]; \
-								glGetProgramiv(prog, opcode, &success); \
-								if (!success) \
-								{ \
-									glGetProgramInfoLog(prog, 512, NULL, infoLog); \
-									printf(msg, infoLog); \
-								} \
-							}
-
 // TODO: __VA_ARGS__
-#define PRINT_ERR(msg) \
-    fprintf(stderr, "ERR: %s:%d: %s\n", __FILE__, __LINE__, msg);
+#define PRINT_ERR(msg) fprintf(stderr, "ERR: %s:%d: %s\n", __FILE__, __LINE__, msg);
 
 typedef struct {
 	float R;

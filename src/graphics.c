@@ -25,6 +25,18 @@ static void _graphics_terminate(int code)
 	exit(code);
 }
 
+static void _check_program_iv(unsigned int prog, unsigned int opcode, const char* msg)
+{
+	int success;
+	char infoLog[512];
+	glGetProgramiv(prog, opcode, &success);
+	if (!success)
+	{
+		glGetProgramInfoLog(prog, 512, NULL, infoLog);
+		printf(msg, infoLog);
+	}
+}
+
 static char* _get_shader_source(const char* name)
 {
 	char* vertex_source_path = str_concat(STRVAL(SOURCE_ROOT), name);
@@ -50,7 +62,7 @@ static void _compile_shader_program(unsigned int* prog, unsigned int vertexShade
 	glAttachShader(*prog, fragShader);
 	glLinkProgram(*prog);
 
-	CHECK_PROG_IV(*prog, GL_LINK_STATUS, "ERROR::SHADER::PROGRAM::LINKING_FAILED: %s\n");
+	_check_program_iv(*prog, GL_LINK_STATUS, "ERROR::SHADER::PROGRAM::LINKING_FAILED: %s\n");
 
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragShader);
@@ -64,7 +76,7 @@ unsigned int _create_vertex_shader(const char** source)
 	glShaderSource(shader, 1, source, NULL);
 	glCompileShader(shader);
 
-	CHECK_PROG_IV(shader, GL_COMPILE_STATUS, "ERROR::SHADER::PROGRAM::COMPILATION_FAILED: %s\n");
+	_check_program_iv(shader, GL_COMPILE_STATUS, "ERROR::SHADER::PROGRAM::COMPILATION_FAILED: %s\n");
 
 	return shader;
 }
@@ -77,7 +89,7 @@ unsigned int _create_fragment_shader(const char** source)
 	glShaderSource(shader, 1, source, NULL);
 	glCompileShader(shader);
 
-	CHECK_PROG_IV(shader, GL_COMPILE_STATUS, "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED: %s\n");
+	_check_program_iv(shader, GL_COMPILE_STATUS, "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED: %s\n");
 
 	return shader;
 }
