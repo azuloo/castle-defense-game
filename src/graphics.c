@@ -4,8 +4,6 @@
 
 #include <stdlib.h>
 
-static GLFWwindow* _window = NULL;
-
 typedef struct {
 	unsigned int  vbo;
 	unsigned int  vao;
@@ -14,10 +12,15 @@ typedef struct {
 	float         data[32];
 } VertexUnit32;
 
+#define PROGRAM_IV_LOG_BUF_CAPACITY 512
+
+static GLFWwindow* _window = NULL;
 static int g_VertexDataCapacity32 = 1;
 static int g_UnitsNum32 = 0;
 static VertexUnit32* VertexData32 = NULL;
 static BackgroundColor g_BColor = { 0.2f, 0.3f, 0.3f, 1.0f };
+static char* g_VertexShaderFilePath = "/res/vertex_source.TXT";
+static char* g_FragShaderFilePath = "/res/fragment_source.TXT";
 
 static void _graphics_terminate(int code)
 {
@@ -28,12 +31,12 @@ static void _graphics_terminate(int code)
 static void _check_program_iv(unsigned int prog, unsigned int opcode, const char* msg)
 {
 	int success;
-	char infoLog[512];
+	char info_log[PROGRAM_IV_LOG_BUF_CAPACITY];
 	glGetProgramiv(prog, opcode, &success);
 	if (!success)
 	{
-		glGetProgramInfoLog(prog, 512, NULL, infoLog);
-		printf(msg, infoLog);
+		glGetProgramInfoLog(prog, 512, NULL, info_log);
+		PRINT_ERR_VARGS(msg, info_log);
 	}
 }
 
@@ -44,7 +47,6 @@ static char* _get_shader_source(const char* name)
 	size_t shader_size = 0;
 
 	int res_code = readall(vertex_source_path, &data_buf, &shader_size);
-	free(vertex_source_path);
 	if (READ_OK != res_code)
 	{
 		PRINT_ERR_VARGS("Failed to load vertex source '%s', err code: %d.", name, res_code);
@@ -61,7 +63,7 @@ static void _compile_shader_program(unsigned int* prog, unsigned int vertexShade
 	glAttachShader(*prog, fragShader);
 	glLinkProgram(*prog);
 
-	_check_program_iv(*prog, GL_LINK_STATUS, "ERROR::SHADER::PROGRAM::LINKING_FAILED: %s\n");
+	_check_program_iv(*prog, GL_LINK_STATUS, "Failed to link shader program: %s\n");
 
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragShader);
@@ -75,7 +77,7 @@ unsigned int _create_vertex_shader(const char** source)
 	glShaderSource(shader, 1, source, NULL);
 	glCompileShader(shader);
 
-	_check_program_iv(shader, GL_COMPILE_STATUS, "ERROR::SHADER::PROGRAM::COMPILATION_FAILED: %s\n");
+	_check_program_iv(shader, GL_COMPILE_STATUS, "Failed to compile vertex shader: %s\n");
 
 	return shader;
 }
@@ -88,7 +90,7 @@ unsigned int _create_fragment_shader(const char** source)
 	glShaderSource(shader, 1, source, NULL);
 	glCompileShader(shader);
 
-	_check_program_iv(shader, GL_COMPILE_STATUS, "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED: %s\n");
+	_check_program_iv(shader, GL_COMPILE_STATUS, "Failed to compile fragment shader: %s\n");
 
 	return shader;
 }
@@ -263,8 +265,8 @@ int draw_triangle(float vertices[], int vertices_len, unsigned int indices[], in
 	VertexUnit32* entry = _create_entry32(vertices, vertices_len);
 
 	// TODO: Move it from here
-	const char* vertex_shader_source = _get_shader_source("/res/vertex_source.TXT");
-	const char* fragment_shader_source = _get_shader_source("/res/fragment_source.TXT");
+	const char* vertex_shader_source = _get_shader_source(g_VertexShaderFilePath);
+	const char* fragment_shader_source = _get_shader_source(g_FragShaderFilePath);
 
 	unsigned int vertex_shader = _create_vertex_shader(&vertex_shader_source);
 	unsigned int fragment_shader = _create_fragment_shader(&fragment_shader_source);
