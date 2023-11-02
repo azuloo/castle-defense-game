@@ -11,7 +11,7 @@ find_package(OpenGL REQUIRED)
 
 add_compile_definitions("_SOURCE_ROOT=${CMAKE_SOURCE_DIR}")
 
-add_executable(castle_defense_game ${HEADER_FILES} ${SOURCE_FILES} "include/file_reader.h" "src/file_reader.c" "include/utils.h" "src/utils.c")
+add_executable(castle_defense_game ${HEADER_FILES} ${SOURCE_FILES})
 
 set_property(TARGET castle_defense_game PROPERTY C_STANDARD 99)
 
