@@ -1,14 +1,17 @@
 #include "graphics.h"
 #include "utils.h"
 #include "file_reader.h"
+#include "stb_image.h"
 
 #include <stdlib.h>
 
+// TODO: Review capacity
 typedef struct {
 	unsigned int  vbo;
 	unsigned int  vao;
 	unsigned int  ebo;
 	unsigned int  shader_prog;
+	unsigned int  texture;
 	float         data[32];
 } VertexUnit32;
 
@@ -40,9 +43,14 @@ static void _check_program_iv(unsigned int prog, unsigned int opcode, const char
 	}
 }
 
+static char* _get_file_path(const char* name)
+{
+	return str_concat(STRVAL(SOURCE_ROOT), name);
+}
+
 static char* _get_shader_source(const char* name)
 {
-	char* vertex_source_path = str_concat(STRVAL(SOURCE_ROOT), name);
+	char* vertex_source_path = _get_file_path(name);
 	char* data_buf = '\0';
 	size_t shader_size = 0;
 
@@ -197,6 +205,7 @@ VertexUnit32* _create_vertex_array32_entry()
 	unit->vao           = 0;
 	unit->ebo           = 0;
 	unit->shader_prog   = 0;
+	unit->texture       = 0;
 	for (int i = 0.f; i < 32; i++)
 	{
 		unit->data[i]   = 0.f;
@@ -258,13 +267,48 @@ void graphics_free_resources()
 	glfwTerminate();
 }
 
+static unsigned char* _load_image(const char* path, int* width, int* height, int* nr_channels)
+{
+	stbi_set_flip_vertically_on_load(1);
+	unsigned char* data = stbi_load(path, width, height, nr_channels, 0);
+	return data;
+}
+
+static void _free_img_data(unsigned int* img_data)
+{
+	stbi_image_free(img_data);
+}
+
+// TODO: Return and store textures
+void _create_texture_2D(const char* img_path, unsigned int* texture)
+{
+	glGenTextures(1, texture);
+	glBindTexture(GL_TEXTURE_2D, *texture);
+	// TODO: Configure filtering options
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	int width, height, nr_channels;
+	unsigned char* data = _load_image(img_path, &width, &height, &nr_channels);
+	if (data)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		PRINT_ERR("Failed to load texture.");
+	}
+	_free_img_data(data);
+}
+
 int draw_triangle(float vertices[], int vertices_len, unsigned int indices[], int indices_len)
 {
 	// TODO: Do we need to create a new 32 entry for each supplied number of vertices?
 	// Probablty not and we sholud probably bind minimum a couple of vertices batches to the same vao, vbo and shader_prog
 	VertexUnit32* entry = _create_entry32(vertices, vertices_len);
 
-	// TODO: Move it from here
 	const char* vertex_shader_source = _get_shader_source(g_VertexShaderFilePath);
 	const char* fragment_shader_source = _get_shader_source(g_FragShaderFilePath);
 
@@ -276,13 +320,17 @@ int draw_triangle(float vertices[], int vertices_len, unsigned int indices[], in
 	_create_vao(&entry->vao);
 	_create_vbo(&entry->vbo, entry->data, vertices_len);
 	_create_ebo(&entry->ebo, indices, indices_len);
+	// TODO: Should be called by user
+	const char* texure_name = "/res/brick.jpg";
+	_create_texture_2D(_get_file_path(texure_name), &entry->texture);
 
+	// TODO: Move these out of here?
 	// TODO: handle different attributes
 	glVertexAttribPointer(0,	// vertex attribute index
 		3,						// size of vertex attribute (vec3)
 		GL_FLOAT,				// data type
 		GL_FALSE,				// normalize?
-		sizeof(float) * 6,		// stride
+		sizeof(float) * 8,		// stride
 		(void*)0				// position data offset
 	);
 	glEnableVertexAttribArray(0);
@@ -291,10 +339,19 @@ int draw_triangle(float vertices[], int vertices_len, unsigned int indices[], in
 		3,						     // size of vertex attribute (vec3)
 		GL_FLOAT,				     // data type
 		GL_FALSE,				     // normalize?
-		sizeof(float) * 6,		     // stride
+		sizeof(float) * 8,		     // stride
 		(void*)(sizeof(float) * 3)   // position data offset
 	);
 	glEnableVertexAttribArray(1);
+
+	glVertexAttribPointer(2,	     // vertex attribute index
+		2,						     // size of vertex attribute (vec3)
+		GL_FLOAT,				     // data type
+		GL_FALSE,				     // normalize?
+		sizeof(float) * 8,		     // stride
+		(void*)(sizeof(float) * 6)   // position data offset
+	);
+	glEnableVertexAttribArray(2);
 
 	glBindVertexArray(0);
 	return 0;
@@ -326,6 +383,7 @@ int draw()
 	{
 		VertexUnit32* entry = VertexData32 + i;
 		glUseProgram(entry->shader_prog);
+		glBindTexture(GL_TEXTURE_2D, entry->texture);
 		glBindVertexArray(entry->vao);
 
 		//glDrawArrays(GL_TRIANGLES, 0, 3);

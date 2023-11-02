@@ -6,11 +6,11 @@
 
 // TEMP
 static float vertices[] = {
-	// Position            // Color
-	0.5f, -0.5f, 0.0f,     0.5f, 0.5f, 0.0f,
-	-0.5f, -0.5f, 0.0f,    0.0f, 0.5f, 0.5f,
-	0.5f, 0.5f, 0.0f,      0.5f, 0.0f, 0.5f,
-	-0.5f, 0.5f, 0.0f,     0.5f, 0.5f, 0.5f
+	// Position            // Color             // Texture
+	0.5f, -0.5f, 0.0f,     0.5f, 0.5f, 0.0f,    1.0f, 0.0f,
+	-0.5f, -0.5f, 0.0f,    0.0f, 0.5f, 0.5f,    0.0f, 0.0f,
+	0.5f, 0.5f, 0.0f,      0.5f, 0.0f, 0.5f,    1.0f, 1.0f,
+	-0.5f, 0.5f, 0.0f,     0.5f, 0.5f, 0.5f,    0.0f, 1.0f
 };
 
 static unsigned int indices[] = {
@@ -35,7 +35,7 @@ int main(int argc, int* argv[])
 
 	set_background_color(b_Color);
 
-	draw_triangle(vertices, 24, indices, 6);
+	draw_triangle(vertices, 32, indices, 6);
 
 	while (!should_be_terminated())
 	{
