@@ -1,4 +1,5 @@
 #include "file_reader.h"
+#include "utils.h"
 
 #include <stdlib.h>
 
@@ -72,4 +73,9 @@ int readall(char* path, char** data_ptr, size_t* size_ptr)
     fclose(in);
 
     return READ_OK;
+}
+
+char* get_file_path(const char* name)
+{
+    return str_concat(STRVAL(SOURCE_ROOT), name);
 }
