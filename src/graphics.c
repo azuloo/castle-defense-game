@@ -45,12 +45,12 @@ static void check_program_iv(unsigned int prog, unsigned int opcode, const char*
 
 static char* get_shader_source(const char* name)
 {
-	char* vertex_source_path = get_file_path(name);
+	char vertex_source_path[256];
+	get_file_path(name, vertex_source_path, 256);
 	char* data_buf = '\0';
 	size_t shader_size = 0;
 
 	int res_code = readall(vertex_source_path, &data_buf, &shader_size);
-	free(vertex_source_path);
 	if (READ_OK != res_code)
 	{
 		PRINT_ERR_VARGS("Failed to load vertex source '%s', err code: %d.", name, res_code);
@@ -319,9 +319,9 @@ int draw_triangle(float vertices[], int vertices_len, unsigned int indices[], in
 	create_ebo(&entry->ebo, indices, indices_len);
 	// TODO: Should be called by user
 	const char* texure_name = "/res/brick.jpg";
-	const char* texture_path = get_file_path(texure_name);
+	char texture_path[256];
+	get_file_path(texure_name, texture_path, 256);
 	create_texture_2D(texture_path, &entry->texture);
-	free(texture_path);
 
 	// TODO: Move these out of here?
 	// TODO: handle different attributes

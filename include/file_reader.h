@@ -14,6 +14,6 @@ typedef enum _ReadOpResult {
 } ReadOpResult;
 
 extern int readall(char* path, char** data_ptr, size_t* size_ptr);
-extern char* get_file_path(const char* name);
+extern char* get_file_path(const char* name, char** buf, size_t len);
 
 #endif // _FILE_READER_H
