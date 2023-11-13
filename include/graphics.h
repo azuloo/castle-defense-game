@@ -31,11 +31,26 @@ typedef struct {
 	float A;
 } BackgroundColor;
 
+typedef struct {
+	unsigned int  vbo;
+	unsigned int  vao;
+	unsigned int  ebo;
+	unsigned int  shader_prog;
+	unsigned int  texture;
+} EntryCnf;
+
+typedef struct {
+	float*       data;
+	unsigned int len;
+} ArrayUnit;
+
 extern int init_graphics();
 extern void set_background_color(BackgroundColor b_color);
 extern int graphics_should_be_terminated();
 extern void graphics_free_resources();
-extern int draw_triangle(float vertices[], int vertices_len, unsigned int indices[], int indices_len);
+
+extern EntryCnf* create_entry();
+extern int draw_triangle(EntryCnf* entry, ArrayUnit* vertices, ArrayUnit* indices);
 extern int draw();
 
 #endif // _GRAPHICS_H

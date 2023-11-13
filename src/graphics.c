@@ -5,22 +5,12 @@
 
 #include <stdlib.h>
 
-// TODO: Review capacity
-typedef struct {
-	unsigned int  vbo;
-	unsigned int  vao;
-	unsigned int  ebo;
-	unsigned int  shader_prog;
-	unsigned int  texture;
-	float         data[32];
-} VertexUnit32;
-
 #define PROGRAM_IV_LOG_BUF_CAPACITY 512
 
 static GLFWwindow* window = NULL;
-static int g_VertexDataCapacity32 = 1;
-static int g_UnitsNum32 = 0;
-static VertexUnit32* VertexData32 = NULL;
+static int g_EntriesDataCapacity = 1;
+static int g_EntriesNum = 0;
+static EntryCnf* EntryCnfData = NULL;
 static BackgroundColor g_BColor = { 0.2f, 0.3f, 0.3f, 1.0f };
 static char* g_VertexShaderFilePath = "/res/vertex_source.TXT";
 static char* g_FragShaderFilePath = "/res/fragment_source.TXT";
@@ -174,78 +164,54 @@ static void create_ebo(unsigned int* ebo, unsigned int* indices, int len)
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices) * len, indices, GL_STATIC_DRAW);
 }
 
-static void init_vertex_array32()
+static void alloc_entry_arr()
 {
 	// TODO: resolve capacity thing
-	g_VertexDataCapacity32 *= 2;
-	VertexUnit32* unit_arr = (VertexUnit32*) realloc(VertexData32, sizeof(VertexUnit32) * g_VertexDataCapacity32);
-	if (NULL == unit_arr)
+	g_EntriesDataCapacity *= 2;
+	EntryCnf* entries_arr = (EntryCnf*) realloc(EntryCnfData, sizeof(EntryCnf) * g_EntriesDataCapacity);
+	if (NULL == entries_arr)
 	{
-		PRINT_ERR("Failed to allocate sufficient memory chunk for VertexUnit32 elements.");
+		PRINT_ERR("Failed to allocate sufficient memory chunk for EntryCnf elements.");
 		graphics_terminate(TERMINATE_ERR_CODE);
 		return;
 	}
 
-	VertexData32 = unit_arr;
+	EntryCnfData = entries_arr;
 }
 
-static VertexUnit32* create_vertex_array32_entry()
+static EntryCnf* create_entry_cnf()
 {
-	if (g_UnitsNum32 >= g_VertexDataCapacity32)
+	if (g_EntriesNum >= g_EntriesDataCapacity)
 	{
-		init_vertex_array32();
+		alloc_entry_arr();
 	}
 
-	VertexUnit32* unit  = VertexData32 + g_UnitsNum32;
-	unit->vbo           = 0;
-	unit->vao           = 0;
-	unit->ebo           = 0;
-	unit->shader_prog   = 0;
-	unit->texture       = 0;
-	for (int i = 0.f; i < 32; i++)
-	{
-		unit->data[i]   = 0.f;
-	}
+	EntryCnf* entry      = EntryCnfData + g_EntriesNum;
+	entry->vbo           = 0;
+	entry->vao           = 0;
+	entry->ebo           = 0;
+	entry->shader_prog   = 0;
+	entry->texture       = 0;
 
-	g_UnitsNum32++;
-
-	return unit;
-}
-
-static VertexUnit32* create_entry32(float* vertices, int len)
-{
-	if (NULL == VertexData32)
-	{
-		init_vertex_array32();
-	}
-	
-	// TODO: assert len <= 32
-
-	VertexUnit32* entry = create_vertex_array32_entry();
-	// TODO: Do we need to save vertex data?
-	float* vertex_data = entry->data;
-	for (int i = 0; i < len; i++)
-	{
-		*(vertex_data++) = vertices[i];
-	}
+	g_EntriesNum++;
 
 	return entry;
 }
 
 static void free_gl_resources()
 {
-	for (int i = 0; i < g_UnitsNum32; i++)
+	for (int i = 0; i < g_EntriesNum; i++)
 	{
-		VertexUnit32* unit = VertexData32 + i;
-		glDeleteVertexArrays(1, &unit->vao);
-		glDeleteBuffers(1, &unit->vbo);
-		glDeleteProgram(unit->shader_prog);
+		EntryCnf* entry = EntryCnfData + i;
+		glDeleteVertexArrays(1, &entry->vao);
+		glDeleteBuffers(1, &entry->vbo);
+		glDeleteProgram(entry->shader_prog);
 	}
 }
 
-static void free_entries32()
+static void free_entry_cnf_data()
 {
-	free(VertexData32);
+	free(EntryCnfData);
 }
 
 static unsigned char* load_image(const char* path, int* width, int* height, int* nr_channels)
@@ -270,9 +236,20 @@ int graphics_should_be_terminated()
 void graphics_free_resources()
 {
 	free_gl_resources();
-	free_entries32();
+	free_entry_cnf_data();
 
 	glfwTerminate();
+}
+
+EntryCnf* create_entry()
+{
+	if (NULL == EntryCnfData)
+	{
+		alloc_entry_arr();
+	}
+
+	EntryCnf* entry = create_entry_cnf();
+	return entry;
 }
 
 // TODO: Return and store textures
@@ -300,12 +277,8 @@ void create_texture_2D(const char* img_path, unsigned int* texture)
 	free_img_data(data);
 }
 
-int draw_triangle(float vertices[], int vertices_len, unsigned int indices[], int indices_len)
+int draw_triangle(EntryCnf* entry, ArrayUnit* vertices, ArrayUnit* indices)
 {
-	// TODO: Do we need to create a new 32 entry for each supplied number of vertices?
-	// Probablty not and we sholud probably bind minimum a couple of vertices batches to the same vao, vbo and shader_prog
-	VertexUnit32* entry = create_entry32(vertices, vertices_len);
-
 	const char* vertex_shader_source = get_shader_source(g_VertexShaderFilePath);
 	const char* fragment_shader_source = get_shader_source(g_FragShaderFilePath);
 
@@ -315,8 +288,8 @@ int draw_triangle(float vertices[], int vertices_len, unsigned int indices[], in
 	compile_shader_program(&entry->shader_prog, vertex_shader, fragment_shader);
 
 	create_vao(&entry->vao);
-	create_vbo(&entry->vbo, entry->data, vertices_len);
-	create_ebo(&entry->ebo, indices, indices_len);
+	create_vbo(&entry->vbo, vertices->data, vertices->len);
+	create_ebo(&entry->ebo, indices->data, indices->len);
 	// TODO: Should be called by user
 	const char* texure_name = "/res/brick.jpg";
 	char texture_path[256];
@@ -378,9 +351,9 @@ int draw()
 	glClearColor(g_BColor.R, g_BColor.G, g_BColor.B, g_BColor.A);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	for (int i = 0; i < g_UnitsNum32; i++)
+	for (int i = 0; i < g_EntriesNum; i++)
 	{
-		VertexUnit32* entry = VertexData32 + i;
+		EntryCnf* entry = EntryCnfData + i;
 		glUseProgram(entry->shader_prog);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, entry->texture);
