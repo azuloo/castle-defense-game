@@ -277,7 +277,7 @@ void create_texture_2D(const char* img_path, unsigned int* texture)
 	free_img_data(data);
 }
 
-int draw_triangle(EntryCnf* entry, ArrayUnit* vertices, ArrayUnit* indices)
+int draw_triangle(EntryCnf* entry, DrawBufferData* buf_data)
 {
 	const char* vertex_shader_source = get_shader_source(g_VertexShaderFilePath);
 	const char* fragment_shader_source = get_shader_source(g_FragShaderFilePath);
@@ -288,8 +288,8 @@ int draw_triangle(EntryCnf* entry, ArrayUnit* vertices, ArrayUnit* indices)
 	compile_shader_program(&entry->shader_prog, vertex_shader, fragment_shader);
 
 	create_vao(&entry->vao);
-	create_vbo(&entry->vbo, vertices->data, vertices->len);
-	create_ebo(&entry->ebo, indices->data, indices->len);
+	create_vbo(&entry->vbo, buf_data->vertices, buf_data->vertices_len);
+	create_ebo(&entry->ebo, buf_data->indices, buf_data->indices_len);
 	// TODO: Should be called by user
 	const char* texure_name = "/res/brick.jpg";
 	char texture_path[256];

@@ -35,16 +35,14 @@ int main(int argc, int* argv[])
 
 	set_background_color(b_Color);
 
-	ArrayUnit castle_vertices;
-	castle_vertices.data = vertices;
-	castle_vertices.len = 32;
+	DrawBufferData draw_buf_data;
+	draw_buf_data.vertices = vertices;
+	draw_buf_data.vertices_len = 32;
+	draw_buf_data.indices = indices;
+	draw_buf_data.indices_len = 6;
 
-	ArrayUnit castle_indices;
-	castle_indices.data = indices;
-	castle_indices.len = 6;
-
-	EntryCnf* entry = create_entry(vertices, 32);
-	draw_triangle(entry, &castle_vertices, &castle_indices);
+	EntryCnf* entry = create_entry();
+	draw_triangle(entry, &draw_buf_data);
 
 	while (!should_be_terminated())
 	{

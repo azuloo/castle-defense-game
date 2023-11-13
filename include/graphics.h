@@ -40,9 +40,11 @@ typedef struct {
 } EntryCnf;
 
 typedef struct {
-	float*       data;
-	unsigned int len;
-} ArrayUnit;
+	float*       vertices;
+	unsigned int vertices_len;
+	float*       indices;
+	unsigned int indices_len;
+} DrawBufferData;
 
 extern int init_graphics();
 extern void set_background_color(BackgroundColor b_color);
@@ -50,7 +52,7 @@ extern int graphics_should_be_terminated();
 extern void graphics_free_resources();
 
 extern EntryCnf* create_entry();
-extern int draw_triangle(EntryCnf* entry, ArrayUnit* vertices, ArrayUnit* indices);
+extern int draw_triangle(EntryCnf* entry, DrawBufferData* buf_data);
 extern int draw();
 
 #endif // _GRAPHICS_H
