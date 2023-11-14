@@ -42,7 +42,13 @@ int main(int argc, int* argv[])
 	draw_buf_data.indices_len = 6;
 
 	EntryCnf* entry = create_entry();
-	draw_triangle(entry, &draw_buf_data);
+
+	const char* texure_name = "/res/brick.jpg";
+	char texture_path[256];
+	get_file_path(texure_name, texture_path, 256);
+	create_texture_2D(texture_path, &entry->texture);
+
+	add_element(entry, &draw_buf_data);
 
 	while (!should_be_terminated())
 	{

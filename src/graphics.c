@@ -192,6 +192,7 @@ static EntryCnf* create_entry_cnf()
 	entry->ebo           = 0;
 	entry->shader_prog   = 0;
 	entry->texture       = 0;
+	entry->num_indices   = 0;
 
 	g_EntriesNum++;
 
@@ -252,7 +253,6 @@ EntryCnf* create_entry()
 	return entry;
 }
 
-// TODO: Return and store textures
 void create_texture_2D(const char* img_path, unsigned int* texture)
 {
 	glGenTextures(1, texture);
@@ -277,7 +277,7 @@ void create_texture_2D(const char* img_path, unsigned int* texture)
 	free_img_data(data);
 }
 
-int draw_triangle(EntryCnf* entry, DrawBufferData* buf_data)
+int add_element(EntryCnf* entry, DrawBufferData* buf_data)
 {
 	const char* vertex_shader_source = get_shader_source(g_VertexShaderFilePath);
 	const char* fragment_shader_source = get_shader_source(g_FragShaderFilePath);
@@ -290,16 +290,11 @@ int draw_triangle(EntryCnf* entry, DrawBufferData* buf_data)
 	create_vao(&entry->vao);
 	create_vbo(&entry->vbo, buf_data->vertices, buf_data->vertices_len);
 	create_ebo(&entry->ebo, buf_data->indices, buf_data->indices_len);
-	// TODO: Should be called by user
-	const char* texure_name = "/res/brick.jpg";
-	char texture_path[256];
-	get_file_path(texure_name, texture_path, 256);
-	create_texture_2D(texture_path, &entry->texture);
+	entry->num_indices = buf_data->indices_len;
 
 	// TODO: Move these out of here?
-	// TODO: handle different attributes
 	glVertexAttribPointer(0,	// vertex attribute index
-		3,						// size of vertex attribute (vec3)
+		3,						// size of vertex attribute
 		GL_FLOAT,				// data type
 		GL_FALSE,				// normalize?
 		sizeof(float) * 8,		// stride
@@ -308,7 +303,7 @@ int draw_triangle(EntryCnf* entry, DrawBufferData* buf_data)
 	glEnableVertexAttribArray(0);
 
 	glVertexAttribPointer(1,	     // vertex attribute index
-		3,						     // size of vertex attribute (vec3)
+		3,						     // size of vertex attribute
 		GL_FLOAT,				     // data type
 		GL_FALSE,				     // normalize?
 		sizeof(float) * 8,		     // stride
@@ -317,7 +312,7 @@ int draw_triangle(EntryCnf* entry, DrawBufferData* buf_data)
 	glEnableVertexAttribArray(1);
 
 	glVertexAttribPointer(2,	     // vertex attribute index
-		2,						     // size of vertex attribute (vec3)
+		2,						     // size of vertex attribute
 		GL_FLOAT,				     // data type
 		GL_FALSE,				     // normalize?
 		sizeof(float) * 8,		     // stride
@@ -359,11 +354,8 @@ int draw()
 		glBindTexture(GL_TEXTURE_2D, entry->texture);
 		glBindVertexArray(entry->vao);
 
-		//glDrawArrays(GL_TRIANGLES, 0, 3);
-
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, entry->ebo);
-		// TODO: Get the number of vertices from the entry
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, entry->num_indices, GL_UNSIGNED_INT, 0);
 	}
 
 	glfwSwapBuffers(window);

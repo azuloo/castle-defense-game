@@ -37,6 +37,7 @@ typedef struct {
 	unsigned int  ebo;
 	unsigned int  shader_prog;
 	unsigned int  texture;
+	unsigned int  num_indices;
 } EntryCnf;
 
 typedef struct {
@@ -52,7 +53,8 @@ extern int graphics_should_be_terminated();
 extern void graphics_free_resources();
 
 extern EntryCnf* create_entry();
-extern int draw_triangle(EntryCnf* entry, DrawBufferData* buf_data);
+extern void create_texture_2D(const char* img_path, unsigned int* texture);
+extern int add_element(EntryCnf* entry, DrawBufferData* buf_data);
 extern int draw();
 
 #endif // _GRAPHICS_H
