@@ -13,7 +13,7 @@ typedef enum _ReadOpResult {
 	READ_OUTOFMEM    = -4
 } ReadOpResult;
 
-extern int readall(char* path, char** data_ptr, size_t* size_ptr);
-extern char* get_file_path(const char* name, char** buf, size_t len);
+int readall(char* path, char** data_ptr, size_t* size_ptr);
+char* get_file_path(const char* name, char** buf, size_t len);
 
 #endif // _FILE_READER_H

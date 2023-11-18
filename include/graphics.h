@@ -47,14 +47,14 @@ typedef struct {
 	unsigned int indices_len;
 } DrawBufferData;
 
-extern int init_graphics();
-extern void set_background_color(BackgroundColor b_color);
-extern int graphics_should_be_terminated();
-extern void graphics_free_resources();
+int init_graphics();
+void set_background_color(BackgroundColor b_color);
+int graphics_should_be_terminated();
+void graphics_free_resources();
 
-extern EntryCnf* create_entry();
-extern void create_texture_2D(const char* img_path, unsigned int* texture);
-extern int add_element(EntryCnf* entry, DrawBufferData* buf_data);
-extern int draw();
+EntryCnf* create_entry();
+void create_texture_2D(const char* img_path, unsigned int* texture);
+int add_element(EntryCnf* entry, DrawBufferData* buf_data);
+int draw();
 
 #endif // _GRAPHICS_H

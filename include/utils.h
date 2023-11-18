@@ -11,6 +11,6 @@
 #define TERMINATE_SUCCESS_CODE EXIT_SUCCESS
 #define TERMINATE_ERR_CODE EXIT_FAILURE
 
-extern char* str_concat(const char* s1, const char* s2, char** buf, size_t len);
+char* str_concat(const char* s1, const char* s2, char** buf, size_t len);
 
 #endif // _UTILS_H
