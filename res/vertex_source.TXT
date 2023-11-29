@@ -7,9 +7,11 @@ layout (location = 2) in vec2 aTexure;
 out vec3 ResColor;
 out vec2 ResTexture;
 
+uniform mat4 transform;
+
 void main()
 {
-    gl_Position = vec4(aPos, 1.0f);
+    gl_Position = transform * vec4(aPos, 1.0f);
     ResColor = aColor;
     ResTexture = aTexure;
 }

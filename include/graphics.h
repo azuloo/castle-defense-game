@@ -3,6 +3,7 @@
 
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
+#include "lin_alg.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -54,6 +55,10 @@ void graphics_free_resources();
 
 EntryCnf* create_entry();
 void create_texture_2D(const char* img_path, unsigned int* texture);
+void rotate_element_x(unsigned int shader_prog, const char* uniform_name, float angle);
+void rotate_element_y(unsigned int shader_prog, const char* uniform_name, float angle);
+void rotate_element_z(unsigned int shader_prog, const char* uniform_name, float angle);
+void add_uniform_mat4f(unsigned int shader_prog, const char* uniform_name, const Mat4* mat);
 int add_element(EntryCnf* entry, DrawBufferData* buf_data);
 int draw();
 

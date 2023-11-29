@@ -2,6 +2,7 @@
 #include "utils.h"
 #include "file_reader.h"
 #include "stb_image.h"
+#include "lin_alg.h"
 
 #include <stdlib.h>
 
@@ -275,6 +276,35 @@ void create_texture_2D(const char* img_path, unsigned int* texture)
 		PRINT_ERR("Failed to load texture.");
 	}
 	free_img_data(data);
+}
+
+void rotate_element_x(unsigned int shader_prog, const char* uniform_name, float angle)
+{
+	Mat4 mat = IdentityMat;
+	rotate_x(&mat, angle);
+	add_uniform_mat4f(shader_prog, uniform_name, &mat);
+}
+
+void rotate_element_y(unsigned int shader_prog, const char* uniform_name, float angle)
+{
+	Mat4 mat = IdentityMat;
+	rotate_y(&mat, angle);
+	add_uniform_mat4f(shader_prog, uniform_name, &mat);
+}
+
+void rotate_element_z(unsigned int shader_prog, const char* uniform_name, float angle)
+{
+	Mat4 mat = IdentityMat;
+	rotate_z(&mat, angle);
+	add_uniform_mat4f(shader_prog, uniform_name, &mat);
+}
+
+void add_uniform_mat4f(unsigned int shader_prog, const char* uniform_name, const Mat4* mat)
+{
+	glUseProgram(shader_prog);
+	unsigned int transformLoc = glGetUniformLocation(shader_prog, uniform_name);
+	const float* el = &mat[0].m[0];
+	glUniformMatrix4fv(transformLoc, 1, GL_FALSE, el);
 }
 
 int add_element(EntryCnf* entry, DrawBufferData* buf_data)
