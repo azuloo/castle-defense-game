@@ -130,6 +130,16 @@ void translate(const Mat4* m, float x, float y, float z)
 	memcpy(m->m, multiply_mat4(m, &translation).m, sizeof(m->m));
 }
 
+float degrees(float radians)
+{
+	return radians * (180.f / PI);
+}
+
+float radians(float degrees)
+{
+	return degrees * (PI / 180.f);
+}
+
 Mat4 perspective(float fovy, float aspect_ratio, float near_plane, float far_plane)
 {
 	Mat4 out = { { 0 } };

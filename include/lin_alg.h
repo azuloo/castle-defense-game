@@ -37,6 +37,8 @@ void rotate_y(const Mat4* m, float angle);
 void rotate_z(const Mat4* m, float angle);
 void scale(const Mat4* m, float x, float y, float z);
 void translate(const Mat4* m, float x, float y, float z);
+float degrees(float radians);
+float radians(float degrees);
 
 Mat4 perspective(float fovy, float aspect_ratio, float near_plane, float far_plane);
 Mat4 orthogonal(float left, float right, float bottom, float top);
