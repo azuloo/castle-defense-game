@@ -13,6 +13,13 @@ typedef union Vec4 {
 	};
 } Vec4;
 
+typedef union Vec3 {
+	float m[3];
+	struct {
+		float x, y, z;
+	};
+} Vec3;
+
 static const Vec4 XAxis = { {1, 0, 0, 0} };
 static const Vec4 YAxis = { {0, 1, 0, 0} };
 static const Vec4 ZAxis = { {0, 0, 1, 0} };
@@ -32,6 +39,7 @@ Vec4 mulmat_vec4(const Mat4* m, const Vec4* v);
 void normaliz_vec4(Vec4* v);
 float dot(Vec4 v1, Vec4 v2);
 Vec4 cross(Vec4 v1, Vec4 v2);
+void rotate(const Vec3* axis, const Mat4* m, float angle);
 void rotate_x(const Mat4* m, float angle);
 void rotate_y(const Mat4* m, float angle);
 void rotate_z(const Mat4* m, float angle);

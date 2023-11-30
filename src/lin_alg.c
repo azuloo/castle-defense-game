@@ -66,6 +66,29 @@ Vec4 cross(Vec4 v1, Vec4 v2)
 	return out;
 }
 
+void rotate(const Vec3* axis, const Mat4* m, float angle)
+{
+	Mat4 rotation = IdentityMat;
+	float sine = (float)sin(angle);
+	float cosine = (float)cos(angle);
+	const double del_cos = 1.0 - cosine;
+	const double xTs = (double)axis->x * sine;
+	const double yTs = (double)axis->y * sine;
+	const double zTs = (double)axis->z * sine;
+
+	rotation.m[0] = cosine + (pow(axis->x, 2) * del_cos);
+	rotation.m[1] = (axis->x * axis->y * del_cos) - zTs;
+	rotation.m[2] = (axis->x * axis->z * del_cos) + yTs;
+	rotation.m[4] = (axis->y * axis->x * del_cos) + zTs;
+	rotation.m[5] = cosine + (pow(axis->y, 2) * del_cos);
+	rotation.m[6] = (axis->y * axis->z * del_cos) - xTs;
+	rotation.m[8] = (axis->z * axis->x * del_cos) - yTs;
+	rotation.m[9] = (axis->z * axis->y * del_cos) + xTs;
+	rotation.m[10] = cosine + (pow(axis->z, 2) * del_cos);
+
+	memcpy(m->m, multiply_mat4(m, &rotation).m, sizeof(m->m));
+}
+
 void rotate_x(const Mat4* m, float angle)
 {
 	Mat4 rotation = IdentityMat;
