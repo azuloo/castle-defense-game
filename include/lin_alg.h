@@ -1,6 +1,8 @@
 #ifndef _LIN_ALG_H
 #define _LIN_ALG_H
 
+#include <math.h>
+
 /* row-major ordering */
 typedef struct Mat4 {
 	float m[16];
@@ -37,6 +39,7 @@ static const Mat4 IdentityMat = { {
 Mat4 multiply_mat4(const Mat4* m1, const Mat4* m2);
 Vec4 mulmat_vec4(const Mat4* m, const Vec4* v);
 void normaliz_vec4(Vec4* v);
+Vec4 sub(Vec4 v1, Vec4 v2);
 float dot(Vec4 v1, Vec4 v2);
 Vec4 cross(Vec4 v1, Vec4 v2);
 void rotate(const Vec3* axis, const Mat4* m, float angle);

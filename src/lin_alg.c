@@ -1,5 +1,4 @@
 #include "lin_alg.h"
-#include <math.h>
 
 static const double PI = 3.14159265358979323846;
 
@@ -50,6 +49,16 @@ void normaliz_vec4(Vec4* v)
 	v->m[0] *= invrt;
 	v->m[1] *= invrt;
 	v->m[2] *= invrt;
+}
+
+Vec4 sub(Vec4 v1, Vec4 v2)
+{
+	Vec4 out = { {0} };
+	out.m[0] = v1.m[0] - v2.m[0];
+	out.m[1] = v1.m[1] - v2.m[1];
+	out.m[2] = v1.m[2] - v2.m[2];
+	out.m[3] = v1.m[3] - v2.m[3];
+	return out;
 }
 
 float dot(Vec4 v1, Vec4 v2)
@@ -195,28 +204,30 @@ Mat4 orthogonal(float left, float right, float bottom, float top)
 
 Mat4 look_at(Vec4 pos, Vec4 dir)
 {
-	Vec4 f = dir;
-	normaliz_vec4(&f);
-	Vec4 u = { {0, 1, 0, 0} };
-	Vec4 s = cross(f, u);
-	normaliz_vec4(&s);
-	u = cross(s, f);
+	Vec4 z = sub(pos, dir);
+	normaliz_vec4(&z);
+	Vec4 y = { {0.f, 1.f, 0.f, 0.f} };
+	Vec4 x = cross(y, z);
+	y = cross(z, x);
+
+	normaliz_vec4(&x);
+	normaliz_vec4(&y);
 
 	Mat4 out = IdentityMat;
-	out.m[0] = s.x;
-	out.m[4] = s.y;
-	out.m[8] = s.z;
+	out.m[0] = x.x;
+	out.m[4] = x.y;
+	out.m[8] = x.z;
 
-	out.m[1] = u.x;
-	out.m[5] = u.y;
-	out.m[9] = u.z;
+	out.m[1] = y.x;
+	out.m[5] = y.y;
+	out.m[9] = y.z;
 
-	out.m[2] = -f.x;
-	out.m[6] = -f.y;
-	out.m[10] = -f.z;
+	out.m[2] = z.x;
+	out.m[6] = z.y;
+	out.m[10] = z.z;
 
-	out.m[12] = -dot(s, pos);
-	out.m[13] = -dot(u, pos);
-	out.m[14] = dot(f, pos);
+	out.m[12] = -dot(x, pos);
+	out.m[13] = -dot(y, pos);
+	out.m[14] = -dot(z, pos);
 	return out;
 }
