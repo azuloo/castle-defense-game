@@ -9,6 +9,8 @@
 #define PROGRAM_IV_LOG_BUF_CAPACITY 512
 
 static GLFWwindow* window = NULL;
+static InputFnPtr input_fn_ptr = NULL;
+
 static int g_EntriesDataCapacity = 1;
 static int g_EntriesNum = 0;
 static EntryCnf* EntryCnfData = NULL;
@@ -93,14 +95,6 @@ static unsigned int create_fragment_shader(const char** source)
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
-}
-
-static void process_input(GLFWwindow* window)
-{
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-	{
-		glfwSetWindowShouldClose(window, CLOSE_GLFW_WINDOW);
-	}
 }
 
 static void init_glfw()
@@ -332,6 +326,16 @@ int add_element(EntryCnf* entry, DrawBufferData* buf_data)
 	return 0;
 }
 
+void close_window(GWindow* window)
+{
+	glfwSetWindowShouldClose(window, CLOSE_GLFW_WINDOW);
+}
+
+void bind_input_fn(InputFnPtr ptr)
+{
+	input_fn_ptr = ptr;
+}
+
 int init_graphics()
 {
 	// TODO: init_graphics() called before everything assertion (gl and GLAD)
@@ -349,10 +353,12 @@ void set_background_color(BackgroundColor b_color)
 
 int draw()
 {
-	process_input(window);
+	// TODO: Add check for NULL-ness
+	(*input_fn_ptr)(window);
 
+	glEnable(GL_DEPTH_TEST);
 	glClearColor(g_BColor.R, g_BColor.G, g_BColor.B, g_BColor.A);
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	for (int i = 0; i < g_EntriesNum; i++)
 	{

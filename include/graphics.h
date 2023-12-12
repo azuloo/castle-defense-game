@@ -48,6 +48,12 @@ typedef struct {
 	unsigned int indices_len;
 } DrawBufferData;
 
+typedef struct GLFWwindow GWindow;
+typedef void (*InputFnPtr)(GWindow* window);
+
+void close_window(GWindow* window);
+void bind_input_fn(InputFnPtr ptr);
+
 int init_graphics();
 void set_background_color(BackgroundColor b_color);
 int graphics_should_be_terminated();
