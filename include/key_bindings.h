@@ -9,6 +9,6 @@
 #define K_W               GLFW_KEY_W
 #define K_S               GLFW_KEY_S
 #define K_A               GLFW_KEY_A
-#define K_D               GLFW_KEY_A
+#define K_D               GLFW_KEY_D
 
 #endif // _KEY_BINDINGS_H
