@@ -40,6 +40,8 @@ Mat4 multiply_mat4(const Mat4* m1, const Mat4* m2);
 Vec4 mulmat_vec4(const Mat4* m, const Vec4* v);
 void normaliz_vec4(Vec4* v);
 Vec4 sub(Vec4 v1, Vec4 v2);
+Vec4 add(Vec4 v1, Vec4 v2);
+Vec4 multipty_by_scalar(Vec4 v, float s);
 float dot(Vec4 v1, Vec4 v2);
 Vec4 cross(Vec4 v1, Vec4 v2);
 void rotate(const Vec3* axis, const Mat4* m, float angle);
@@ -54,6 +56,6 @@ float radians(float degrees);
 Mat4 perspective(float fovy, float aspect_ratio, float near_plane, float far_plane);
 Mat4 orthogonal(float left, float right, float bottom, float top);
 
-Mat4 look_at(Vec4 pos, Vec4 dir);
+Mat4 look_at(Vec4 pos, Vec4 dir, Vec4 up);
 
 #endif // _LIN_ALG_H

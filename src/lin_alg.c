@@ -61,6 +61,26 @@ Vec4 sub(Vec4 v1, Vec4 v2)
 	return out;
 }
 
+Vec4 add(Vec4 v1, Vec4 v2)
+{
+	Vec4 out = { {0} };
+	out.m[0] = v1.m[0] + v2.m[0];
+	out.m[1] = v1.m[1] + v2.m[1];
+	out.m[2] = v1.m[2] + v2.m[2];
+	out.m[3] = v1.m[3] + v2.m[3];
+	return out;
+}
+
+Vec4 multipty_by_scalar(Vec4 v, float s)
+{
+	Vec4 out = { {0} };
+	out.m[0] = s * v.m[0];
+	out.m[1] = s * v.m[1];
+	out.m[2] = s * v.m[2];
+	out.m[3] = s * v.m[3];
+	return out;
+}
+
 float dot(Vec4 v1, Vec4 v2)
 {
 	return v1.m[0] * v2.m[0] + v1.m[1] * v2.m[1] + v1.m[2] * v2.m[2] + v1.m[3] * v2.m[3];
@@ -176,16 +196,14 @@ Mat4 perspective(float fovy, float aspect_ratio, float near_plane, float far_pla
 {
 	Mat4 out = { { 0 } };
 
-	const float
-		y_scale = (float)(1 / cos(fovy * PI / 360)),
-		x_scale = y_scale / aspect_ratio,
-		frustum_length = far_plane - near_plane;
+	const float rad = fovy;
+	const float tan_half_fovy = tan(rad / 2.f);
 
-	out.m[0] = x_scale;
-	out.m[5] = y_scale;
-	out.m[10] = -((far_plane + near_plane) / frustum_length);
-	out.m[11] = -1;
-	out.m[14] = -((2 * near_plane * far_plane) / frustum_length);
+	out.m[0] = 1.f / (aspect_ratio * tan_half_fovy);
+	out.m[5] = 1.f / tan_half_fovy;
+	out.m[10] = -(far_plane + near_plane) / (far_plane - near_plane);
+	out.m[11] = -1.f;
+	out.m[14] = -(2.f * far_plane * near_plane) / (far_plane - near_plane);
 
 	return out;
 }
@@ -202,32 +220,30 @@ Mat4 orthogonal(float left, float right, float bottom, float top)
 	return out;
 }
 
-Mat4 look_at(Vec4 pos, Vec4 dir)
+Mat4 look_at(Vec4 pos, Vec4 dir, Vec4 up)
 {
-	Vec4 z = sub(pos, dir);
-	normaliz_vec4(&z);
-	Vec4 y = { {0.f, 1.f, 0.f, 0.f} };
-	Vec4 x = cross(y, z);
-	y = cross(z, x);
-
-	normaliz_vec4(&x);
-	normaliz_vec4(&y);
+	Vec4 f = sub(dir, pos);
+	normaliz_vec4(&f);
+	Vec4 s = cross(f, up);
+	normaliz_vec4(&s);
+	Vec4 u = cross(s, f);
 
 	Mat4 out = IdentityMat;
-	out.m[0] = x.x;
-	out.m[4] = x.y;
-	out.m[8] = x.z;
+	out.m[0] = s.x;
+	out.m[4] = s.y;
+	out.m[8] = s.z;
 
-	out.m[1] = y.x;
-	out.m[5] = y.y;
-	out.m[9] = y.z;
+	out.m[1] = u.x;
+	out.m[5] = u.y;
+	out.m[9] = u.z;
 
-	out.m[2] = z.x;
-	out.m[6] = z.y;
-	out.m[10] = z.z;
+	out.m[2] = -f.x;
+	out.m[6] = -f.y;
+	out.m[10] = -f.z;
 
-	out.m[12] = -dot(x, pos);
-	out.m[13] = -dot(y, pos);
-	out.m[14] = -dot(z, pos);
+	out.m[12] = -dot(s, pos);
+	out.m[13] = -dot(u, pos);
+	out.m[14] = dot(f, pos);
+
 	return out;
 }
