@@ -353,8 +353,10 @@ void set_background_color(BackgroundColor b_color)
 
 int draw()
 {
-	// TODO: Add check for NULL-ness
-	(*input_fn_ptr)(window);
+	if (NULL != input_fn_ptr)
+	{
+		(*input_fn_ptr)(window);
+	}
 
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(g_BColor.R, g_BColor.G, g_BColor.B, g_BColor.A);

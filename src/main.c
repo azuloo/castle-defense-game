@@ -1,6 +1,8 @@
 #include "graphics.h"
 #include "file_reader.h"
 #include "utils.h"
+#include "lin_alg.h"
+#include "key_bindings.h"
 
 #include <string.h>
 
@@ -13,6 +15,13 @@ static float vertices[] = {
 	-0.5f, 0.5f, 0.0f,     0.5f, 0.5f, 0.5f,    0.0f, 1.0f
 };
 
+Vec4 camPos = { { 0.f, 0.f, 3.f } };
+Vec4 camDir = { { 0.f, 0.f, -1.f } };
+Vec4 camUp = { { 0.f, 1.f, 0.f, 0.f } };
+
+float dt = 0.0f;     // delta time
+float lft = 0.0f;    // last frame time
+
 static unsigned int indices[] = {
 	1, 3, 2,
 	2, 1, 0
@@ -21,6 +30,44 @@ static unsigned int indices[] = {
 static int should_be_terminated()
 {
 	return graphics_should_be_terminated();
+}
+
+void process_input(GWindow* window)
+{
+	if (KEY_PRESSED(window, K_ESCAPE))
+	{
+		close_window(window);
+	}
+
+	const float camSpeed = dt * 2.5f;
+	if (KEY_PRESSED(window, K_SPACE))
+	{
+		camPos = add(camPos, multipty_by_scalar(camUp, camSpeed));
+	}
+	if (KEY_PRESSED(window, K_BACKSPACE))
+	{
+		camPos = sub(camPos, multipty_by_scalar(camUp, camSpeed));
+	}
+	if (KEY_PRESSED(window, K_W))
+	{
+		camPos = add(camPos, multipty_by_scalar(camDir, camSpeed));
+	}
+	if (KEY_PRESSED(window, K_S))
+	{
+		camPos = sub(camPos, multipty_by_scalar(camDir, camSpeed));
+	}
+	if (KEY_PRESSED(window, K_A))
+	{
+		Vec4 camSide = cross(camDir, camUp);
+		normaliz_vec4(&camSide);
+		camPos = sub(camPos, multipty_by_scalar(camSide, camSpeed));
+	}
+	if (KEY_PRESSED(window, K_D))
+	{
+		Vec4 camSide = cross(camDir, camUp);
+		normaliz_vec4(&camSide);
+		camPos = add(camPos, multipty_by_scalar(camSide, camSpeed));
+	}
 }
 
 int main(int argc, int* argv[])
@@ -50,8 +97,23 @@ int main(int argc, int* argv[])
 
 	add_element(entry, &draw_buf_data);
 
+	Mat4 projection;
+	projection = perspective(radians(45.f), 1280.f / 800.f, 1.f, 100.f);
+	add_uniform_mat4f(entry->shader_prog, "projection", &projection);
+
+	Mat4 model = IdentityMat;
+	add_uniform_mat4f(entry->shader_prog, "model", &model);
+
 	while (!should_be_terminated())
 	{
+		float curr_time = (float)glfwGetTime();
+		dt = curr_time - lft;
+		lft = curr_time;
+
+		Mat4 view;
+		view = look_at(camPos, add(camPos, camDir), camUp);
+		add_uniform_mat4f(entry->shader_prog, "view", &view);
+
 		draw();
 	}
 	
