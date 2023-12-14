@@ -50,9 +50,11 @@ typedef struct {
 
 typedef struct GLFWwindow GWindow;
 typedef void (*InputFnPtr)(GWindow* window);
+typedef void (*WindowResizeFnPtr)(GWindow* window, float width, float height);
 
 void close_window(GWindow* window);
 void bind_input_fn(InputFnPtr ptr);
+void bind_window_resize_fn(WindowResizeFnPtr ptr);
 
 int init_graphics();
 void set_background_color(BackgroundColor b_color);

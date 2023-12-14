@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 
+// ! Allocates memory on heap !
 int readall(char* path, char** data_ptr, size_t* size_ptr)
 {
     if (NULL == path || NULL == data_ptr || NULL == size_ptr)

@@ -8,12 +8,15 @@
 
 // TEMP
 static float vertices[] = {
-	// Position            // Color             // Texture
-	0.5f, -0.5f, 0.0f,     0.5f, 0.5f, 0.0f,    1.0f, 0.0f,
-	-0.5f, -0.5f, 0.0f,    0.0f, 0.5f, 0.5f,    0.0f, 0.0f,
-	0.5f, 0.5f, 0.0f,      0.5f, 0.0f, 0.5f,    1.0f, 1.0f,
-	-0.5f, 0.5f, 0.0f,     0.5f, 0.5f, 0.5f,    0.0f, 1.0f
+	// Position            // Texture
+	0.5f, -0.5f, 0.0f,     1.0f, 0.0f,
+	-0.5f, -0.5f, 0.0f,    0.0f, 0.0f,
+	0.5f, 0.5f, 0.0f,      1.0f, 1.0f,
+	-0.5f, 0.5f, 0.0f,     0.0f, 1.0f
 };
+
+float wWidth = WINDOW_DEFAULT_RES_W;
+float wHeight = WINDOW_DEFAULT_RES_H;
 
 Vec4 camPos = { { 0.f, 0.f, 3.f } };
 Vec4 camDir = { { 0.f, 0.f, -1.f } };
@@ -30,6 +33,13 @@ static unsigned int indices[] = {
 static int should_be_terminated()
 {
 	return graphics_should_be_terminated();
+}
+
+// TODO: Take the window param into accout
+void window_resize_hook(GWindow* window, float width, float height)
+{
+	wWidth = width;
+	wHeight = height;
 }
 
 void process_input(GWindow* window)
@@ -73,6 +83,8 @@ void process_input(GWindow* window)
 int main(int argc, int* argv[])
 {
 	init_graphics();
+	bind_input_fn(&process_input);
+	bind_window_resize_fn(&window_resize_hook);
 
 	BackgroundColor b_Color;
 	b_Color.R = 0.3f;
@@ -84,7 +96,7 @@ int main(int argc, int* argv[])
 
 	DrawBufferData draw_buf_data;
 	draw_buf_data.vertices = vertices;
-	draw_buf_data.vertices_len = 32;
+	draw_buf_data.vertices_len = 20;
 	draw_buf_data.indices = indices;
 	draw_buf_data.indices_len = 6;
 
@@ -97,10 +109,6 @@ int main(int argc, int* argv[])
 
 	add_element(entry, &draw_buf_data);
 
-	Mat4 projection;
-	projection = perspective(radians(45.f), 1280.f / 800.f, 1.f, 100.f);
-	add_uniform_mat4f(entry->shader_prog, "projection", &projection);
-
 	Mat4 model = IdentityMat;
 	add_uniform_mat4f(entry->shader_prog, "model", &model);
 
@@ -109,6 +117,11 @@ int main(int argc, int* argv[])
 		float curr_time = (float)glfwGetTime();
 		dt = curr_time - lft;
 		lft = curr_time;
+
+		Mat4 projection;
+		float ar = wWidth / wHeight;
+		projection = ortho(-ar, ar, -1.f, 1.f, 0.1f, 100.f);
+		add_uniform_mat4f(entry->shader_prog, "projection", &projection);
 
 		Mat4 view;
 		view = look_at(camPos, add(camPos, camDir), camUp);

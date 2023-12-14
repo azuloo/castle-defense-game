@@ -208,14 +208,16 @@ Mat4 perspective(float fovy, float aspect_ratio, float near_plane, float far_pla
 	return out;
 }
 
-Mat4 orthogonal(float left, float right, float bottom, float top)
+Mat4 ortho(float left, float right, float bottom, float top, float near_plane, float far_plane)
 {
 	Mat4 out = IdentityMat;
-	out.m[0] = 2 / (right - left);
-	out.m[5] = 2 / (top - bottom);
-	out.m[10] = -1;
+
+	out.m[0] = 2.f / (right - left);
+	out.m[5] = 2.f / (top - bottom);
+	out.m[10] = -2.f / (far_plane - near_plane);
 	out.m[12] = -(right + left) / (right - left);
 	out.m[13] = -(top + bottom) / (top - bottom);
+	out.m[14] = -(far_plane + near_plane) / (far_plane - near_plane);
 
 	return out;
 }

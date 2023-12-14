@@ -10,11 +10,13 @@
 
 static GLFWwindow* window = NULL;
 static InputFnPtr input_fn_ptr = NULL;
+static WindowResizeFnPtr window_resize_fn_ptr = NULL;
 
 static int g_EntriesDataCapacity = 1;
 static int g_EntriesNum = 0;
 static EntryCnf* EntryCnfData = NULL;
 static BackgroundColor g_BColor = { 0.2f, 0.3f, 0.3f, 1.0f };
+// TODO: Move to client side
 static char* g_VertexShaderFilePath = "/res/vertex_source.TXT";
 static char* g_FragShaderFilePath = "/res/fragment_source.TXT";
 
@@ -36,6 +38,7 @@ static void check_program_iv(unsigned int prog, unsigned int opcode, const char*
 	}
 }
 
+// ! Allocates memory on heap (indirect) !
 static char* get_shader_source(const char* name)
 {
 	char vertex_source_path[256];
@@ -95,6 +98,10 @@ static unsigned int create_fragment_shader(const char** source)
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
+	if (NULL != window_resize_fn_ptr)
+	{
+		(*window_resize_fn_ptr)(window, width, height);
+	}
 }
 
 static void init_glfw()
@@ -110,7 +117,7 @@ static void set_context_current(GLFWwindow* window)
 	glfwMakeContextCurrent(window);
 }
 
-static GLFWwindow* _create_window()
+static GLFWwindow* create_window()
 {
 	GLFWwindow* window = glfwCreateWindow(WINDOW_DEFAULT_RES_W, WINDOW_DEFAULT_RES_H, WINDOW_DEFUALT_NAME, NULL, NULL);
 	if (NULL == window)
@@ -159,9 +166,9 @@ static void create_ebo(unsigned int* ebo, unsigned int* indices, int len)
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices) * len, indices, GL_STATIC_DRAW);
 }
 
+// ! Allocates memory on heap !
 static void alloc_entry_arr()
 {
-	// TODO: resolve capacity thing
 	g_EntriesDataCapacity *= 2;
 	EntryCnf* entries_arr = (EntryCnf*) realloc(EntryCnfData, sizeof(EntryCnf) * g_EntriesDataCapacity);
 	if (NULL == entries_arr)
@@ -287,6 +294,9 @@ int add_element(EntryCnf* entry, DrawBufferData* buf_data)
 	unsigned int vertex_shader = create_vertex_shader(&vertex_shader_source);
 	unsigned int fragment_shader = create_fragment_shader(&fragment_shader_source);
 
+	free(vertex_shader_source);
+	free(fragment_shader_source);
+
 	compile_shader_program(&entry->shader_prog, vertex_shader, fragment_shader);
 
 	create_vao(&entry->vao);
@@ -299,28 +309,19 @@ int add_element(EntryCnf* entry, DrawBufferData* buf_data)
 		3,						// size of vertex attribute
 		GL_FLOAT,				// data type
 		GL_FALSE,				// normalize?
-		sizeof(float) * 8,		// stride
+		sizeof(float) * 5,		// stride
 		(void*)0				// position data offset
 	);
 	glEnableVertexAttribArray(0);
 
 	glVertexAttribPointer(1,	     // vertex attribute index
-		3,						     // size of vertex attribute
-		GL_FLOAT,				     // data type
-		GL_FALSE,				     // normalize?
-		sizeof(float) * 8,		     // stride
-		(void*)(sizeof(float) * 3)   // position data offset
-	);
-	glEnableVertexAttribArray(1);
-
-	glVertexAttribPointer(2,	     // vertex attribute index
 		2,						     // size of vertex attribute
 		GL_FLOAT,				     // data type
 		GL_FALSE,				     // normalize?
-		sizeof(float) * 8,		     // stride
-		(void*)(sizeof(float) * 6)   // position data offset
+		sizeof(float) * 5,		     // stride
+		(void*)(sizeof(float) * 3)   // position data offset
 	);
-	glEnableVertexAttribArray(2);
+	glEnableVertexAttribArray(1);
 
 	glBindVertexArray(0);
 	return 0;
@@ -336,11 +337,16 @@ void bind_input_fn(InputFnPtr ptr)
 	input_fn_ptr = ptr;
 }
 
+void bind_window_resize_fn(WindowResizeFnPtr ptr)
+{
+	window_resize_fn_ptr = ptr;
+}
+
 int init_graphics()
 {
 	// TODO: init_graphics() called before everything assertion (gl and GLAD)
 	init_glfw();
-	window = _create_window();
+	window = create_window();
 	init_glad();
 
 	return 0;

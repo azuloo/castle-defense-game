@@ -54,7 +54,7 @@ float degrees(float radians);
 float radians(float degrees);
 
 Mat4 perspective(float fovy, float aspect_ratio, float near_plane, float far_plane);
-Mat4 orthogonal(float left, float right, float bottom, float top);
+Mat4 ortho(float left, float right, float bottom, float top, float near_plane, float far_plane);
 
 Mat4 look_at(Vec4 pos, Vec4 dir, Vec4 up);
 
