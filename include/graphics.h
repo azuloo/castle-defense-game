@@ -33,12 +33,27 @@ typedef struct {
 } BackgroundColor;
 
 typedef struct {
+	unsigned int idx;
+	unsigned int size;
+} AttributeCnf;
+
+typedef struct {
+	unsigned int     stride;
+	unsigned int     type;
+	unsigned int     normalize;
+	unsigned int     capacity;
+	unsigned int     count;
+	AttributeCnf*    elements;
+} GAttributes; 
+
+typedef struct {
 	unsigned int  vbo;
 	unsigned int  vao;
 	unsigned int  ebo;
 	unsigned int  shader_prog;
 	unsigned int  texture;
 	unsigned int  num_indices;
+	GAttributes*  attributes;
 } EntryCnf;
 
 typedef struct {
@@ -65,6 +80,8 @@ EntryCnf* create_entry();
 void create_texture_2D(const char* img_path, unsigned int* texture);
 void add_uniform_mat4f(unsigned int shader_prog, const char* uniform_name, const Mat4* mat);
 int add_element(EntryCnf* entry, DrawBufferData* buf_data);
+void add_entry_attribute(EntryCnf* entry, unsigned int size);
+void apply_entry_attributes(EntryCnf* entry);
 int draw();
 
 #endif // _GRAPHICS_H

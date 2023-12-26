@@ -108,6 +108,10 @@ int main(int argc, int* argv[])
 	create_texture_2D(texture_path, &entry->texture);
 
 	add_element(entry, &draw_buf_data);
+	add_entry_attribute(entry, 3);
+	add_entry_attribute(entry, 2);
+
+	apply_entry_attributes(entry);
 
 	Mat4 model = IdentityMat;
 	add_uniform_mat4f(entry->shader_prog, "model", &model);

@@ -181,6 +181,46 @@ static void alloc_entry_arr()
 	EntryCnfData = entries_arr;
 }
 
+static add_entry_attributes_cnf(EntryCnf* entry)
+{
+	entry->attributes->capacity *= 2;
+	AttributeCnf* attr_cnf = (AttributeCnf*)realloc(entry->attributes->elements, entry->attributes->capacity * sizeof(AttributeCnf));
+	if (NULL == attr_cnf)
+	{
+		PRINT_ERR("Failed to allocate sufficient memory chunk for AttributeCnf elements.");
+		graphics_terminate(TERMINATE_ERR_CODE);
+		return;
+	}
+
+	entry->attributes->elements = attr_cnf;
+	for (int i = entry->attributes->count; i < entry->attributes->capacity; i++)
+	{
+		AttributeCnf* attr_cnf = entry->attributes->elements + i;
+		attr_cnf->idx = 0;
+		attr_cnf->size = 0;
+	}
+}
+
+static void create_entry_attributes(EntryCnf* entry)
+{
+	entry->attributes = (GAttributes*) malloc(sizeof(GAttributes));
+	if (NULL == entry->attributes)
+	{
+		PRINT_ERR("Failed to allocate sufficient memory chunk for GAttributes elements.");
+		graphics_terminate(TERMINATE_ERR_CODE);
+		return;
+	}
+
+	entry->attributes->elements   = NULL;
+	entry->attributes->type       = GL_FLOAT;
+	entry->attributes->normalize  = GL_FALSE;
+	entry->attributes->stride     = 0;
+	entry->attributes->capacity   = 1;
+	entry->attributes->count      = 0;
+
+	add_entry_attributes_cnf(entry);
+}
+
 static EntryCnf* create_entry_cnf()
 {
 	if (g_EntriesNum >= g_EntriesDataCapacity)
@@ -195,6 +235,9 @@ static EntryCnf* create_entry_cnf()
 	entry->shader_prog   = 0;
 	entry->texture       = 0;
 	entry->num_indices   = 0;
+	
+	entry->attributes    = NULL;
+	create_entry_attributes(entry);
 
 	g_EntriesNum++;
 
@@ -212,8 +255,24 @@ static void free_gl_resources()
 	}
 }
 
+static void free_entry_attributes_cnf()
+{
+	for (int i = 0; i < g_EntriesNum; i++)
+	{
+		EntryCnf* entry = EntryCnfData + i;
+		if (NULL == entry->attributes)
+		{
+			continue;
+		}
+
+		free(entry->attributes->elements);
+		free(entry->attributes);
+	}
+}
+
 static void free_entry_cnf_data()
 {
+	free_entry_attributes_cnf();
 	free(EntryCnfData);
 }
 
@@ -304,27 +363,45 @@ int add_element(EntryCnf* entry, DrawBufferData* buf_data)
 	create_ebo(&entry->ebo, buf_data->indices, buf_data->indices_len);
 	entry->num_indices = buf_data->indices_len;
 
-	// TODO: Move these out of here?
-	glVertexAttribPointer(0,	// vertex attribute index
-		3,						// size of vertex attribute
-		GL_FLOAT,				// data type
-		GL_FALSE,				// normalize?
-		sizeof(float) * 5,		// stride
-		(void*)0				// position data offset
-	);
-	glEnableVertexAttribArray(0);
+	return 0;
+}
 
-	glVertexAttribPointer(1,	     // vertex attribute index
-		2,						     // size of vertex attribute
-		GL_FLOAT,				     // data type
-		GL_FALSE,				     // normalize?
-		sizeof(float) * 5,		     // stride
-		(void*)(sizeof(float) * 3)   // position data offset
-	);
-	glEnableVertexAttribArray(1);
+void add_entry_attribute(EntryCnf* entry, unsigned int size)
+{
+	GAttributes* attributes = entry->attributes;
+	if (attributes->count == attributes->capacity)
+	{
+		add_entry_attributes_cnf(entry);
+	}
+
+	AttributeCnf* attr_cnf = attributes->elements + attributes->count;
+	attr_cnf->idx  = attributes->count;
+	attr_cnf->size = size;
+
+	attributes->stride += size;
+	attributes->count  += 1;
+}
+
+void apply_entry_attributes(EntryCnf* entry)
+{
+	glBindVertexArray(entry->vao);
+	GAttributes* attributes = entry->attributes;
+	unsigned int offset = 0;
+	for (int i = 0; i < attributes->count; i++)
+	{
+		AttributeCnf* attr_cnf = attributes->elements + i;
+		glVertexAttribPointer(attr_cnf->idx,	           // vertex attribute index
+			attr_cnf->size,						           // size of vertex attribute
+			attributes->type,				               // data type
+			attributes->normalize,				           // normalize?
+			sizeof(float) * attributes->stride,		       // stride
+			(void*)(sizeof(float) * offset)				   // position data offset
+		);
+		glEnableVertexAttribArray(attr_cnf->idx);
+		offset += attr_cnf->size;
+	}
 
 	glBindVertexArray(0);
-	return 0;
 }
 
 void close_window(GWindow* window)
