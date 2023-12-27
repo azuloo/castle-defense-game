@@ -4,6 +4,7 @@
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 #include "lin_alg.h"
+#include "utils.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,6 +25,10 @@ static char err_msg_buffer[1024];
 	sprintf(err_msg_buffer, msg, __VA_ARGS__); \
 	PRINT_ERR(err_msg_buffer); \
 	memset(err_msg_buffer, 0, sizeof(err_msg_buffer));
+
+#define CHECK_NULL_ERR(ptr, msg) if (NULL == ptr) { \
+	PRINT_ERR(msg); \
+	graphics_terminate(TERMINATE_ERR_CODE); }
 
 typedef struct {
 	float R;

@@ -1,5 +1,4 @@
 #include "graphics.h"
-#include "utils.h"
 #include "file_reader.h"
 #include "stb_image.h"
 #include "lin_alg.h"
@@ -120,12 +119,7 @@ static void set_context_current(GLFWwindow* window)
 static GLFWwindow* create_window()
 {
 	GLFWwindow* window = glfwCreateWindow(WINDOW_DEFAULT_RES_W, WINDOW_DEFAULT_RES_H, WINDOW_DEFUALT_NAME, NULL, NULL);
-	if (NULL == window)
-	{
-		PRINT_ERR("Failed to init window.");
-		glfwTerminate();
-	}
-
+	CHECK_NULL_ERR(window, "Failed to init window.");
 	set_context_current(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
@@ -171,13 +165,7 @@ static void alloc_entry_arr()
 {
 	g_EntriesDataCapacity *= 2;
 	EntryCnf* entries_arr = (EntryCnf*) realloc(EntryCnfData, sizeof(EntryCnf) * g_EntriesDataCapacity);
-	if (NULL == entries_arr)
-	{
-		PRINT_ERR("Failed to allocate sufficient memory chunk for EntryCnf elements.");
-		graphics_terminate(TERMINATE_ERR_CODE);
-		return;
-	}
-
+	CHECK_NULL_ERR(entries_arr, "Failed to allocate sufficient memory chunk for EntryCnf elements.");
 	EntryCnfData = entries_arr;
 }
 
@@ -185,13 +173,7 @@ static add_entry_attributes_cnf(EntryCnf* entry)
 {
 	entry->attributes->capacity *= 2;
 	AttributeCnf* attr_cnf = (AttributeCnf*)realloc(entry->attributes->elements, entry->attributes->capacity * sizeof(AttributeCnf));
-	if (NULL == attr_cnf)
-	{
-		PRINT_ERR("Failed to allocate sufficient memory chunk for AttributeCnf elements.");
-		graphics_terminate(TERMINATE_ERR_CODE);
-		return;
-	}
-
+	CHECK_NULL_ERR(attr_cnf, "Failed to allocate sufficient memory chunk for AttributeCnf elements.");
 	entry->attributes->elements = attr_cnf;
 	for (int i = entry->attributes->count; i < entry->attributes->capacity; i++)
 	{
@@ -204,12 +186,7 @@ static add_entry_attributes_cnf(EntryCnf* entry)
 static void create_entry_attributes(EntryCnf* entry)
 {
 	entry->attributes = (GAttributes*) malloc(sizeof(GAttributes));
-	if (NULL == entry->attributes)
-	{
-		PRINT_ERR("Failed to allocate sufficient memory chunk for GAttributes elements.");
-		graphics_terminate(TERMINATE_ERR_CODE);
-		return;
-	}
+	CHECK_NULL_ERR(entry->attributes, "Failed to allocate sufficient memory chunk for GAttributes elements.");
 
 	entry->attributes->elements   = NULL;
 	entry->attributes->type       = GL_FLOAT;
