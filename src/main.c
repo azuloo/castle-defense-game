@@ -107,7 +107,10 @@ int main(int argc, int* argv[])
 	get_file_path(texure_name, texture_path, 256);
 	create_texture_2D(texture_path, &entry->texture);
 
-	add_element(entry, &draw_buf_data);
+	const char* vertex_shader_path = "/res/vertex_source.txt";
+	const char* fragment_shader_path = "/res/fragment_source.txt";
+
+	add_element(entry, &draw_buf_data, vertex_shader_path, fragment_shader_path);
 	add_entry_attribute(entry, 3);
 	add_entry_attribute(entry, 2);
 

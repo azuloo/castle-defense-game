@@ -15,9 +15,6 @@ static int g_EntriesDataCapacity = 1;
 static int g_EntriesNum = 0;
 static EntryCnf* EntryCnfData = NULL;
 static BackgroundColor g_BColor = { 0.2f, 0.3f, 0.3f, 1.0f };
-// TODO: Move to client side
-static char* g_VertexShaderFilePath = "/res/vertex_source.TXT";
-static char* g_FragShaderFilePath = "/res/fragment_source.TXT";
 
 static void graphics_terminate(int code)
 {
@@ -322,10 +319,10 @@ void add_uniform_mat4f(unsigned int shader_prog, const char* uniform_name, const
 	glUniformMatrix4fv(transformLoc, 1, GL_FALSE, &mat[0].m[0]);
 }
 
-int add_element(EntryCnf* entry, DrawBufferData* buf_data)
+int add_element(EntryCnf* entry, DrawBufferData* buf_data, const char* vertex_shader_path, const char* fragment_shader_path)
 {
-	const char* vertex_shader_source = get_shader_source(g_VertexShaderFilePath);
-	const char* fragment_shader_source = get_shader_source(g_FragShaderFilePath);
+	const char* vertex_shader_source = get_shader_source(vertex_shader_path);
+	const char* fragment_shader_source = get_shader_source(fragment_shader_path);
 
 	unsigned int vertex_shader = create_vertex_shader(&vertex_shader_source);
 	unsigned int fragment_shader = create_fragment_shader(&fragment_shader_source);

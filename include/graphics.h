@@ -84,7 +84,7 @@ void graphics_free_resources();
 EntryCnf* create_entry();
 void create_texture_2D(const char* img_path, unsigned int* texture);
 void add_uniform_mat4f(unsigned int shader_prog, const char* uniform_name, const Mat4* mat);
-int add_element(EntryCnf* entry, DrawBufferData* buf_data);
+int add_element(EntryCnf* entry, DrawBufferData* buf_data, const char* vertex_shader_path, const char* fragment_shader_path);
 void add_entry_attribute(EntryCnf* entry, unsigned int size);
 void apply_entry_attributes(EntryCnf* entry);
 int draw();
