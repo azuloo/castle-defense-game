@@ -14,7 +14,7 @@ static WindowResizeFnPtr window_resize_fn_ptr = NULL;
 static int g_EntriesDataCapacity = 1;
 static int g_EntriesNum = 0;
 static EntryCnf* EntryCnfData = NULL;
-static BackgroundColor g_BColor = { 0.2f, 0.3f, 0.3f, 1.0f };
+static BackgroundColor g_BColor = { 0.f, 0.f, 0.f, 1.f };
 
 static void graphics_terminate(int code)
 {
@@ -252,7 +252,6 @@ static void free_entry_cnf_data()
 
 static unsigned char* load_image(const char* path, int* width, int* height, int* nr_channels)
 {
-	stbi_set_flip_vertically_on_load(1);
 	unsigned char* data = stbi_load(path, width, height, nr_channels, 0);
 	return data;
 }
