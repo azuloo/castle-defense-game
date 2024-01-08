@@ -3,7 +3,7 @@
 extern float wWidth;
 extern float wHeight;
 
-void add_environments()
+int add_environments()
 {
 	static const float B_vertices[] = {
 		// Position            // Texture
@@ -32,9 +32,21 @@ void add_environments()
 
 	char texture_path[256];
 	get_file_path(texure_name, texture_path, 256);
-	create_texture_2D(texture_path, &entry->texture);
 
-	add_element(entry, &draw_buf_data, vertex_shader_path, fragment_shader_path);
+	int create_texture_2D_res = create_texture_2D(texture_path, &entry->texture);
+	if (TERMINATE_ERR_CODE == create_texture_2D_res)
+	{
+		PRINT_ERR("[static_env]: Failed to add env texute.");
+		return TERMINATE_ERR_CODE;
+	}
+
+	int add_res = add_element(entry, &draw_buf_data, vertex_shader_path, fragment_shader_path);
+	if (TERMINATE_ERR_CODE == add_res)
+	{
+		PRINT_ERR("[static_env]: Failed to add env element.");
+		return TERMINATE_ERR_CODE;
+	}
+
 	add_entry_attribute(entry, 3);
 	add_entry_attribute(entry, 2);
 

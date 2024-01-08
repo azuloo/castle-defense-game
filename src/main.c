@@ -36,11 +36,20 @@ void process_input(GWindow* window)
 
 int main(int argc, int* argv[])
 {
-	init_graphics();
+	int init_graphics_res = init_graphics();
+	if (TERMINATE_ERR_CODE == init_graphics_res)
+	{
+		APP_EXIT(TERMINATE_ERR_CODE);
+	}
+
 	bind_input_fn(&process_input);
 	bind_window_resize_fn(&window_resize_hook);
 
-	add_environments();
+	int add_env_res = add_environments();
+	if (TERMINATE_ERR_CODE == add_env_res)
+	{
+		APP_EXIT(TERMINATE_ERR_CODE);
+	}
 
 	while (!should_be_terminated())
 	{

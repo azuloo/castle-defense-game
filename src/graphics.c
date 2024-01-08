@@ -45,8 +45,8 @@ static char* get_shader_source(const char* name)
 	int res_code = readall(vertex_source_path, &data_buf, &shader_size);
 	if (READ_OK != res_code)
 	{
-		PRINT_ERR_VARGS("Failed to load vertex source '%s', err code: %d.", name, res_code);
-		graphics_terminate(TERMINATE_ERR_CODE);
+		PRINT_ERR_VARGS("[graphics]: Failed to load vertex source '%s', err code: %d.", name, res_code);
+		return NULL;
 	}
 
 	return data_buf;
@@ -116,7 +116,11 @@ static void set_context_current(GLFWwindow* window)
 static GLFWwindow* create_window()
 {
 	GLFWwindow* window = glfwCreateWindow(WINDOW_DEFAULT_RES_W, WINDOW_DEFAULT_RES_H, WINDOW_DEFUALT_NAME, NULL, NULL);
-	CHECK_NULL_ERR(window, "Failed to init window.");
+	if (NULL == window)
+	{
+		PRINT_ERR("[graphics]: Failed to init window.");
+		return NULL;
+	}
 	set_context_current(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
@@ -127,7 +131,7 @@ static void init_glad()
 {
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
-		PRINT_ERR("Failed to init GLAD.");
+		PRINT_ERR("[graphics]: Failed to init GLAD.");
 		glfwTerminate();
 	}
 }
@@ -158,19 +162,27 @@ static void create_ebo(unsigned int* ebo, unsigned int* indices, int len)
 }
 
 // ! Allocates memory on heap !
-static void alloc_entry_arr()
+static int alloc_entry_arr()
 {
 	g_EntriesDataCapacity *= 2;
 	EntryCnf* entries_arr = (EntryCnf*) realloc(EntryCnfData, sizeof(EntryCnf) * g_EntriesDataCapacity);
-	CHECK_NULL_ERR(entries_arr, "Failed to allocate sufficient memory chunk for EntryCnf elements.");
+	if (NULL == entries_arr)
+	{
+		PRINT_ERR("[graphics]: Failed to allocate sufficient memory chunk for EntryCnf elements.");
+		return TERMINATE_ERR_CODE;
+	}
 	EntryCnfData = entries_arr;
 }
 
-static add_entry_attributes_cnf(EntryCnf* entry)
+static int add_entry_attributes_cnf(EntryCnf* entry)
 {
 	entry->attributes->capacity *= 2;
-	AttributeCnf* attr_cnf = (AttributeCnf*)realloc(entry->attributes->elements, entry->attributes->capacity * sizeof(AttributeCnf));
-	CHECK_NULL_ERR(attr_cnf, "Failed to allocate sufficient memory chunk for AttributeCnf elements.");
+	AttributeCnf* attr_cnf = (AttributeCnf*) realloc(entry->attributes->elements, entry->attributes->capacity * sizeof(AttributeCnf));
+	if (NULL == attr_cnf)
+	{
+		PRINT_ERR("[graphics]: Failed to allocate sufficient memory chunk for AttributeCnf elements.");
+		return TERMINATE_ERR_CODE;
+	}
 	entry->attributes->elements = attr_cnf;
 	for (int i = entry->attributes->count; i < entry->attributes->capacity; i++)
 	{
@@ -180,10 +192,14 @@ static add_entry_attributes_cnf(EntryCnf* entry)
 	}
 }
 
-static void create_entry_attributes(EntryCnf* entry)
+static int create_entry_attributes(EntryCnf* entry)
 {
 	entry->attributes = (GAttributes*) malloc(sizeof(GAttributes));
-	CHECK_NULL_ERR(entry->attributes, "Failed to allocate sufficient memory chunk for GAttributes elements.");
+	if (NULL == entry->attributes)
+	{
+		PRINT_ERR("[graphics]: Failed to allocate sufficient memory chunk for GAttributes elements.");
+		return TERMINATE_ERR_CODE;
+	}
 
 	entry->attributes->elements   = NULL;
 	entry->attributes->type       = GL_FLOAT;
@@ -192,14 +208,20 @@ static void create_entry_attributes(EntryCnf* entry)
 	entry->attributes->capacity   = 1;
 	entry->attributes->count      = 0;
 
-	add_entry_attributes_cnf(entry);
+	int add_entry_attributes_cnf_res = add_entry_attributes_cnf(entry);
+	return add_entry_attributes_cnf_res;
 }
 
 static EntryCnf* create_entry_cnf()
 {
 	if (g_EntriesNum >= g_EntriesDataCapacity)
 	{
-		alloc_entry_arr();
+		int alloc_entry_res = alloc_entry_arr();
+		if (TERMINATE_ERR_CODE == alloc_entry_res)
+		{
+			PRINT_ERR("[graphics]: Failed to create entry config.");
+			return NULL;
+		}
 	}
 
 	EntryCnf* entry      = EntryCnfData + g_EntriesNum;
@@ -209,9 +231,14 @@ static EntryCnf* create_entry_cnf()
 	entry->shader_prog   = 0;
 	entry->texture       = 0;
 	entry->num_indices   = 0;
-	
 	entry->attributes    = NULL;
-	create_entry_attributes(entry);
+
+	int create_entry_attributes_res = create_entry_attributes(entry);
+	if (TERMINATE_ERR_CODE == create_entry_attributes_res)
+	{
+		PRINT_ERR("[graphics]: Failed to create entry attibutes.");
+		return NULL;
+	}
 
 	g_EntriesNum++;
 
@@ -287,7 +314,7 @@ EntryCnf* create_entry()
 	return entry;
 }
 
-void create_texture_2D(const char* img_path, unsigned int* texture)
+int create_texture_2D(const char* img_path, unsigned int* texture)
 {
 	glGenTextures(1, texture);
 	glActiveTexture(GL_TEXTURE0);
@@ -299,29 +326,36 @@ void create_texture_2D(const char* img_path, unsigned int* texture)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	int width, height, nr_channels;
 	unsigned char* data = load_image(img_path, &width, &height, &nr_channels);
-	if (data)
+	if (NULL == data)
 	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-		glGenerateMipmap(GL_TEXTURE_2D);
+		return TERMINATE_ERR_CODE;
+		PRINT_ERR("[graphics]: Failed to load texture.");
 	}
-	else
-	{
-		PRINT_ERR("Failed to load texture.");
-	}
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+	glGenerateMipmap(GL_TEXTURE_2D);
 	free_img_data(data);
+
+	return 0;
 }
 
-void add_uniform_mat4f(unsigned int shader_prog, const char* uniform_name, const Mat4* mat)
+int add_uniform_mat4f(unsigned int shader_prog, const char* uniform_name, const Mat4* mat)
 {
 	glUseProgram(shader_prog);
 	unsigned int transformLoc = glGetUniformLocation(shader_prog, uniform_name);
 	glUniformMatrix4fv(transformLoc, 1, GL_FALSE, &mat[0].m[0]);
+	return 0;
 }
 
 int add_element(EntryCnf* entry, DrawBufferData* buf_data, const char* vertex_shader_path, const char* fragment_shader_path)
 {
 	const char* vertex_shader_source = get_shader_source(vertex_shader_path);
 	const char* fragment_shader_source = get_shader_source(fragment_shader_path);
+
+	if (NULL == vertex_shader_source || NULL == fragment_shader_source)
+	{
+		return TERMINATE_ERR_CODE;
+	}
 
 	unsigned int vertex_shader = create_vertex_shader(&vertex_shader_source);
 	unsigned int fragment_shader = create_fragment_shader(&fragment_shader_source);
@@ -339,7 +373,7 @@ int add_element(EntryCnf* entry, DrawBufferData* buf_data, const char* vertex_sh
 	return 0;
 }
 
-void add_entry_attribute(EntryCnf* entry, unsigned int size)
+int add_entry_attribute(EntryCnf* entry, unsigned int size)
 {
 	GAttributes* attributes = entry->attributes;
 	if (attributes->count == attributes->capacity)
@@ -353,9 +387,11 @@ void add_entry_attribute(EntryCnf* entry, unsigned int size)
 
 	attributes->stride += size;
 	attributes->count  += 1;
+
+	return 0;
 }
 
-void apply_entry_attributes(EntryCnf* entry)
+int apply_entry_attributes(EntryCnf* entry)
 {
 	glBindVertexArray(entry->vao);
 	GAttributes* attributes = entry->attributes;
@@ -373,8 +409,9 @@ void apply_entry_attributes(EntryCnf* entry)
 		glEnableVertexAttribArray(attr_cnf->idx);
 		offset += attr_cnf->size;
 	}
-
 	glBindVertexArray(0);
+
+	return 0;
 }
 
 void close_window(GWindow* window)
@@ -397,6 +434,11 @@ int init_graphics()
 	// TODO: init_graphics() called before everything assertion (gl and GLAD)
 	init_glfw();
 	window = create_window();
+	if (NULL == window)
+	{
+		PRINT_ERR("[graphics]: Failed to create window.");
+		return TERMINATE_ERR_CODE;
+	}
 	init_glad();
 
 	return 0;

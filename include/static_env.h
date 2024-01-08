@@ -6,6 +6,6 @@
 #include "utils.h"
 #include "lin_alg.h"
 
-void add_environments();
+int add_environments();
 
 #endif // _STATIC_ENV_H
