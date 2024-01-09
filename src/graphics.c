@@ -279,6 +279,7 @@ static void free_entry_cnf_data()
 
 static unsigned char* load_image(const char* path, int* width, int* height, int* nr_channels)
 {
+	stbi_set_flip_vertically_on_load(1);
 	unsigned char* data = stbi_load(path, width, height, nr_channels, 0);
 	return data;
 }
@@ -314,7 +315,7 @@ EntryCnf* create_entry()
 	return entry;
 }
 
-int create_texture_2D(const char* img_path, unsigned int* texture)
+int create_texture_2D(const char* img_path, unsigned int* texture, enum TextureType type)
 {
 	glGenTextures(1, texture);
 	glActiveTexture(GL_TEXTURE0);
@@ -328,11 +329,22 @@ int create_texture_2D(const char* img_path, unsigned int* texture)
 	unsigned char* data = load_image(img_path, &width, &height, &nr_channels);
 	if (NULL == data)
 	{
-		return TERMINATE_ERR_CODE;
 		PRINT_ERR("[graphics]: Failed to load texture.");
+		return TERMINATE_ERR_CODE;
 	}
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+	switch (type)
+	{
+	case TexType_RGB:
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		break;
+	case TexType_RGBA:
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		break;
+	default:
+		break;
+	}
+
 	glGenerateMipmap(GL_TEXTURE_2D);
 	free_img_data(data);
 
@@ -343,7 +355,7 @@ int add_uniform_mat4f(unsigned int shader_prog, const char* uniform_name, const 
 {
 	glUseProgram(shader_prog);
 	unsigned int transformLoc = glGetUniformLocation(shader_prog, uniform_name);
-	glUniformMatrix4fv(transformLoc, 1, GL_FALSE, &mat[0].m[0]);
+	glUniformMatrix4fv(transformLoc, 1, GL_FALSE, &mat->m[0]);
 	return 0;
 }
 
@@ -457,8 +469,12 @@ int draw()
 	}
 
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+
 	glClearColor(g_BColor.R, g_BColor.G, g_BColor.B, g_BColor.A);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	for (int i = 0; i < g_EntriesNum; i++)
 	{

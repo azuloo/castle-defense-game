@@ -5,6 +5,7 @@
 #include "key_bindings.h"
 
 #include "static_env.h"
+#include "entity.h"
 
 #include <string.h>
 
@@ -50,6 +51,10 @@ int main(int argc, int* argv[])
 	{
 		APP_EXIT(TERMINATE_ERR_CODE);
 	}
+
+	add_entity(Triangle);
+	add_entity(Square);
+	add_entity(Circle);
 
 	while (!should_be_terminated())
 	{

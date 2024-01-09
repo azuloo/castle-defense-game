@@ -17,8 +17,11 @@
 #define WINDOW_DEFAULT_RES_H 920
 #define WINDOW_DEFUALT_NAME "Application"
 
-#define CHECK_NULL_ERR(ptr, msg) if (NULL == ptr) { \
-	}
+enum TextureType
+{
+	TexType_RGB,
+	TexType_RGBA
+};
 
 typedef struct {
 	float R;
@@ -72,7 +75,7 @@ int graphics_should_be_terminated();
 void graphics_free_resources();
 
 EntryCnf* create_entry();
-int create_texture_2D(const char* img_path, unsigned int* texture);
+int create_texture_2D(const char* img_path, unsigned int* texture, enum TextureType type);
 int add_uniform_mat4f(unsigned int shader_prog, const char* uniform_name, const Mat4* mat);
 int add_element(EntryCnf* entry, DrawBufferData* buf_data, const char* vertex_shader_path, const char* fragment_shader_path);
 int add_entry_attribute(EntryCnf* entry, unsigned int size);

@@ -1,7 +1,13 @@
 #include "static_env.h"
+#include "graphics.h"
+#include "file_reader.h"
+#include "utils.h"
+#include "lin_alg.h"
 
 extern float wWidth;
 extern float wHeight;
+
+// ----------------------- PUBLIC FUNCTIONS ----------------------- //
 
 int add_environments()
 {
@@ -20,20 +26,20 @@ int add_environments()
 
 	static const char* vertex_shader_path = "/res/static/shaders/field_vert.txt";
 	static const char* fragment_shader_path = "/res/static/shaders/field_frag.txt";
-	static const char* texure_name = "/res/static/textures/field.jpg";
+	static const char* texture_path = "/res/static/textures/field.jpg";
 
 	DrawBufferData draw_buf_data;
 	draw_buf_data.vertices = B_vertices;
-	draw_buf_data.vertices_len = 20;
+	draw_buf_data.vertices_len = sizeof(B_vertices);
 	draw_buf_data.indices = B_indices;
-	draw_buf_data.indices_len = 6;
+	draw_buf_data.indices_len = sizeof(B_indices);
 
 	EntryCnf* entry = create_entry();
 
-	char texture_path[256];
-	get_file_path(texure_name, texture_path, 256);
+	char texture_buf[256];
+	get_file_path(texture_path, texture_buf, 256);
 
-	int create_texture_2D_res = create_texture_2D(texture_path, &entry->texture);
+	int create_texture_2D_res = create_texture_2D(texture_buf, &entry->texture, TexType_RGB);
 	if (TERMINATE_ERR_CODE == create_texture_2D_res)
 	{
 		PRINT_ERR("[static_env]: Failed to add env texute.");
@@ -54,10 +60,12 @@ int add_environments()
 
 	Mat4 model = IdentityMat;
 	scale(&model, (float)wWidth / 2, (float)wHeight / 2, 1.f);
-	translate(&model, (float)wWidth / 2, (float)wHeight / 2, 1.f);
+	translate(&model, (float)wWidth / 2, (float)wHeight / 2, 0.1f);
 	add_uniform_mat4f(entry->shader_prog, "model", &model);
 
 	Mat4 projection;
-	projection = ortho(0.f, wWidth, wHeight, 0.f, -1.f, 1.f);
+	projection = ortho(0.f, wWidth, 0.f, wHeight, -1.f, 1.f);
 	add_uniform_mat4f(entry->shader_prog, "projection", &projection);
 }
+
+// ----------------------- PUBLIC FUNCTIONS END ----------------------- //
