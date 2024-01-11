@@ -306,6 +306,7 @@ void graphics_free_resources()
 
 EntryCnf* create_entry()
 {
+	// TODO: Check for NULL and return error
 	if (NULL == EntryCnfData)
 	{
 		alloc_entry_arr();

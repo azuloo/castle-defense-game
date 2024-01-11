@@ -28,6 +28,7 @@ int add_environments()
 	static const char* fragment_shader_path = "/res/static/shaders/field_frag.txt";
 	static const char* texture_path = "/res/static/textures/field.jpg";
 
+	// TODO: Pass by ref below; should allocate on heap?
 	DrawBufferData draw_buf_data;
 	draw_buf_data.vertices = B_vertices;
 	draw_buf_data.vertices_len = sizeof(B_vertices);

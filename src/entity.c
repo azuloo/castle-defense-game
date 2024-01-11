@@ -1,18 +1,25 @@
 #include "entity.h"
-#include "graphics.h"
 #include "file_reader.h"
 #include "utils.h"
-#include "lin_alg.h"
 
 extern float wWidth;
 extern float wHeight;
 
-static EntryCnf* add_entity_common(const DrawBufferData* draw_buf_data, const char* texture_path, const Vec3* new_pos, const Vec3* new_scale)
+static int add_entity_common(EntityDef** dest, const DrawBufferData* draw_buf_data, const char* texture_path, const Vec3* new_pos, const Vec3* new_scale)
 {
+	//assert(dest != NULL);
+
 	static const char* vertex_shader_path = "/res/static/shaders/entity_vert.txt";
 	static const char* fragment_shader_path = "/res/static/shaders/entity_frag.txt";
 
 	EntryCnf* entry = create_entry();
+	if (NULL == entry)
+	{
+		PRINT_ERR("[static_env]: Failed to create entry.");
+		return TERMINATE_ERR_CODE;
+	}
+
+	(*dest)->entry_cnf = entry;
 
 	char texture_buf[256];
 	get_file_path(texture_path, texture_buf, 256);
@@ -44,13 +51,15 @@ static EntryCnf* add_entity_common(const DrawBufferData* draw_buf_data, const ch
 	Mat4 projection;
 	projection = ortho(0.f, wWidth, 0.f, wHeight, -1.f, 1.f);
 	add_uniform_mat4f(entry->shader_prog, "projection", &projection);
+
+	return 0;
 }
 
-static int add_triangle()
+static int add_triangle(EntityDef** dest)
 {
 	static const float vertices[] = {
 		// Position           // Texture
-		0.f, 1.f, 0.f,       0.5f, 1.f,
+		0.f, 1.f, 0.f,        0.5f, 1.f,
 		-1.f, -1.f, 0.f,      0.f, 0.f,
 		1.f, -1.f, 0.0f,      1.f, 0.f
 	};
@@ -65,16 +74,28 @@ static int add_triangle()
 	draw_buf_data.indices = indices;
 	draw_buf_data.indices_len = sizeof(indices);
 
+	EntityDef* entity_def = (EntityDef*) malloc(sizeof(EntityDef));
+	if (NULL == entity_def)
+	{
+		PRINT_ERR("[entity]: Failed to allocate sufficient memory chunk for EntityDef.");
+		return TERMINATE_ERR_CODE;
+	}
+
+	*dest = entity_def;
+	entity_def->type        = Triangle;
+	entity_def->path        = NULL;
+	entity_def->entry_cnf   = NULL;
+
 	Vec3 tri_pos = { { 600.f, (float)wHeight / 2.f, 0.2f } };
 	Vec3 tri_scale = { { 35.f, 35.f, 1.f } };
 
 	const char* texture_path = "/res/static/textures/triangle.png";
-	add_entity_common(&draw_buf_data, texture_path, &tri_pos, &tri_scale);
+	add_entity_common(dest, &draw_buf_data, texture_path, &tri_pos, &tri_scale);
 
 	return 0;
 }
 
-static int add_square()
+static int add_square(EntityDef** dest)
 {
 	static const float vertices[] = {
 		// Position           // Texture
@@ -94,17 +115,29 @@ static int add_square()
 	draw_buf_data.vertices_len = sizeof(vertices);
 	draw_buf_data.indices = indices;
 	draw_buf_data.indices_len = sizeof(indices);
+
+	EntityDef* entity_def = (EntityDef*)malloc(sizeof(EntityDef));
+	if (NULL == entity_def)
+	{
+		PRINT_ERR("[entity]: Failed to allocate sufficient memory chunk for EntityDef.");
+		return TERMINATE_ERR_CODE;
+	}
+
+	*dest = entity_def;
+	entity_def->type        = Square;
+	entity_def->path        = NULL;
+	entity_def->entry_cnf   = NULL;
 
 	Vec3 sq_pos = { { 400.f, (float)wHeight / 2.f, 0.2f } };
 	Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
 
 	const char* texture_path = "/res/static/textures/square.png";
-	add_entity_common(&draw_buf_data, texture_path, &sq_pos, &sq_scale);
+	add_entity_common(dest, &draw_buf_data, texture_path, &sq_pos, &sq_scale);
 
 	return 0;
 }
 
-static int add_circle()
+static int add_circle(EntityDef** dest)
 {
 	static const float vertices[] = {
 		// Position           // Texture
@@ -125,29 +158,41 @@ static int add_circle()
 	draw_buf_data.indices = indices;
 	draw_buf_data.indices_len = sizeof(indices);
 
+	EntityDef* entity_def = (EntityDef*)malloc(sizeof(EntityDef));
+	if (NULL == entity_def)
+	{
+		PRINT_ERR("[entity]: Failed to allocate sufficient memory chunk for EntityDef.");
+		return TERMINATE_ERR_CODE;
+	}
+
+	*dest = entity_def;
+	entity_def->type        = Circle;
+	entity_def->path        = NULL;
+	entity_def->entry_cnf   = NULL;
+
 	Vec3 sq_pos = { { 500.f, (float)wHeight / 2.f, 0.2f } };
 	Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
 
 	const char* texture_path = "/res/static/textures/circle.png";
-	const EntryCnf* entry = add_entity_common(&draw_buf_data, texture_path, &sq_pos, &sq_scale);
+	const EntryCnf* entry = add_entity_common(dest , &draw_buf_data, texture_path, &sq_pos, &sq_scale);
 
 	return 0;
 }
 
 // ----------------------- PUBLIC FUNCTIONS ----------------------- //
 
-int add_entity(enum EntityType type)
+int add_entity(enum EntityType type, EntityDef** dest)
 {
 	switch (type)
 	{
 	case Triangle:
-		add_triangle();
+		add_triangle(dest);
 		break;
 	case Square:
-		add_square();
+		add_square(dest);
 		break;
 	case Circle:
-		add_circle();
+		add_circle(dest);
 		break;
 	default:
 		PRINT_ERR("[entity]: Unknown entity type.");

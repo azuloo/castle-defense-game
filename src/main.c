@@ -52,9 +52,13 @@ int main(int argc, int* argv[])
 		APP_EXIT(TERMINATE_ERR_CODE);
 	}
 
-	add_entity(Triangle);
-	add_entity(Square);
-	add_entity(Circle);
+	EntityDef* triangle = NULL;
+	EntityDef* square = NULL;
+	EntityDef* circle = NULL;
+
+	add_entity(Triangle, &triangle);
+	add_entity(Square, &square);
+	add_entity(Circle, &circle);
 
 	while (!should_be_terminated())
 	{

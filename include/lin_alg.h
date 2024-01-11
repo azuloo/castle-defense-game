@@ -22,6 +22,13 @@ typedef union Vec3 {
 	};
 } Vec3;
 
+typedef union Vec2 {
+	float m[2];
+	struct {
+		float x, y;
+	};
+} Vec2;
+
 static const Vec4 XAxis = { {1, 0, 0, 0} };
 static const Vec4 YAxis = { {0, 1, 0, 0} };
 static const Vec4 ZAxis = { {0, 0, 1, 0} };
