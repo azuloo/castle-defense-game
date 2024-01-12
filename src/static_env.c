@@ -8,7 +8,7 @@ extern float wWidth;
 extern float wHeight;
 
 // ----------------------- PUBLIC FUNCTIONS ----------------------- //
-
+// TODO: Add EntityDef** dest arg
 int add_environments()
 {
 	static const float B_vertices[] = {
@@ -59,14 +59,20 @@ int add_environments()
 
 	apply_entry_attributes(entry);
 
-	Mat4 model = IdentityMat;
-	scale(&model, (float)wWidth / 2, (float)wHeight / 2, 1.f);
-	translate(&model, (float)wWidth / 2, (float)wHeight / 2, 0.1f);
-	add_uniform_mat4f(entry->shader_prog, "model", &model);
+	GMatrices* matrices = malloc(sizeof(GMatrices));
+	if (NULL == matrices)
+	{
+		PRINT_ERR("[static_env]: Failed to allocate sufficient memory chunk for GMatrices.");
+		return TERMINATE_ERR_CODE;
+	}
 
-	Mat4 projection;
-	projection = ortho(0.f, wWidth, 0.f, wHeight, -1.f, 1.f);
-	add_uniform_mat4f(entry->shader_prog, "projection", &projection);
+	matrices->model = IdentityMat;
+	scale(&matrices->model, (float)wWidth / 2, (float)wHeight / 2, 1.f);
+	translate(&matrices->model, (float)wWidth / 2, (float)wHeight / 2, 0.1f);
+	add_uniform_mat4f(entry->shader_prog, "model", &matrices->model);
+
+	matrices->projection = ortho(0.f, wWidth, 0.f, wHeight, -1.f, 1.f);
+	add_uniform_mat4f(entry->shader_prog, "projection", &matrices->projection);
 }
 
 // ----------------------- PUBLIC FUNCTIONS END ----------------------- //

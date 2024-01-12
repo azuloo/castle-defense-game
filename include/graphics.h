@@ -23,19 +23,22 @@ enum TextureType
 	TexType_RGBA
 };
 
-typedef struct {
+typedef struct
+{
 	float R;
 	float G;
 	float B;
 	float A;
 } BackgroundColor;
 
-typedef struct {
+typedef struct
+{
 	unsigned int idx;
 	unsigned int size;
 } AttributeCnf;
 
-typedef struct {
+typedef struct
+{
 	unsigned int     stride;
 	unsigned int     type;
 	unsigned int     normalize;
@@ -44,7 +47,15 @@ typedef struct {
 	AttributeCnf*    elements;
 } GAttributes; 
 
-typedef struct {
+typedef struct
+{
+	Mat4 model;
+	Mat4 view;
+	Mat4 projection;
+} GMatrices;
+
+typedef struct
+{
 	unsigned int  vbo;
 	unsigned int  vao;
 	unsigned int  ebo;
@@ -52,9 +63,11 @@ typedef struct {
 	unsigned int  texture;
 	unsigned int  num_indices;
 	GAttributes*  attributes;
+	GMatrices*    matrices;
 } EntryCnf;
 
-typedef struct {
+typedef struct
+{
 	float*       vertices;
 	unsigned int vertices_len;
 	float*       indices;

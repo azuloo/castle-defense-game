@@ -43,6 +43,8 @@ static const Mat4 IdentityMat = { {
 	0, 0, 0, 1
 } };
 
+float lerp(float a, float b, float f);
+
 Mat4 multiply_mat4(const Mat4* m1, const Mat4* m2);
 Vec4 mulmat_vec4(const Mat4* m, const Vec4* v);
 void normaliz_vec4(Vec4* v);

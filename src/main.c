@@ -60,6 +60,14 @@ int main(int argc, int* argv[])
 	add_entity(Square, &square);
 	add_entity(Circle, &circle);
 
+	PathSegment path[3] = {
+		[0] = { .start = { 300.f, 500.f }, .end = { 500.f, 500.f } },
+		[1] = { .start = { 500.f, 500.f }, .end = { 500.f, 350.f } },
+		[2] = { .start = { 500.f, 350.f }, .end = { 700.f, 350.f } }
+	};
+
+	add_entity_path(&triangle, path, 3);
+
 	while (!should_be_terminated())
 	{
 		float curr_time = (float)glfwGetTime();

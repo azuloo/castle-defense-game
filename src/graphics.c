@@ -11,7 +11,7 @@ static GLFWwindow* window = NULL;
 static InputFnPtr input_fn_ptr = NULL;
 static WindowResizeFnPtr window_resize_fn_ptr = NULL;
 
-static int g_EntriesDataCapacity = 1;
+static int g_EntriesDataCapacity = 512;
 static int g_EntriesNum = 0;
 static EntryCnf* EntryCnfData = NULL;
 static BackgroundColor g_BColor = { 0.f, 0.f, 0.f, 1.f };
@@ -212,8 +212,24 @@ static int create_entry_attributes(EntryCnf* entry)
 	return add_entry_attributes_cnf_res;
 }
 
+static int create_entry_matrices(EntryCnf* entry)
+{
+	entry->matrices = (GMatrices*) malloc(sizeof(GMatrices));
+	if (NULL == entry->matrices)
+	{
+		PRINT_ERR("[graphics]: Failed to allocate sufficient memory chunk for GMatrices elements.");
+		return TERMINATE_ERR_CODE;
+	}
+
+	memset(entry->matrices->model.m, 0, sizeof(float) * 16);
+	memset(entry->matrices->view.m, 0, sizeof(float) * 16);
+	memset(entry->matrices->projection.m, 0, sizeof(float) * 16);
+	return 0;
+}
+
 static EntryCnf* create_entry_cnf()
 {
+	// TODO: How do we solve pointers invalidation problem? (UIDs maybe?)
 	if (g_EntriesNum >= g_EntriesDataCapacity)
 	{
 		int alloc_entry_res = alloc_entry_arr();
@@ -232,9 +248,17 @@ static EntryCnf* create_entry_cnf()
 	entry->texture       = 0;
 	entry->num_indices   = 0;
 	entry->attributes    = NULL;
+	entry->matrices      = NULL;
 
 	int create_entry_attributes_res = create_entry_attributes(entry);
 	if (TERMINATE_ERR_CODE == create_entry_attributes_res)
+	{
+		PRINT_ERR("[graphics]: Failed to create entry attibutes.");
+		return NULL;
+	}
+
+	int create_entry_matrices_res = create_entry_matrices(entry);
+	if (TERMINATE_ERR_CODE == create_entry_matrices_res)
 	{
 		PRINT_ERR("[graphics]: Failed to create entry attibutes.");
 		return NULL;
@@ -271,9 +295,24 @@ static void free_entry_attributes_cnf()
 	}
 }
 
+void free_entry_matrices()
+{
+	for (int i = 0; i < g_EntriesNum; i++)
+	{
+		EntryCnf* entry = EntryCnfData + i;
+		if (NULL == entry->matrices)
+		{
+			continue;
+		}
+
+		free(entry->matrices);
+	}
+}
+
 static void free_entry_cnf_data()
 {
 	free_entry_attributes_cnf();
+	free_entry_matrices();
 	free(EntryCnfData);
 }
 

@@ -2,6 +2,11 @@
 
 static const double PI = 3.14159265358979323846;
 
+float lerp(float a, float b, float f)
+{
+	return a + f * (b - a);
+}
+
 Mat4 multiply_mat4(const Mat4* m1, const Mat4* m2)
 {
 	Mat4 out = IdentityMat;

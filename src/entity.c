@@ -5,10 +5,8 @@
 extern float wWidth;
 extern float wHeight;
 
-static int add_entity_common(EntityDef** dest, const DrawBufferData* draw_buf_data, const char* texture_path, const Vec3* new_pos, const Vec3* new_scale)
+static int add_entity_common(EntityDef* dest, const DrawBufferData* draw_buf_data, const char* texture_path, const Vec3* new_pos, const Vec3* new_scale)
 {
-	//assert(dest != NULL);
-
 	static const char* vertex_shader_path = "/res/static/shaders/entity_vert.txt";
 	static const char* fragment_shader_path = "/res/static/shaders/entity_frag.txt";
 
@@ -19,7 +17,7 @@ static int add_entity_common(EntityDef** dest, const DrawBufferData* draw_buf_da
 		return TERMINATE_ERR_CODE;
 	}
 
-	(*dest)->entry_cnf = entry;
+	dest->entry_cnf = entry;
 
 	char texture_buf[256];
 	get_file_path(texture_path, texture_buf, 256);
@@ -43,14 +41,13 @@ static int add_entity_common(EntityDef** dest, const DrawBufferData* draw_buf_da
 
 	apply_entry_attributes(entry);
 
-	Mat4 model = IdentityMat;
-	scale(&model, new_scale->x, new_scale->y, new_scale->z);
-	translate(&model, new_pos->x, new_pos->y, new_pos->z);
-	add_uniform_mat4f(entry->shader_prog, "model", &model);
-
-	Mat4 projection;
-	projection = ortho(0.f, wWidth, 0.f, wHeight, -1.f, 1.f);
-	add_uniform_mat4f(entry->shader_prog, "projection", &projection);
+	entry->matrices->model = IdentityMat;
+	scale(&entry->matrices->model, new_scale->x, new_scale->y, new_scale->z);
+	translate(&entry->matrices->model, new_pos->x, new_pos->y, new_pos->z);
+	add_uniform_mat4f(entry->shader_prog, "model", &entry->matrices->model);
+	
+	entry->matrices->projection = ortho(0.f, wWidth, 0.f, wHeight, -1.f, 1.f);
+	add_uniform_mat4f(entry->shader_prog, "projection", &entry->matrices->projection);
 
 	return 0;
 }
@@ -70,11 +67,11 @@ static int add_triangle(EntityDef** dest)
 
 	DrawBufferData draw_buf_data;
 	draw_buf_data.vertices = vertices;
-	draw_buf_data.vertices_len = sizeof(vertices);
+	draw_buf_data.vertices_len = sizeof(vertices) / sizeof(vertices[0]);
 	draw_buf_data.indices = indices;
-	draw_buf_data.indices_len = sizeof(indices);
+	draw_buf_data.indices_len = sizeof(indices) / sizeof(indices[0]);
 
-	EntityDef* entity_def = (EntityDef*) malloc(sizeof(EntityDef));
+	EntityDef* entity_def = malloc(sizeof(EntityDef));
 	if (NULL == entity_def)
 	{
 		PRINT_ERR("[entity]: Failed to allocate sufficient memory chunk for EntityDef.");
@@ -84,13 +81,14 @@ static int add_triangle(EntityDef** dest)
 	*dest = entity_def;
 	entity_def->type        = Triangle;
 	entity_def->path        = NULL;
+	entity_def->path_len    = 0;
 	entity_def->entry_cnf   = NULL;
 
 	Vec3 tri_pos = { { 600.f, (float)wHeight / 2.f, 0.2f } };
 	Vec3 tri_scale = { { 35.f, 35.f, 1.f } };
 
 	const char* texture_path = "/res/static/textures/triangle.png";
-	add_entity_common(dest, &draw_buf_data, texture_path, &tri_pos, &tri_scale);
+	add_entity_common(*dest, &draw_buf_data, texture_path, &tri_pos, &tri_scale);
 
 	return 0;
 }
@@ -112,9 +110,9 @@ static int add_square(EntityDef** dest)
 
 	DrawBufferData draw_buf_data;
 	draw_buf_data.vertices = vertices;
-	draw_buf_data.vertices_len = sizeof(vertices);
+	draw_buf_data.vertices_len = sizeof(vertices) / sizeof(vertices[0]);
 	draw_buf_data.indices = indices;
-	draw_buf_data.indices_len = sizeof(indices);
+	draw_buf_data.indices_len = sizeof(indices) / sizeof(indices[0]);
 
 	EntityDef* entity_def = (EntityDef*)malloc(sizeof(EntityDef));
 	if (NULL == entity_def)
@@ -126,13 +124,14 @@ static int add_square(EntityDef** dest)
 	*dest = entity_def;
 	entity_def->type        = Square;
 	entity_def->path        = NULL;
+	entity_def->path_len    = 0;
 	entity_def->entry_cnf   = NULL;
 
 	Vec3 sq_pos = { { 400.f, (float)wHeight / 2.f, 0.2f } };
 	Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
 
 	const char* texture_path = "/res/static/textures/square.png";
-	add_entity_common(dest, &draw_buf_data, texture_path, &sq_pos, &sq_scale);
+	add_entity_common(*dest, &draw_buf_data, texture_path, &sq_pos, &sq_scale);
 
 	return 0;
 }
@@ -154,9 +153,9 @@ static int add_circle(EntityDef** dest)
 
 	DrawBufferData draw_buf_data;
 	draw_buf_data.vertices = vertices;
-	draw_buf_data.vertices_len = sizeof(vertices);
+	draw_buf_data.vertices_len = sizeof(vertices) / sizeof(vertices[0]);
 	draw_buf_data.indices = indices;
-	draw_buf_data.indices_len = sizeof(indices);
+	draw_buf_data.indices_len = sizeof(indices) / sizeof(indices[0]);
 
 	EntityDef* entity_def = (EntityDef*)malloc(sizeof(EntityDef));
 	if (NULL == entity_def)
@@ -168,13 +167,14 @@ static int add_circle(EntityDef** dest)
 	*dest = entity_def;
 	entity_def->type        = Circle;
 	entity_def->path        = NULL;
+	entity_def->path_len    = 0;
 	entity_def->entry_cnf   = NULL;
 
 	Vec3 sq_pos = { { 500.f, (float)wHeight / 2.f, 0.2f } };
 	Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
 
 	const char* texture_path = "/res/static/textures/circle.png";
-	const EntryCnf* entry = add_entity_common(dest , &draw_buf_data, texture_path, &sq_pos, &sq_scale);
+	const EntryCnf* entry = add_entity_common(*dest , &draw_buf_data, texture_path, &sq_pos, &sq_scale);
 
 	return 0;
 }
@@ -200,6 +200,41 @@ int add_entity(enum EntityType type, EntityDef** dest)
 	}
 
 	return 0;
+}
+
+int add_entity_path(EntityDef** dest, const PathSegment* path, int path_len)
+{
+	PathSegment* path_seg = (PathSegment*) malloc(sizeof(PathSegment));
+	if (NULL == path_seg)
+	{
+		PRINT_ERR("[entity]: Failed to allocate sufficient memory chunk for PathSegment ptr.");
+		return TERMINATE_ERR_CODE;
+	}
+
+	(*dest)->path = path_seg;
+	
+	for (int i = 0; i < path_len; i++)
+	{
+		path_seg = (PathSegment*) malloc(sizeof(PathSegment));
+		if (NULL == path_seg)
+		{
+			PRINT_ERR("[entity]: Failed to allocate sufficient memory chunk for PathSegment element.");
+			return TERMINATE_ERR_CODE;
+		}
+
+		(*dest)->path[i] = path_seg;
+		(*dest)->path[i]->start = path[i].start;
+		(*dest)->path[i]->end = path[i].end;
+	}
+
+	(*dest)->path_len = path_len;
+	return 0;
+}
+
+int move_entity(EntityDef* entity, Vec3* new_pos)
+{
+	translate(&entity->entry_cnf->matrices->model, new_pos->x, new_pos->y, new_pos->z);
+	add_uniform_mat4f(entity->entry_cnf->shader_prog, "model", &entity->entry_cnf->matrices->model);
 }
 
 // ----------------------- PUBLIC FUNCTIONS END ----------------------- //
