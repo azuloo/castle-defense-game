@@ -2,6 +2,8 @@
 #include "file_reader.h"
 #include "utils.h"
 
+#include <stdlib.h>
+
 extern float wWidth;
 extern float wHeight;
 
@@ -16,8 +18,6 @@ static int add_entity_common(EntityDef* dest, const DrawBufferData* draw_buf_dat
 		PRINT_ERR("[static_env]: Failed to create entry.");
 		return TERMINATE_ERR_CODE;
 	}
-
-	dest->entry_cnf = entry;
 
 	char texture_buf[256];
 	get_file_path(texture_path, texture_buf, 256);
@@ -40,6 +40,20 @@ static int add_entity_common(EntityDef* dest, const DrawBufferData* draw_buf_dat
 	add_entry_attribute(entry, 2);
 
 	apply_entry_attributes(entry);
+
+	// TODO: Free memory
+	TransformDef* transform = malloc(sizeof *transform);
+	if (NULL == transform)
+	{
+		PRINT_ERR("[static_env]: Failed to allocate sufficient memory chunk for TransformDef.");
+		return TERMINATE_ERR_CODE;
+	}
+
+	transform->pos = *new_pos;
+	transform->scale = *new_scale;
+	memset(&transform->rotation, 0, sizeof(Vec3));
+
+	dest->transform = transform;
 
 	entry->matrices->model = IdentityMat;
 	scale(&entry->matrices->model, new_scale->x, new_scale->y, new_scale->z);
@@ -71,7 +85,8 @@ static int add_triangle(EntityDef** dest)
 	draw_buf_data.indices = indices;
 	draw_buf_data.indices_len = sizeof(indices) / sizeof(indices[0]);
 
-	EntityDef* entity_def = malloc(sizeof(EntityDef));
+	// TODO: Free memory
+	EntityDef* entity_def = malloc(sizeof *entity_def);
 	if (NULL == entity_def)
 	{
 		PRINT_ERR("[entity]: Failed to allocate sufficient memory chunk for EntityDef.");
@@ -79,10 +94,11 @@ static int add_triangle(EntityDef** dest)
 	}
 
 	*dest = entity_def;
-	entity_def->type        = Triangle;
+	entity_def->type        = Entity_Triangle;
+	entity_def->transform   = NULL;
 	entity_def->path        = NULL;
 	entity_def->path_len    = 0;
-	entity_def->entry_cnf   = NULL;
+	entity_def->state       = Entity_Idle;
 
 	Vec3 tri_pos = { { 600.f, (float)wHeight / 2.f, 0.2f } };
 	Vec3 tri_scale = { { 35.f, 35.f, 1.f } };
@@ -114,7 +130,8 @@ static int add_square(EntityDef** dest)
 	draw_buf_data.indices = indices;
 	draw_buf_data.indices_len = sizeof(indices) / sizeof(indices[0]);
 
-	EntityDef* entity_def = (EntityDef*)malloc(sizeof(EntityDef));
+	// TODO: Free memory
+	EntityDef* entity_def = malloc(sizeof *entity_def);
 	if (NULL == entity_def)
 	{
 		PRINT_ERR("[entity]: Failed to allocate sufficient memory chunk for EntityDef.");
@@ -122,10 +139,11 @@ static int add_square(EntityDef** dest)
 	}
 
 	*dest = entity_def;
-	entity_def->type        = Square;
+	entity_def->type        = Entity_Square;
+	entity_def->transform   = NULL;
 	entity_def->path        = NULL;
 	entity_def->path_len    = 0;
-	entity_def->entry_cnf   = NULL;
+	entity_def->state       = Entity_Idle;
 
 	Vec3 sq_pos = { { 400.f, (float)wHeight / 2.f, 0.2f } };
 	Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
@@ -157,7 +175,8 @@ static int add_circle(EntityDef** dest)
 	draw_buf_data.indices = indices;
 	draw_buf_data.indices_len = sizeof(indices) / sizeof(indices[0]);
 
-	EntityDef* entity_def = (EntityDef*)malloc(sizeof(EntityDef));
+	// TODO: Free memory
+	EntityDef* entity_def = malloc(sizeof *entity_def);
 	if (NULL == entity_def)
 	{
 		PRINT_ERR("[entity]: Failed to allocate sufficient memory chunk for EntityDef.");
@@ -165,10 +184,11 @@ static int add_circle(EntityDef** dest)
 	}
 
 	*dest = entity_def;
-	entity_def->type        = Circle;
+	entity_def->type        = Entity_Circle;
+	entity_def->transform   = NULL;
 	entity_def->path        = NULL;
 	entity_def->path_len    = 0;
-	entity_def->entry_cnf   = NULL;
+	entity_def->state       = Entity_Idle;
 
 	Vec3 sq_pos = { { 500.f, (float)wHeight / 2.f, 0.2f } };
 	Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
@@ -185,13 +205,13 @@ int add_entity(enum EntityType type, EntityDef** dest)
 {
 	switch (type)
 	{
-	case Triangle:
+	case Entity_Triangle:
 		add_triangle(dest);
 		break;
-	case Square:
+	case Entity_Square:
 		add_square(dest);
 		break;
-	case Circle:
+	case Entity_Circle:
 		add_circle(dest);
 		break;
 	default:
@@ -204,7 +224,7 @@ int add_entity(enum EntityType type, EntityDef** dest)
 
 int add_entity_path(EntityDef** dest, const PathSegment* path, int path_len)
 {
-	PathSegment* path_seg = (PathSegment*) malloc(sizeof(PathSegment));
+	PathSegment* path_seg = malloc(sizeof *path_seg);
 	if (NULL == path_seg)
 	{
 		PRINT_ERR("[entity]: Failed to allocate sufficient memory chunk for PathSegment ptr.");
@@ -215,7 +235,7 @@ int add_entity_path(EntityDef** dest, const PathSegment* path, int path_len)
 	
 	for (int i = 0; i < path_len; i++)
 	{
-		path_seg = (PathSegment*) malloc(sizeof(PathSegment));
+		path_seg = malloc(sizeof *path_seg);
 		if (NULL == path_seg)
 		{
 			PRINT_ERR("[entity]: Failed to allocate sufficient memory chunk for PathSegment element.");
@@ -233,8 +253,15 @@ int add_entity_path(EntityDef** dest, const PathSegment* path, int path_len)
 
 int move_entity(EntityDef* entity, Vec3* new_pos)
 {
-	translate(&entity->entry_cnf->matrices->model, new_pos->x, new_pos->y, new_pos->z);
-	add_uniform_mat4f(entity->entry_cnf->shader_prog, "model", &entity->entry_cnf->matrices->model);
+	// Place at the start of the path
+	//if (entity->state == Entity_Idle && entity->path_len != 0)
+	//{
+	//	Vec2 starting_pos = entity->path[0]->start;
+	//	translate(&entity->entry_cnf->matrices->model, starting_pos.x, starting_pos.y, new_pos->z);
+	//}
+
+	//translate(&entity->entry_cnf->matrices->model, new_pos->x, new_pos->y, new_pos->z);
+	//add_uniform_mat4f(entity->entry_cnf->shader_prog, "model", &entity->entry_cnf->matrices->model);
 }
 
 // ----------------------- PUBLIC FUNCTIONS END ----------------------- //

@@ -56,9 +56,9 @@ int main(int argc, int* argv[])
 	EntityDef* square = NULL;
 	EntityDef* circle = NULL;
 
-	add_entity(Triangle, &triangle);
-	add_entity(Square, &square);
-	add_entity(Circle, &circle);
+	add_entity(Entity_Triangle, &triangle);
+	add_entity(Entity_Square, &square);
+	add_entity(Entity_Circle, &circle);
 
 	PathSegment path[3] = {
 		[0] = { .start = { 300.f, 500.f }, .end = { 500.f, 500.f } },

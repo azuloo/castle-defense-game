@@ -165,7 +165,7 @@ static void create_ebo(unsigned int* ebo, unsigned int* indices, int len)
 static int alloc_entry_arr()
 {
 	g_EntriesDataCapacity *= 2;
-	EntryCnf* entries_arr = (EntryCnf*) realloc(EntryCnfData, sizeof(EntryCnf) * g_EntriesDataCapacity);
+	EntryCnf* entries_arr = realloc(EntryCnfData, g_EntriesDataCapacity * sizeof *entries_arr);
 	if (NULL == entries_arr)
 	{
 		PRINT_ERR("[graphics]: Failed to allocate sufficient memory chunk for EntryCnf elements.");
@@ -177,7 +177,7 @@ static int alloc_entry_arr()
 static int add_entry_attributes_cnf(EntryCnf* entry)
 {
 	entry->attributes->capacity *= 2;
-	AttributeCnf* attr_cnf = (AttributeCnf*) realloc(entry->attributes->elements, entry->attributes->capacity * sizeof(AttributeCnf));
+	AttributeCnf* attr_cnf = realloc(entry->attributes->elements, entry->attributes->capacity * sizeof *attr_cnf);
 	if (NULL == attr_cnf)
 	{
 		PRINT_ERR("[graphics]: Failed to allocate sufficient memory chunk for AttributeCnf elements.");
@@ -194,7 +194,7 @@ static int add_entry_attributes_cnf(EntryCnf* entry)
 
 static int create_entry_attributes(EntryCnf* entry)
 {
-	entry->attributes = (GAttributes*) malloc(sizeof(GAttributes));
+	entry->attributes = malloc(sizeof *entry->attributes);
 	if (NULL == entry->attributes)
 	{
 		PRINT_ERR("[graphics]: Failed to allocate sufficient memory chunk for GAttributes elements.");
@@ -214,16 +214,13 @@ static int create_entry_attributes(EntryCnf* entry)
 
 static int create_entry_matrices(EntryCnf* entry)
 {
-	entry->matrices = (GMatrices*) malloc(sizeof(GMatrices));
+	entry->matrices = calloc(1, sizeof *entry->matrices);
 	if (NULL == entry->matrices)
 	{
 		PRINT_ERR("[graphics]: Failed to allocate sufficient memory chunk for GMatrices elements.");
 		return TERMINATE_ERR_CODE;
 	}
 
-	memset(entry->matrices->model.m, 0, sizeof(float) * 16);
-	memset(entry->matrices->view.m, 0, sizeof(float) * 16);
-	memset(entry->matrices->projection.m, 0, sizeof(float) * 16);
 	return 0;
 }
 

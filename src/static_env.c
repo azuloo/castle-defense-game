@@ -59,7 +59,7 @@ int add_environments()
 
 	apply_entry_attributes(entry);
 
-	GMatrices* matrices = malloc(sizeof(GMatrices));
+	GMatrices* matrices = malloc(sizeof *matrices);
 	if (NULL == matrices)
 	{
 		PRINT_ERR("[static_env]: Failed to allocate sufficient memory chunk for GMatrices.");
