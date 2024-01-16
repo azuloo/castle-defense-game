@@ -3,6 +3,7 @@
 #include "utils.h"
 #include "lin_alg.h"
 #include "key_bindings.h"
+#include "obj_registry.h"
 
 #include "static_env.h"
 #include "entity.h"
@@ -61,12 +62,13 @@ int main(int argc, int* argv[])
 	add_entity(Entity_Circle, &circle);
 
 	PathSegment path[3] = {
-		[0] = { .start = { 300.f, 500.f }, .end = { 500.f, 500.f } },
-		[1] = { .start = { 500.f, 500.f }, .end = { 500.f, 350.f } },
-		[2] = { .start = { 500.f, 350.f }, .end = { 700.f, 350.f } }
+		[0] = { .start = { 200.f, 500.f }, .end = { 800.f, 500.f } },
+		[1] = { .start = { 800.f, 500.f }, .end = { 800.f, 250.f } },
+		[2] = { .start = { 800.f, 250.f }, .end = { 1500.f, 250.f } }
 	};
 
-	add_entity_path(&triangle, path, 3);
+	add_entity_path(triangle, path, 3);
+
 
 	while (!should_be_terminated())
 	{
@@ -74,6 +76,7 @@ int main(int argc, int* argv[])
 		dt = curr_time - lft;
 		lft = curr_time;
 
+		entity_follow_path(triangle, &path->start);
 		draw();
 	}
 	

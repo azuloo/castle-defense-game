@@ -6,9 +6,6 @@
 #include "lin_alg.h"
 #include "utils.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-
 #define CLOSE_GLFW_WINDOW 1
 #define LIB_MAJOR_VER 3
 #define LIB_MINOR_VER 3
@@ -64,6 +61,7 @@ typedef struct
 	unsigned int  num_indices;
 	GAttributes*  attributes;
 	GMatrices*    matrices;
+	int           handle;
 } EntryCnf;
 
 typedef struct

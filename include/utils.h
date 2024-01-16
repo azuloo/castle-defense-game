@@ -2,6 +2,7 @@
 #define _UTILS_H
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #define SOURCE_ROOT _SOURCE_ROOT
 

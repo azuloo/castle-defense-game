@@ -2,6 +2,7 @@
 #include "file_reader.h"
 #include "stb_image.h"
 #include "lin_alg.h"
+#include "obj_registry.h"
 
 #include <stdlib.h>
 
@@ -11,7 +12,7 @@ static GLFWwindow* window = NULL;
 static InputFnPtr input_fn_ptr = NULL;
 static WindowResizeFnPtr window_resize_fn_ptr = NULL;
 
-static int g_EntriesDataCapacity = 512;
+static int g_EntriesDataCapacity = 128;
 static int g_EntriesNum = 0;
 static EntryCnf* EntryCnfData = NULL;
 static BackgroundColor g_BColor = { 0.f, 0.f, 0.f, 1.f };
@@ -246,6 +247,7 @@ static EntryCnf* create_entry_cnf()
 	entry->num_indices   = 0;
 	entry->attributes    = NULL;
 	entry->matrices      = NULL;
+	entry->handle        = -1;
 
 	int create_entry_attributes_res = create_entry_attributes(entry);
 	if (TERMINATE_ERR_CODE == create_entry_attributes_res)
@@ -260,6 +262,8 @@ static EntryCnf* create_entry_cnf()
 		PRINT_ERR("[graphics]: Failed to create entry attibutes.");
 		return NULL;
 	}
+
+	REGISTER_OBJ(entry, &entry->handle);
 
 	g_EntriesNum++;
 

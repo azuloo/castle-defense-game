@@ -4,6 +4,9 @@
 #include "lin_alg.h"
 #include "graphics.h"
 
+// TODO: Add to entity's state
+#define ENTITY_MOVEMENT_SPEED 200.f
+
 enum EntityType
 {
 	Entity_Square,
@@ -13,6 +16,7 @@ enum EntityType
 
 enum EntityState
 {
+	Entity_Setup,
 	Entity_Idle,
 	Entity_Moving
 };
@@ -35,12 +39,14 @@ typedef struct EntityDef
 	enum EntityType   type;
 	TransformDef*     transform;
 	PathSegment**     path;
+	int               path_idx;
 	int               path_len;
 	enum EntityState  state;
+	int               entry_handle;
 } EntityDef;
 
 int add_entity(enum EntityType type, EntityDef** dest);
-int add_entity_path(EntityDef** dest, const PathSegment* path, int path_len);
-int move_entity(EntityDef* entity, Vec3* new_pos);
+int add_entity_path(EntityDef* dest, const PathSegment* path, int path_len);
+int entity_follow_path(EntityDef* entity);
 
 #endif // _ENTITY_H

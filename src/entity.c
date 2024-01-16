@@ -1,11 +1,14 @@
 #include "entity.h"
 #include "file_reader.h"
 #include "utils.h"
+#include "obj_registry.h"
 
 #include <stdlib.h>
+#include <stdbool.h>
 
 extern float wWidth;
 extern float wHeight;
+extern float dt;
 
 static int add_entity_common(EntityDef* dest, const DrawBufferData* draw_buf_data, const char* texture_path, const Vec3* new_pos, const Vec3* new_scale)
 {
@@ -18,6 +21,8 @@ static int add_entity_common(EntityDef* dest, const DrawBufferData* draw_buf_dat
 		PRINT_ERR("[static_env]: Failed to create entry.");
 		return TERMINATE_ERR_CODE;
 	}
+
+	dest->entry_handle = entry->handle;
 
 	char texture_buf[256];
 	get_file_path(texture_path, texture_buf, 256);
@@ -51,7 +56,7 @@ static int add_entity_common(EntityDef* dest, const DrawBufferData* draw_buf_dat
 
 	transform->pos = *new_pos;
 	transform->scale = *new_scale;
-	memset(&transform->rotation, 0, sizeof(Vec3));
+	memset(&transform->rotation, 0, sizeof &transform->rotation);
 
 	dest->transform = transform;
 
@@ -94,11 +99,13 @@ static int add_triangle(EntityDef** dest)
 	}
 
 	*dest = entity_def;
-	entity_def->type        = Entity_Triangle;
-	entity_def->transform   = NULL;
-	entity_def->path        = NULL;
-	entity_def->path_len    = 0;
-	entity_def->state       = Entity_Idle;
+	entity_def->type          = Entity_Triangle;
+	entity_def->transform     = NULL;
+	entity_def->path          = NULL;
+	entity_def->path_idx      = -1;
+	entity_def->path_len      = -1;
+	entity_def->state         = Entity_Setup;
+	entity_def->entry_handle  = -1;
 
 	Vec3 tri_pos = { { 600.f, (float)wHeight / 2.f, 0.2f } };
 	Vec3 tri_scale = { { 35.f, 35.f, 1.f } };
@@ -139,11 +146,13 @@ static int add_square(EntityDef** dest)
 	}
 
 	*dest = entity_def;
-	entity_def->type        = Entity_Square;
-	entity_def->transform   = NULL;
-	entity_def->path        = NULL;
-	entity_def->path_len    = 0;
-	entity_def->state       = Entity_Idle;
+	entity_def->type          = Entity_Square;
+	entity_def->transform     = NULL;
+	entity_def->path          = NULL;
+	entity_def->path_idx      = -1;
+	entity_def->path_len      = -1;
+	entity_def->state         = Entity_Setup;
+	entity_def->entry_handle  = -1;
 
 	Vec3 sq_pos = { { 400.f, (float)wHeight / 2.f, 0.2f } };
 	Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
@@ -184,11 +193,13 @@ static int add_circle(EntityDef** dest)
 	}
 
 	*dest = entity_def;
-	entity_def->type        = Entity_Circle;
-	entity_def->transform   = NULL;
-	entity_def->path        = NULL;
-	entity_def->path_len    = 0;
-	entity_def->state       = Entity_Idle;
+	entity_def->type          = Entity_Circle;
+	entity_def->transform     = NULL;
+	entity_def->path          = NULL;
+	entity_def->path_idx      = -1;
+	entity_def->path_len      = -1;
+	entity_def->state         = Entity_Setup;
+	entity_def->entry_handle  = -1;
 
 	Vec3 sq_pos = { { 500.f, (float)wHeight / 2.f, 0.2f } };
 	Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
@@ -222,7 +233,7 @@ int add_entity(enum EntityType type, EntityDef** dest)
 	return 0;
 }
 
-int add_entity_path(EntityDef** dest, const PathSegment* path, int path_len)
+int add_entity_path(EntityDef* dest, const PathSegment* path, int path_len)
 {
 	PathSegment* path_seg = malloc(sizeof *path_seg);
 	if (NULL == path_seg)
@@ -231,7 +242,7 @@ int add_entity_path(EntityDef** dest, const PathSegment* path, int path_len)
 		return TERMINATE_ERR_CODE;
 	}
 
-	(*dest)->path = path_seg;
+	dest->path = path_seg;
 	
 	for (int i = 0; i < path_len; i++)
 	{
@@ -242,26 +253,113 @@ int add_entity_path(EntityDef** dest, const PathSegment* path, int path_len)
 			return TERMINATE_ERR_CODE;
 		}
 
-		(*dest)->path[i] = path_seg;
-		(*dest)->path[i]->start = path[i].start;
-		(*dest)->path[i]->end = path[i].end;
+		dest->path[i]         = path_seg;
+		dest->path[i]->start  = path[i].start;
+		dest->path[i]->end    = path[i].end;
 	}
 
-	(*dest)->path_len = path_len;
+	dest->path_len = path_len;
+	dest->path_idx = 0;
+
 	return 0;
 }
 
-int move_entity(EntityDef* entity, Vec3* new_pos)
+int entity_follow_path(EntityDef* entity)
 {
-	// Place at the start of the path
-	//if (entity->state == Entity_Idle && entity->path_len != 0)
-	//{
-	//	Vec2 starting_pos = entity->path[0]->start;
-	//	translate(&entity->entry_cnf->matrices->model, starting_pos.x, starting_pos.y, new_pos->z);
-	//}
+	EntryCnf* entry = (EntryCnf*) GET_FROM_REGISTRY(&entity->entry_handle);
+	if (NULL == entry)
+	{
+		PRINT_ERR("[entity]: Failed to fetch EntryCnf from registry.");
+		return TERMINATE_ERR_CODE;
+	}
 
-	//translate(&entity->entry_cnf->matrices->model, new_pos->x, new_pos->y, new_pos->z);
-	//add_uniform_mat4f(entity->entry_cnf->shader_prog, "model", &entity->entry_cnf->matrices->model);
+	// Place at the start of the path
+	if (entity->state == Entity_Setup && entity->path_len != 0)
+	{
+		Vec3 starting_pos = { { entity->path[0]->start.x, entity->path[0]->start.y, entity->transform->pos.z } };
+
+		entry->matrices->model = IdentityMat;
+		scale(&entry->matrices->model, entity->transform->scale.x, entity->transform->scale.y, entity->transform->scale.z);
+		translate(&entry->matrices->model, starting_pos.x, starting_pos.y, entity->transform->pos.z);
+		add_uniform_mat4f(entry->shader_prog, "model", &entry->matrices->model);
+
+		entity->transform->pos = starting_pos;
+		entity->state = Entity_Moving;
+	}
+
+	if (entity->state == Entity_Moving && entity->path_len != 0)
+	{
+		int path_idx = entity->path_idx;
+
+		const Vec3* pos_start = &entity->path[path_idx]->start;
+		const Vec2* pos_end = &entity->path[path_idx]->end;
+	
+		float pos_x_step = 0.f;
+		float pos_y_step = 0.f;
+
+		if (pos_end->x > pos_start->x)
+		{
+			pos_x_step = ENTITY_MOVEMENT_SPEED;
+		}
+		else if (pos_end->x < pos_start->x)
+		{
+			pos_x_step = -ENTITY_MOVEMENT_SPEED;
+		}
+
+		if (pos_end->y > pos_start->y)
+		{
+			pos_y_step = ENTITY_MOVEMENT_SPEED;
+		}
+		else if (pos_end->y < pos_start->y)
+		{
+			pos_y_step = -ENTITY_MOVEMENT_SPEED;
+		}
+
+		float new_pos_x = entity->transform->pos.x + pos_x_step * dt;
+		float new_pos_y = entity->transform->pos.y + pos_y_step * dt;
+
+		// TODO: Better way to do this?
+		bool move_to_next_segment = false;
+		if (pos_x_step >= 0 && pos_y_step >= 0)
+		{
+			move_to_next_segment = new_pos_x >= pos_end->x && new_pos_y >= pos_end->y;
+		}
+		else if (pos_x_step < 0 && pos_y_step >= 0)
+		{
+			move_to_next_segment = new_pos_x <= pos_end->x && new_pos_y >= pos_end->y;
+		}
+		else if (pos_x_step >= 0 && pos_y_step < 0)
+		{
+			move_to_next_segment = new_pos_x >= pos_end->x && new_pos_y <= pos_end->y;
+		}
+		else if (pos_x_step < 0 && pos_y_step < 0)
+		{
+			move_to_next_segment = new_pos_x <= pos_end->x && new_pos_y <= pos_end->y;
+		}
+
+		if (move_to_next_segment)
+		{
+			entity->path_idx++;
+
+			entity->transform->pos.x = pos_end->x;
+			entity->transform->pos.y = pos_end->y;
+			if (entity->path_idx >= entity->path_len)
+			{
+				entity->state = Entity_Idle;
+			}
+
+			return;
+		}
+
+		// TODO: Move to separate func
+		entry->matrices->model = IdentityMat;
+		scale(&entry->matrices->model, entity->transform->scale.x, entity->transform->scale.y, entity->transform->scale.z);
+		translate(&entry->matrices->model, new_pos_x, new_pos_y, entity->transform->pos.z);
+		add_uniform_mat4f(entry->shader_prog, "model", &entry->matrices->model);
+
+		entity->transform->pos.x = new_pos_x;
+		entity->transform->pos.y = new_pos_y;
+	}
 }
 
 // ----------------------- PUBLIC FUNCTIONS END ----------------------- //
