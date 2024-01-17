@@ -59,6 +59,7 @@ int add_environments()
 
 	apply_entry_attributes(entry);
 
+	// TODO: Free memory
 	GMatrices* matrices = malloc(sizeof *matrices);
 	if (NULL == matrices)
 	{

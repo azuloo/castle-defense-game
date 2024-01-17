@@ -4,6 +4,16 @@ static void** g_Registry = NULL;
 static int    g_RegistryEntires = 32;
 static int    g_Count = 0;
 
+void registry_free()
+{
+	if (NULL == g_Registry)
+	{
+		return;
+	}
+
+	free(g_Registry);
+}
+
 int register_obj(void* obj, int* handle)
 {
 	if (g_Count == g_RegistryEntires)
@@ -13,6 +23,7 @@ int register_obj(void* obj, int* handle)
 
 	if (NULL == g_Registry)
 	{
+		// TODO: Free memory
 		void** reg = malloc(g_RegistryEntires * sizeof * reg);
 		if (NULL == reg)
 		{

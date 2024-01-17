@@ -46,7 +46,6 @@ static int add_entity_common(EntityDef* dest, const DrawBufferData* draw_buf_dat
 
 	apply_entry_attributes(entry);
 
-	// TODO: Free memory
 	TransformDef* transform = malloc(sizeof *transform);
 	if (NULL == transform)
 	{
@@ -90,7 +89,6 @@ static int add_triangle(EntityDef** dest)
 	draw_buf_data.indices = indices;
 	draw_buf_data.indices_len = sizeof(indices) / sizeof(indices[0]);
 
-	// TODO: Free memory
 	EntityDef* entity_def = malloc(sizeof *entity_def);
 	if (NULL == entity_def)
 	{
@@ -103,7 +101,7 @@ static int add_triangle(EntityDef** dest)
 	entity_def->transform     = NULL;
 	entity_def->path          = NULL;
 	entity_def->path_idx      = -1;
-	entity_def->path_len      = -1;
+	entity_def->path_len      = 0;
 	entity_def->state         = Entity_Setup;
 	entity_def->entry_handle  = -1;
 
@@ -137,7 +135,6 @@ static int add_square(EntityDef** dest)
 	draw_buf_data.indices = indices;
 	draw_buf_data.indices_len = sizeof(indices) / sizeof(indices[0]);
 
-	// TODO: Free memory
 	EntityDef* entity_def = malloc(sizeof *entity_def);
 	if (NULL == entity_def)
 	{
@@ -150,7 +147,7 @@ static int add_square(EntityDef** dest)
 	entity_def->transform     = NULL;
 	entity_def->path          = NULL;
 	entity_def->path_idx      = -1;
-	entity_def->path_len      = -1;
+	entity_def->path_len      = 0;
 	entity_def->state         = Entity_Setup;
 	entity_def->entry_handle  = -1;
 
@@ -184,7 +181,6 @@ static int add_circle(EntityDef** dest)
 	draw_buf_data.indices = indices;
 	draw_buf_data.indices_len = sizeof(indices) / sizeof(indices[0]);
 
-	// TODO: Free memory
 	EntityDef* entity_def = malloc(sizeof *entity_def);
 	if (NULL == entity_def)
 	{
@@ -197,7 +193,7 @@ static int add_circle(EntityDef** dest)
 	entity_def->transform     = NULL;
 	entity_def->path          = NULL;
 	entity_def->path_idx      = -1;
-	entity_def->path_len      = -1;
+	entity_def->path_len      = 0;
 	entity_def->state         = Entity_Setup;
 	entity_def->entry_handle  = -1;
 
@@ -235,18 +231,18 @@ int add_entity(enum EntityType type, EntityDef** dest)
 
 int add_entity_path(EntityDef* dest, const PathSegment* path, int path_len)
 {
-	PathSegment* path_seg = malloc(sizeof *path_seg);
-	if (NULL == path_seg)
+	PathSegment* path_ptr = malloc(path_len * sizeof *path_ptr);
+	if (NULL == path_ptr)
 	{
 		PRINT_ERR("[entity]: Failed to allocate sufficient memory chunk for PathSegment ptr.");
 		return TERMINATE_ERR_CODE;
 	}
 
-	dest->path = path_seg;
+	dest->path = path_ptr;
 	
 	for (int i = 0; i < path_len; i++)
 	{
-		path_seg = malloc(sizeof *path_seg);
+		PathSegment* path_seg = malloc(sizeof *path_seg);
 		if (NULL == path_seg)
 		{
 			PRINT_ERR("[entity]: Failed to allocate sufficient memory chunk for PathSegment element.");
@@ -291,7 +287,7 @@ int entity_follow_path(EntityDef* entity)
 	{
 		int path_idx = entity->path_idx;
 
-		const Vec3* pos_start = &entity->path[path_idx]->start;
+		const Vec2* pos_start = &entity->path[path_idx]->start;
 		const Vec2* pos_end = &entity->path[path_idx]->end;
 	
 		float pos_x_step = 0.f;
@@ -343,9 +339,13 @@ int entity_follow_path(EntityDef* entity)
 
 			entity->transform->pos.x = pos_end->x;
 			entity->transform->pos.y = pos_end->y;
+
 			if (entity->path_idx >= entity->path_len)
 			{
-				entity->state = Entity_Idle;
+				// Repeat the path
+				entity->path_idx = 0;
+				// Stop at the end of the path
+				//entity->state = Entity_Idle;
 			}
 
 			return;

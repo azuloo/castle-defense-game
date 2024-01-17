@@ -5,7 +5,7 @@
 #include "graphics.h"
 
 // TODO: Add to entity's state
-#define ENTITY_MOVEMENT_SPEED 200.f
+#define ENTITY_MOVEMENT_SPEED 400.f
 
 enum EntityType
 {

@@ -61,14 +61,14 @@ int main(int argc, int* argv[])
 	add_entity(Entity_Square, &square);
 	add_entity(Entity_Circle, &circle);
 
-	PathSegment path[3] = {
-		[0] = { .start = { 200.f, 500.f }, .end = { 800.f, 500.f } },
-		[1] = { .start = { 800.f, 500.f }, .end = { 800.f, 250.f } },
-		[2] = { .start = { 800.f, 250.f }, .end = { 1500.f, 250.f } }
+	PathSegment path[4] = {
+		[0] = { .start = { 200.f, 200.f }, .end = { 200.f, 800.f } },
+		[1] = { .start = { 200.f, 800.f }, .end = { 800.f, 800.f } },
+		[2] = { .start = { 800.f, 800.f }, .end = { 800.f, 200.f } },
+		[3] = { .start = { 800.f, 200.f }, .end = { 200.f, 200.f } },
 	};
 
-	add_entity_path(triangle, path, 3);
-
+	add_entity_path(triangle, path, 4);
 
 	while (!should_be_terminated())
 	{
@@ -76,10 +76,35 @@ int main(int argc, int* argv[])
 		dt = curr_time - lft;
 		lft = curr_time;
 
-		entity_follow_path(triangle, &path->start);
+		entity_follow_path(triangle);
 		draw();
 	}
-	
+
+	for (int i = 0; i < triangle->path_len; i++)
+	{
+		free(triangle->path[i]);
+	}
+	free(triangle->path);
+	free(triangle->transform);
+	free(triangle);
+
+	for (int i = 0; i < square->path_len; i++)
+	{
+		free(square->path[i]);
+	}
+	free(square->path);
+	free(square->transform);
+	free(square);
+
+	for (int i = 0; i < circle->path_len; i++)
+	{
+		free(circle->path[i]);
+	}
+	free(circle->path);
+	free(circle->transform);
+	free(circle);
+
+	registry_free();
 	graphics_free_resources();
 
 	return 0;
