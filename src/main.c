@@ -80,31 +80,8 @@ int main(int argc, int* argv[])
 		draw();
 	}
 
-	for (int i = 0; i < triangle->path_len; i++)
-	{
-		free(triangle->path[i]);
-	}
-	free(triangle->path);
-	free(triangle->transform);
-	free(triangle);
-
-	for (int i = 0; i < square->path_len; i++)
-	{
-		free(square->path[i]);
-	}
-	free(square->path);
-	free(square->transform);
-	free(square);
-
-	for (int i = 0; i < circle->path_len; i++)
-	{
-		free(circle->path[i]);
-	}
-	free(circle->path);
-	free(circle->transform);
-	free(circle);
-
 	registry_free();
+	entity_free_resources();
 	graphics_free_resources();
 
 	return 0;

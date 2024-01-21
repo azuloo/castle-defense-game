@@ -10,6 +10,27 @@ extern float wWidth;
 extern float wHeight;
 extern float dt;
 
+static int g_EntitiesCnfCapacity    = 32;
+static int g_EntitiesNum            = 0;
+static EntityDef* g_EntityDefs      = NULL;
+
+// ! Allocates memory on heap !
+static int alloc_entities_arr()
+{
+	g_EntitiesCnfCapacity *= 2;
+	EntityDef* entity_defs_arr = realloc(g_EntityDefs, g_EntitiesCnfCapacity * sizeof *entity_defs_arr);
+
+	if (NULL == entity_defs_arr)
+	{
+		PRINT_ERR("[entity]: Failed to allocate sufficient memory chunk for EntityDefs arr.");
+		return TERMINATE_ERR_CODE;
+	}
+
+	g_EntityDefs = entity_defs_arr;
+
+	return 0;
+}
+
 static int add_entity_common(EntityDef* dest, const DrawBufferData* draw_buf_data, const char* texture_path, const Vec3* new_pos, const Vec3* new_scale)
 {
 	static const char* vertex_shader_path = "/res/static/shaders/entity_vert.txt";
@@ -70,6 +91,33 @@ static int add_entity_common(EntityDef* dest, const DrawBufferData* draw_buf_dat
 	return 0;
 }
 
+static EntityDef* create_entity_def(enum EntityType type)
+{
+    // TODO: How do we solve pointers invalidation problem? (UIDs maybe?)
+	if (g_EntitiesNum >= g_EntitiesCnfCapacity)
+	{
+		int alloc_entities_arr_res = alloc_entities_arr();
+		if (TERMINATE_ERR_CODE == alloc_entities_arr_res)
+		{
+			PRINT_ERR("[entity]: Failed to create entities arr.");
+			return TERMINATE_ERR_CODE;
+		}
+	}
+
+	EntityDef* entity_def = g_EntityDefs + g_EntitiesNum;
+	entity_def->type = Entity_Triangle;
+	entity_def->transform = NULL;
+	entity_def->path = NULL;
+	entity_def->path_idx = -1;
+	entity_def->path_len = 0;
+	entity_def->state = Entity_Setup;
+	entity_def->entry_handle = -1;
+
+	g_EntitiesNum++;
+
+	return entity_def;
+}
+
 static int add_triangle(EntityDef** dest)
 {
 	static const float vertices[] = {
@@ -89,21 +137,8 @@ static int add_triangle(EntityDef** dest)
 	draw_buf_data.indices = indices;
 	draw_buf_data.indices_len = sizeof(indices) / sizeof(indices[0]);
 
-	EntityDef* entity_def = malloc(sizeof *entity_def);
-	if (NULL == entity_def)
-	{
-		PRINT_ERR("[entity]: Failed to allocate sufficient memory chunk for EntityDef.");
-		return TERMINATE_ERR_CODE;
-	}
-
+	EntityDef* entity_def = create_entity_def(Entity_Triangle);
 	*dest = entity_def;
-	entity_def->type          = Entity_Triangle;
-	entity_def->transform     = NULL;
-	entity_def->path          = NULL;
-	entity_def->path_idx      = -1;
-	entity_def->path_len      = 0;
-	entity_def->state         = Entity_Setup;
-	entity_def->entry_handle  = -1;
 
 	Vec3 tri_pos = { { 600.f, (float)wHeight / 2.f, 0.2f } };
 	Vec3 tri_scale = { { 35.f, 35.f, 1.f } };
@@ -135,21 +170,8 @@ static int add_square(EntityDef** dest)
 	draw_buf_data.indices = indices;
 	draw_buf_data.indices_len = sizeof(indices) / sizeof(indices[0]);
 
-	EntityDef* entity_def = malloc(sizeof *entity_def);
-	if (NULL == entity_def)
-	{
-		PRINT_ERR("[entity]: Failed to allocate sufficient memory chunk for EntityDef.");
-		return TERMINATE_ERR_CODE;
-	}
-
+	EntityDef* entity_def = create_entity_def(Entity_Square);
 	*dest = entity_def;
-	entity_def->type          = Entity_Square;
-	entity_def->transform     = NULL;
-	entity_def->path          = NULL;
-	entity_def->path_idx      = -1;
-	entity_def->path_len      = 0;
-	entity_def->state         = Entity_Setup;
-	entity_def->entry_handle  = -1;
 
 	Vec3 sq_pos = { { 400.f, (float)wHeight / 2.f, 0.2f } };
 	Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
@@ -181,21 +203,8 @@ static int add_circle(EntityDef** dest)
 	draw_buf_data.indices = indices;
 	draw_buf_data.indices_len = sizeof(indices) / sizeof(indices[0]);
 
-	EntityDef* entity_def = malloc(sizeof *entity_def);
-	if (NULL == entity_def)
-	{
-		PRINT_ERR("[entity]: Failed to allocate sufficient memory chunk for EntityDef.");
-		return TERMINATE_ERR_CODE;
-	}
-
+	EntityDef* entity_def = create_entity_def(Entity_Circle);
 	*dest = entity_def;
-	entity_def->type          = Entity_Circle;
-	entity_def->transform     = NULL;
-	entity_def->path          = NULL;
-	entity_def->path_idx      = -1;
-	entity_def->path_len      = 0;
-	entity_def->state         = Entity_Setup;
-	entity_def->entry_handle  = -1;
 
 	Vec3 sq_pos = { { 500.f, (float)wHeight / 2.f, 0.2f } };
 	Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
@@ -210,6 +219,16 @@ static int add_circle(EntityDef** dest)
 
 int add_entity(enum EntityType type, EntityDef** dest)
 {
+	if (NULL == g_EntityDefs)
+	{
+		int alloc_entities_arr_res = alloc_entities_arr();
+		if (TERMINATE_ERR_CODE == alloc_entities_arr_res)
+		{
+			PRINT_ERR("[entity]: Failed to create entities arr.");
+			return TERMINATE_ERR_CODE;
+		}
+	}
+
 	switch (type)
 	{
 	case Entity_Triangle:
@@ -360,6 +379,24 @@ int entity_follow_path(EntityDef* entity)
 		entity->transform->pos.x = new_pos_x;
 		entity->transform->pos.y = new_pos_y;
 	}
+}
+
+void entity_free_resources()
+{
+	for (int i = 0; i < g_EntitiesNum; i++)
+	{
+		EntityDef* entity_def = g_EntityDefs + i;
+
+		for (int j = 0; j < entity_def->path_len; j++)
+		{
+			free(entity_def->path[j]);
+		}
+
+		free(entity_def->path);
+		free(entity_def->transform);
+	}
+
+	free(g_EntityDefs);
 }
 
 // ----------------------- PUBLIC FUNCTIONS END ----------------------- //
