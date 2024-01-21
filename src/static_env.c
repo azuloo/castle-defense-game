@@ -28,7 +28,6 @@ int add_environments()
 	static const char* fragment_shader_path = "/res/static/shaders/field_frag.txt";
 	static const char* texture_path = "/res/static/textures/field.jpg";
 
-	// TODO: Pass by ref below; should allocate on heap?
 	DrawBufferData draw_buf_data;
 	draw_buf_data.vertices = B_vertices;
 	draw_buf_data.vertices_len = sizeof(B_vertices);
@@ -59,21 +58,15 @@ int add_environments()
 
 	apply_entry_attributes(entry);
 
-	// TODO: Free memory
-	GMatrices* matrices = malloc(sizeof *matrices);
-	if (NULL == matrices)
-	{
-		PRINT_ERR("[static_env]: Failed to allocate sufficient memory chunk for GMatrices.");
-		return TERMINATE_ERR_CODE;
-	}
+	entry->matrices->model = IdentityMat;
+	scale(&entry->matrices->model, (float)wWidth / 2, (float)wHeight / 2, 1.f);
+	translate(&entry->matrices->model, (float)wWidth / 2, (float)wHeight / 2, 0.1f);
+	add_uniform_mat4f(entry->shader_prog, "model", &entry->matrices->model);
 
-	matrices->model = IdentityMat;
-	scale(&matrices->model, (float)wWidth / 2, (float)wHeight / 2, 1.f);
-	translate(&matrices->model, (float)wWidth / 2, (float)wHeight / 2, 0.1f);
-	add_uniform_mat4f(entry->shader_prog, "model", &matrices->model);
+	entry->matrices->projection = ortho(0.f, wWidth, 0.f, wHeight, -1.f, 1.f);
+	add_uniform_mat4f(entry->shader_prog, "projection", &entry->matrices->projection);
 
-	matrices->projection = ortho(0.f, wWidth, 0.f, wHeight, -1.f, 1.f);
-	add_uniform_mat4f(entry->shader_prog, "projection", &matrices->projection);
+	return 0;
 }
 
 // ----------------------- PUBLIC FUNCTIONS END ----------------------- //

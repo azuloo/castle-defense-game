@@ -167,11 +167,13 @@ static int alloc_entry_arr()
 {
 	g_EntriesDataCapacity *= 2;
 	EntryCnf* entries_arr = realloc(EntryCnfData, g_EntriesDataCapacity * sizeof *entries_arr);
+
 	if (NULL == entries_arr)
 	{
 		PRINT_ERR("[graphics]: Failed to allocate sufficient memory chunk for EntryCnf elements.");
 		return TERMINATE_ERR_CODE;
 	}
+
 	EntryCnfData = entries_arr;
 }
 
@@ -346,10 +348,14 @@ void graphics_free_resources()
 
 EntryCnf* create_entry()
 {
-	// TODO: Check for NULL and return error
 	if (NULL == EntryCnfData)
 	{
-		alloc_entry_arr();
+		int alloc_entry_res = alloc_entry_arr();
+		if (TERMINATE_ERR_CODE == alloc_entry_res)
+		{
+			PRINT_ERR("[graphics]: Failed to create entry config.");
+			return NULL;
+		}
 	}
 
 	EntryCnf* entry = create_entry_cnf();
