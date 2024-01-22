@@ -8,14 +8,14 @@
 
 #define PROGRAM_IV_LOG_BUF_CAPACITY 512
 
-static GLFWwindow* window = NULL;
-static InputFnPtr input_fn_ptr = NULL;
-static WindowResizeFnPtr window_resize_fn_ptr = NULL;
+static GLFWwindow* window                       = NULL;
+static InputFnPtr input_fn_ptr                  = NULL;
+static WindowResizeFnPtr window_resize_fn_ptr   = NULL;
 
-static int g_EntriesDataCapacity = 128;
-static int g_EntriesNum = 0;
-static EntryCnf* EntryCnfData = NULL;
-static BackgroundColor g_BColor = { 0.f, 0.f, 0.f, 1.f };
+static int g_EntriesDataCapacity       = 32;
+static int g_EntriesNum                = 0;
+static EntryCnf* g_EntryCnfData        = NULL;
+static BackgroundColor g_BColor        = { 0.f, 0.f, 0.f, 1.f };
 
 static void graphics_terminate(int code)
 {
@@ -166,15 +166,17 @@ static void create_ebo(unsigned int* ebo, unsigned int* indices, int len)
 static int alloc_entry_arr()
 {
 	g_EntriesDataCapacity *= 2;
-	EntryCnf* entries_arr = realloc(EntryCnfData, g_EntriesDataCapacity * sizeof *entries_arr);
+	EntryCnf* entries_arr = realloc(g_EntryCnfData, g_EntriesDataCapacity * sizeof *entries_arr);
 
 	if (NULL == entries_arr)
 	{
-		PRINT_ERR("[graphics]: Failed to allocate sufficient memory chunk for EntryCnf elements.");
+		PRINT_ERR("[graphics]: Failed to allocate sufficient memory chunk for EntryCnf arr.");
 		return TERMINATE_ERR_CODE;
 	}
 
-	EntryCnfData = entries_arr;
+	g_EntryCnfData = entries_arr;
+
+	return 0;
 }
 
 static int add_entry_attributes_cnf(EntryCnf* entry)
@@ -240,7 +242,7 @@ static EntryCnf* create_entry_cnf()
 		}
 	}
 
-	EntryCnf* entry      = EntryCnfData + g_EntriesNum;
+	EntryCnf* entry      = g_EntryCnfData + g_EntriesNum;
 	entry->vbo           = 0;
 	entry->vao           = 0;
 	entry->ebo           = 0;
@@ -276,7 +278,7 @@ static void free_gl_resources()
 {
 	for (int i = 0; i < g_EntriesNum; i++)
 	{
-		EntryCnf* entry = EntryCnfData + i;
+		EntryCnf* entry = g_EntryCnfData + i;
 		glDeleteVertexArrays(1, &entry->vao);
 		glDeleteBuffers(1, &entry->vbo);
 		glDeleteProgram(entry->shader_prog);
@@ -287,7 +289,7 @@ static void free_entry_attributes_cnf()
 {
 	for (int i = 0; i < g_EntriesNum; i++)
 	{
-		EntryCnf* entry = EntryCnfData + i;
+		EntryCnf* entry = g_EntryCnfData + i;
 		if (NULL == entry->attributes)
 		{
 			continue;
@@ -302,7 +304,7 @@ void free_entry_matrices()
 {
 	for (int i = 0; i < g_EntriesNum; i++)
 	{
-		EntryCnf* entry = EntryCnfData + i;
+		EntryCnf* entry = g_EntryCnfData + i;
 		if (NULL == entry->matrices)
 		{
 			continue;
@@ -316,7 +318,7 @@ static void free_entry_cnf_data()
 {
 	free_entry_attributes_cnf();
 	free_entry_matrices();
-	free(EntryCnfData);
+	free(g_EntryCnfData);
 }
 
 static unsigned char* load_image(const char* path, int* width, int* height, int* nr_channels)
@@ -348,7 +350,7 @@ void graphics_free_resources()
 
 EntryCnf* create_entry()
 {
-	if (NULL == EntryCnfData)
+	if (NULL == g_EntryCnfData)
 	{
 		int alloc_entry_res = alloc_entry_arr();
 		if (TERMINATE_ERR_CODE == alloc_entry_res)
@@ -525,7 +527,7 @@ int draw()
 
 	for (int i = 0; i < g_EntriesNum; i++)
 	{
-		EntryCnf* entry = EntryCnfData + i;
+		EntryCnf* entry = g_EntryCnfData + i;
 		glUseProgram(entry->shader_prog);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, entry->texture);
