@@ -39,7 +39,7 @@ static void check_program_iv(unsigned int prog, unsigned int opcode, const char*
 static char* get_shader_source(const char* name)
 {
 	char vertex_source_path[256];
-	get_file_path(name, vertex_source_path, 256);
+	get_file_path(name, &vertex_source_path, 256);
 	char* data_buf = '\0';
 	size_t shader_size = 0;
 
@@ -189,12 +189,14 @@ static int add_entry_attributes_cnf(EntryCnf* entry)
 		return TERMINATE_ERR_CODE;
 	}
 	entry->attributes->elements = attr_cnf;
-	for (int i = entry->attributes->count; i < entry->attributes->capacity; i++)
+	for (unsigned int i = entry->attributes->count; i < entry->attributes->capacity; i++)
 	{
 		AttributeCnf* attr_cnf = entry->attributes->elements + i;
 		attr_cnf->idx = 0;
 		attr_cnf->size = 0;
 	}
+
+	return 0;
 }
 
 static int create_entry_attributes(EntryCnf* entry)
@@ -231,7 +233,7 @@ static int create_entry_matrices(EntryCnf* entry)
 
 static EntryCnf* create_entry_cnf()
 {
-	// TODO: How do we solve pointers invalidation problem? (UIDs maybe?)
+	// TODO: How do we solve pointers invalidation problem? (use Registry)
 	if (g_EntriesNum >= g_EntriesDataCapacity)
 	{
 		int alloc_entry_res = alloc_entry_arr();
@@ -328,7 +330,7 @@ static unsigned char* load_image(const char* path, int* width, int* height, int*
 	return data;
 }
 
-static void free_img_data(unsigned int* img_data)
+static void free_img_data(unsigned char* img_data)
 {
 	stbi_image_free(img_data);
 }
@@ -408,10 +410,10 @@ int add_uniform_mat4f(unsigned int shader_prog, const char* uniform_name, const 
 	return 0;
 }
 
-int add_element(EntryCnf* entry, DrawBufferData* buf_data, const char* vertex_shader_path, const char* fragment_shader_path)
+int add_element(EntryCnf* entry, const DrawBufferData* buf_data, const char* vertex_shader_path, const char* fragment_shader_path)
 {
-	const char* vertex_shader_source = get_shader_source(vertex_shader_path);
-	const char* fragment_shader_source = get_shader_source(fragment_shader_path);
+	char* vertex_shader_source = get_shader_source(vertex_shader_path);
+	char* fragment_shader_source = get_shader_source(fragment_shader_path);
 
 	if (NULL == vertex_shader_source || NULL == fragment_shader_source)
 	{
@@ -457,7 +459,7 @@ int apply_entry_attributes(EntryCnf* entry)
 	glBindVertexArray(entry->vao);
 	GAttributes* attributes = entry->attributes;
 	unsigned int offset = 0;
-	for (int i = 0; i < attributes->count; i++)
+	for (unsigned int i = 0; i < attributes->count; i++)
 	{
 		AttributeCnf* attr_cnf = attributes->elements + i;
 		glVertexAttribPointer(attr_cnf->idx,	           // vertex attribute index

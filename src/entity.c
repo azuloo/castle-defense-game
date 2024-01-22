@@ -46,7 +46,7 @@ static int add_entity_common(EntityDef* dest, const DrawBufferData* draw_buf_dat
 	dest->entry_handle = entry->handle;
 
 	char texture_buf[256];
-	get_file_path(texture_path, texture_buf, 256);
+	get_file_path(texture_path, &texture_buf, 256);
 
 	int create_texture_2D_res = create_texture_2D(texture_buf, &entry->texture, TexType_RGBA);
 	if (TERMINATE_ERR_CODE == create_texture_2D_res)
@@ -93,25 +93,25 @@ static int add_entity_common(EntityDef* dest, const DrawBufferData* draw_buf_dat
 
 static EntityDef* create_entity_def(enum EntityType type)
 {
-    // TODO: How do we solve pointers invalidation problem? (UIDs maybe?)
+    // TODO: How do we solve pointers invalidation problem? (use Registry)
 	if (g_EntitiesNum >= g_EntitiesCnfCapacity)
 	{
 		int alloc_entities_arr_res = alloc_entities_arr();
 		if (TERMINATE_ERR_CODE == alloc_entities_arr_res)
 		{
 			PRINT_ERR("[entity]: Failed to create entities arr.");
-			return TERMINATE_ERR_CODE;
+			return NULL;
 		}
 	}
 
-	EntityDef* entity_def = g_EntityDefs + g_EntitiesNum;
-	entity_def->type = Entity_Triangle;
-	entity_def->transform = NULL;
-	entity_def->path = NULL;
-	entity_def->path_idx = -1;
-	entity_def->path_len = 0;
-	entity_def->state = Entity_Setup;
-	entity_def->entry_handle = -1;
+	EntityDef* entity_def       = g_EntityDefs + g_EntitiesNum;
+	entity_def->type            = Entity_Triangle;
+	entity_def->transform       = NULL;
+	entity_def->path            = NULL;
+	entity_def->path_idx        = -1;
+	entity_def->path_len        = 0;
+	entity_def->state           = Entity_Setup;
+	entity_def->entry_handle    = -1;
 
 	g_EntitiesNum++;
 
@@ -120,7 +120,7 @@ static EntityDef* create_entity_def(enum EntityType type)
 
 static int add_triangle(EntityDef** dest)
 {
-	static const float vertices[] = {
+	static float vertices[] = {
 		// Position           // Texture
 		0.f, 1.f, 0.f,        0.5f, 1.f,
 		-1.f, -1.f, 0.f,      0.f, 0.f,
@@ -140,6 +140,7 @@ static int add_triangle(EntityDef** dest)
 	EntityDef* entity_def = create_entity_def(Entity_Triangle);
 	*dest = entity_def;
 
+	// TODO: Take window res into account
 	Vec3 tri_pos = { { 600.f, (float)wHeight / 2.f, 0.2f } };
 	Vec3 tri_scale = { { 35.f, 35.f, 1.f } };
 
@@ -151,7 +152,7 @@ static int add_triangle(EntityDef** dest)
 
 static int add_square(EntityDef** dest)
 {
-	static const float vertices[] = {
+	static float vertices[] = {
 		// Position           // Texture
 		-1.f, 1.f, 0.f,       0.f, 1.f,
 		1.f, 1.f, 0.f,        1.f, 1.f,
@@ -173,6 +174,7 @@ static int add_square(EntityDef** dest)
 	EntityDef* entity_def = create_entity_def(Entity_Square);
 	*dest = entity_def;
 
+	// TODO: Take window res into account
 	Vec3 sq_pos = { { 400.f, (float)wHeight / 2.f, 0.2f } };
 	Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
 
@@ -184,7 +186,7 @@ static int add_square(EntityDef** dest)
 
 static int add_circle(EntityDef** dest)
 {
-	static const float vertices[] = {
+	static float vertices[] = {
 		// Position           // Texture
 		-1.f, 1.f, 0.f,       0.f, 1.f,
 		1.f, 1.f, 0.f,        1.f, 1.f,
@@ -206,11 +208,12 @@ static int add_circle(EntityDef** dest)
 	EntityDef* entity_def = create_entity_def(Entity_Circle);
 	*dest = entity_def;
 
+	// TODO: Take window res into account
 	Vec3 sq_pos = { { 500.f, (float)wHeight / 2.f, 0.2f } };
 	Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
 
 	const char* texture_path = "/res/static/textures/circle.png";
-	const EntryCnf* entry = add_entity_common(*dest , &draw_buf_data, texture_path, &sq_pos, &sq_scale);
+	add_entity_common(*dest , &draw_buf_data, texture_path, &sq_pos, &sq_scale);
 
 	return 0;
 }
@@ -250,7 +253,7 @@ int add_entity(enum EntityType type, EntityDef** dest)
 
 int add_entity_path(EntityDef* dest, const PathSegment* path, int path_len)
 {
-	PathSegment* path_ptr = malloc(path_len * sizeof *path_ptr);
+	PathSegment** path_ptr = malloc(path_len * sizeof *path_ptr);
 	if (NULL == path_ptr)
 	{
 		PRINT_ERR("[entity]: Failed to allocate sufficient memory chunk for PathSegment ptr.");
@@ -379,6 +382,8 @@ int entity_follow_path(EntityDef* entity)
 		entity->transform->pos.x = new_pos_x;
 		entity->transform->pos.y = new_pos_y;
 	}
+
+	return 0;
 }
 
 void entity_free_resources()

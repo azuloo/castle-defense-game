@@ -68,13 +68,13 @@ typedef struct
 {
 	float*       vertices;
 	unsigned int vertices_len;
-	float*       indices;
+	int*         indices;
 	unsigned int indices_len;
 } DrawBufferData;
 
 typedef struct GLFWwindow GWindow;
 typedef void (*InputFnPtr)(GWindow* window);
-typedef void (*WindowResizeFnPtr)(GWindow* window, float width, float height);
+typedef void (*WindowResizeFnPtr)(GWindow* window, int width, int height);
 
 void close_window(GWindow* window);
 void bind_input_fn(InputFnPtr ptr);
@@ -88,7 +88,7 @@ void graphics_free_resources();
 EntryCnf* create_entry();
 int create_texture_2D(const char* img_path, unsigned int* texture, enum TextureType type);
 int add_uniform_mat4f(unsigned int shader_prog, const char* uniform_name, const Mat4* mat);
-int add_element(EntryCnf* entry, DrawBufferData* buf_data, const char* vertex_shader_path, const char* fragment_shader_path);
+int add_element(EntryCnf* entry, const DrawBufferData* buf_data, const char* vertex_shader_path, const char* fragment_shader_path);
 int add_entry_attribute(EntryCnf* entry, unsigned int size);
 int apply_entry_attributes(EntryCnf* entry);
 int draw();
