@@ -8,6 +8,8 @@
 
 #define PROGRAM_IV_LOG_BUF_CAPACITY 512
 
+static int g_Initialized                        = 0;
+
 static GLFWwindow* window                       = NULL;
 static InputFnPtr input_fn_ptr                  = NULL;
 static WindowResizeFnPtr window_resize_fn_ptr   = NULL;
@@ -16,6 +18,8 @@ static int g_EntriesDataCapacity       = 32;
 static int g_EntriesNum                = 0;
 static EntryCnf* g_EntryCnfData        = NULL;
 static BackgroundColor g_BColor        = { 0.f, 0.f, 0.f, 1.f };
+
+#define ASSERT_GRAPHICS_INITED assert( g_Initialized == 1 );
 
 static void graphics_terminate(int code)
 {
@@ -339,11 +343,15 @@ static void free_img_data(unsigned char* img_data)
 
 int graphics_should_be_terminated()
 {
+	ASSERT_GRAPHICS_INITED
+
 	return glfwWindowShouldClose(window);
 }
 
 void graphics_free_resources()
 {
+	ASSERT_GRAPHICS_INITED
+
 	free_gl_resources();
 	free_entry_cnf_data();
 
@@ -352,6 +360,8 @@ void graphics_free_resources()
 
 EntryCnf* create_entry()
 {
+	ASSERT_GRAPHICS_INITED
+
 	if (NULL == g_EntryCnfData)
 	{
 		int alloc_entry_res = alloc_entry_arr();
@@ -368,6 +378,8 @@ EntryCnf* create_entry()
 
 int create_texture_2D(const char* img_path, unsigned int* texture, enum TextureType type)
 {
+	ASSERT_GRAPHICS_INITED
+
 	glGenTextures(1, texture);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, *texture);
@@ -404,6 +416,8 @@ int create_texture_2D(const char* img_path, unsigned int* texture, enum TextureT
 
 int add_uniform_mat4f(unsigned int shader_prog, const char* uniform_name, const Mat4* mat)
 {
+	ASSERT_GRAPHICS_INITED
+
 	glUseProgram(shader_prog);
 	unsigned int transformLoc = glGetUniformLocation(shader_prog, uniform_name);
 	glUniformMatrix4fv(transformLoc, 1, GL_FALSE, &mat->m[0]);
@@ -412,6 +426,8 @@ int add_uniform_mat4f(unsigned int shader_prog, const char* uniform_name, const 
 
 int add_element(EntryCnf* entry, const DrawBufferData* buf_data, const char* vertex_shader_path, const char* fragment_shader_path)
 {
+	ASSERT_GRAPHICS_INITED
+
 	char* vertex_shader_source = get_shader_source(vertex_shader_path);
 	char* fragment_shader_source = get_shader_source(fragment_shader_path);
 
@@ -438,6 +454,8 @@ int add_element(EntryCnf* entry, const DrawBufferData* buf_data, const char* ver
 
 int add_entry_attribute(EntryCnf* entry, unsigned int size)
 {
+	ASSERT_GRAPHICS_INITED
+
 	GAttributes* attributes = entry->attributes;
 	if (attributes->count == attributes->capacity)
 	{
@@ -456,6 +474,8 @@ int add_entry_attribute(EntryCnf* entry, unsigned int size)
 
 int apply_entry_attributes(EntryCnf* entry)
 {
+	ASSERT_GRAPHICS_INITED
+
 	glBindVertexArray(entry->vao);
 	GAttributes* attributes = entry->attributes;
 	unsigned int offset = 0;
@@ -479,41 +499,54 @@ int apply_entry_attributes(EntryCnf* entry)
 
 void close_window(GWindow* window)
 {
+	ASSERT_GRAPHICS_INITED
+
 	glfwSetWindowShouldClose(window, CLOSE_GLFW_WINDOW);
 }
 
 void bind_input_fn(InputFnPtr ptr)
 {
+	ASSERT_GRAPHICS_INITED
+
 	input_fn_ptr = ptr;
 }
 
 void bind_window_resize_fn(WindowResizeFnPtr ptr)
 {
+	ASSERT_GRAPHICS_INITED
+
 	window_resize_fn_ptr = ptr;
 }
 
 int init_graphics()
 {
-	// TODO: init_graphics() called before everything assertion (gl and GLAD)
 	init_glfw();
 	window = create_window();
+
 	if (NULL == window)
 	{
 		PRINT_ERR("[graphics]: Failed to create window.");
 		return TERMINATE_ERR_CODE;
 	}
+
 	init_glad();
+
+	g_Initialized = 1;
 
 	return 0;
 }
 
 void set_background_color(BackgroundColor b_color)
 {
+	ASSERT_GRAPHICS_INITED
+
 	g_BColor = b_color;
 }
 
 int draw()
 {
+	ASSERT_GRAPHICS_INITED
+
 	if (NULL != input_fn_ptr)
 	{
 		(*input_fn_ptr)(window);
