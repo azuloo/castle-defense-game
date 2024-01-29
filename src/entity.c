@@ -251,7 +251,7 @@ int add_entity(enum EntityType type, EntityDef** dest)
 	return 0;
 }
 
-int add_entity_path(EntityDef* dest, const PathSegment* path, int path_len)
+int add_entity_path(EntityDef* dest, const PathSegment** path, int path_len)
 {
 	PathSegment** path_ptr = malloc(path_len * sizeof *path_ptr);
 	if (NULL == path_ptr)
@@ -272,8 +272,8 @@ int add_entity_path(EntityDef* dest, const PathSegment* path, int path_len)
 		}
 
 		dest->path[i]         = path_seg;
-		dest->path[i]->start  = path[i].start;
-		dest->path[i]->end    = path[i].end;
+		dest->path[i]->start  = path[i]->start;
+		dest->path[i]->end    = path[i]->end;
 	}
 
 	dest->path_len = path_len;
@@ -365,9 +365,9 @@ int entity_follow_path(EntityDef* entity)
 			if (entity->path_idx >= entity->path_len)
 			{
 				// Repeat the path
-				entity->path_idx = 0;
+				//entity->path_idx = 0;
 				// Stop at the end of the path
-				//entity->state = Entity_Idle;
+				entity->state = Entity_Idle;
 			}
 
 			return;
