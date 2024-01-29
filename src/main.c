@@ -5,7 +5,7 @@
 #include "key_bindings.h"
 #include "obj_registry.h"
 
-#include "static_env.h"
+#include "map/map_mgr.h"
 #include "entity.h"
 
 #include <string.h>
@@ -47,8 +47,10 @@ int main(int argc, int* argv[])
 	bind_input_fn(&process_input);
 	bind_window_resize_fn(&window_resize_hook);
 
-	int add_env_res = add_environments();
-	if (TERMINATE_ERR_CODE == add_env_res)
+	map_mgr_init();
+
+	int load_map_res = map_mgr_load_map();
+	if (TERMINATE_ERR_CODE == load_map_res)
 	{
 		APP_EXIT(TERMINATE_ERR_CODE);
 	}
@@ -61,14 +63,15 @@ int main(int argc, int* argv[])
 	add_entity(Entity_Square, &square);
 	add_entity(Entity_Circle, &circle);
 
-	PathSegment path[4] = {
-		[0] = { .start = { 200.f, 200.f }, .end = { 200.f, 800.f } },
-		[1] = { .start = { 200.f, 800.f }, .end = { 800.f, 800.f } },
-		[2] = { .start = { 800.f, 800.f }, .end = { 800.f, 200.f } },
-		[3] = { .start = { 800.f, 200.f }, .end = { 200.f, 200.f } },
-	};
+	const PathSegment** path = map_mgr_get_path();
+	int path_len = map_mgr_get_path_len();
 
-	add_entity_path(triangle, path, 4);
+	add_entity_path(triangle, path, path_len);
+	add_entity_path(square, path, path_len);
+	add_entity_path(circle, path, path_len);
+
+	int path_delay_sq = 250;
+	int path_delay_cir = 750;
 
 	while (!should_be_terminated())
 	{
@@ -77,10 +80,29 @@ int main(int argc, int* argv[])
 		lft = curr_time;
 
 		entity_follow_path(triangle);
+		if (path_delay_sq > 0)
+		{
+			--path_delay_sq;
+		}
+		else
+		{
+			entity_follow_path(square);
+		}
+
+		if (path_delay_cir > 0)
+		{
+			--path_delay_cir;
+		}
+		else
+		{
+			entity_follow_path(circle);
+		}
+
 		draw();
 	}
 
 	registry_free();
+	map_mgr_free_resources();
 	entity_free_resources();
 	graphics_free_resources();
 
