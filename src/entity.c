@@ -62,8 +62,8 @@ static int add_entity_common(EntityDef* dest, const DrawBufferData* draw_buf_dat
 		return TERMINATE_ERR_CODE;
 	}
 
-	add_entry_attribute(entry, 3);
-	add_entry_attribute(entry, 2);
+	add_entry_attribute(entry, 3); // Pos
+	add_entry_attribute(entry, 2); // Texture
 
 	apply_entry_attributes(entry);
 
@@ -364,8 +364,6 @@ int entity_follow_path(EntityDef* entity)
 
 			if (entity->path_idx >= entity->path_len)
 			{
-				// Repeat the path
-				//entity->path_idx = 0;
 				// Stop at the end of the path
 				entity->state = Entity_Idle;
 			}

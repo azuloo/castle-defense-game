@@ -2,8 +2,6 @@
 #include "map/initial_map.h"
 #include "utils.h"
 
-#define NUM_MAPS 1
-
 static int              s_CurrMapIdx = 0;
 static int              s_NextAvailableIdx = 0;
 static int              s_MapFunctionsCapacity = 32;
@@ -23,6 +21,18 @@ static int init_map_functions()
 	s_MapFunctions = map_funcs_ptr;
 	
 	return 0;
+}
+
+static const MapFuncsDef* get_curr_map()
+{
+	MapFuncsDef* map_def = s_MapFunctions[s_CurrMapIdx];
+	if (NULL == map_def)
+	{
+		PRINT_ERR("[map_mgr]: Failed to load current map funcs def.");
+		return TERMINATE_ERR_CODE;
+	}
+
+	return map_def;
 }
 
 // ----------------------- PUBLIC FUNCTIONS ----------------------- //
@@ -62,10 +72,10 @@ int map_mgr_register_map(const MapFuncsDef* map_funcs_def)
 
 int map_mgr_load_map()
 {
-	MapFuncsDef* map_def = s_MapFunctions[s_CurrMapIdx];
+	MapFuncsDef* map_def = get_curr_map();
 	if (NULL == map_def)
 	{
-		PRINT_ERR("[map_mgr]: Failed to load current map funcs def.");
+		PRINT_ERR("[map_mgr]: Failed to get current map ptr.");
 		return TERMINATE_ERR_CODE;
 	}
 
@@ -77,15 +87,18 @@ int map_mgr_load_map()
 
 int map_mgr_advance_to_next_map()
 {
+	// TODO: Do we need to clear prev map resources?
 	s_CurrMapIdx++;
+	// TODO: If we've reached the end - return some err code
+	return 0;
 }
 
 const PathSegment** map_mgr_get_path()
 {
-	MapFuncsDef* map_def = s_MapFunctions[s_CurrMapIdx];
+	MapFuncsDef* map_def = get_curr_map();
 	if (NULL == map_def)
 	{
-		PRINT_ERR("[map_mgr]: Failed to load current map funcs def.");
+		PRINT_ERR("[map_mgr]: Failed to get current map ptr.");
 		return TERMINATE_ERR_CODE;
 	}
 
@@ -94,10 +107,10 @@ const PathSegment** map_mgr_get_path()
 
 int map_mgr_get_path_len()
 {
-	MapFuncsDef* map_def = s_MapFunctions[s_CurrMapIdx];
+	MapFuncsDef* map_def = get_curr_map();
 	if (NULL == map_def)
 	{
-		PRINT_ERR("[map_mgr]: Failed to load current map funcs def.");
+		PRINT_ERR("[map_mgr]: Failed to get current map ptr.");
 		return TERMINATE_ERR_CODE;
 	}
 

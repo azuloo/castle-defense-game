@@ -57,8 +57,8 @@ int initial_add_background()
 		return TERMINATE_ERR_CODE;
 	}
 
-	add_entry_attribute(entry, 3);
-	add_entry_attribute(entry, 2);
+	add_entry_attribute(entry, 3); // Pos
+	add_entry_attribute(entry, 2); // Texture
 
 	apply_entry_attributes(entry);
 
@@ -75,6 +75,7 @@ int initial_add_background()
 
 int initial_add_path()
 {
+	// TODO: Rect verices are identical; move somewhere
 	static float vertices[] = {
 		// Position            // Texture
 		-1.f, 1.f, 0.f,       0.f, 1.f,
@@ -83,6 +84,7 @@ int initial_add_path()
 		-1.f, -1.f, 0.0f,     0.f, 0.f
 	};
 
+	// TODO: Rect indices are identical; move somewhere
 	static unsigned int indices[] = {
 		0, 1, 3,
 		2, 3, 1
@@ -97,7 +99,6 @@ int initial_add_path()
 	float half_path_h = path_h / 2.f;
 	float path_y_offset = wHeight / 6;
 
-	// TODO: This is Level related data; move to level.c once ready
 	PathSegment predefined_path[_INTIAL_MAP_PATH_LEN] = {
 		{ .start = { 0.f, (float)(wHeight - path_y_offset) }, .end = { 550.f, (float)(wHeight - path_y_offset) } },
 		{ .start = { 550.f, (float)(wHeight - path_y_offset) }, .end = { 550.f, (float)path_y_offset } },
@@ -111,7 +112,7 @@ int initial_add_path()
 	PathSegment** path = malloc(_INTIAL_MAP_PATH_LEN * sizeof *s_Path);
 	if (NULL == path)
 	{
-		PRINT_ERR("[static_env]: Failed to add path ptr.");
+		PRINT_ERR("[static_env]: Failed to create path ptr.");
 		return TERMINATE_ERR_CODE;
 	}
 
@@ -121,7 +122,7 @@ int initial_add_path()
 		PathSegment* path_seg = malloc(sizeof *path_seg);
 		if (NULL == path_seg)
 		{
-			PRINT_ERR("[static_env]: Failed to add path segment ptr.");
+			PRINT_ERR("[static_env]: Failed to create path segment ptr.");
 			return TERMINATE_ERR_CODE;
 		}
 
@@ -147,19 +148,19 @@ int initial_add_path()
 		int create_texture_2D_res = create_texture_2D(texture_buf, &entry->texture, TexType_RGB);
 		if (TERMINATE_ERR_CODE == create_texture_2D_res)
 		{
-			PRINT_ERR("[static_env]: Failed to add env texute.");
+			PRINT_ERR("[static_env]: Failed to add initial map level\'s texute.");
 			return TERMINATE_ERR_CODE;
 		}
 
 		int add_res = add_element(entry, &draw_buf_data, vertex_shader_path, fragment_shader_path);
 		if (TERMINATE_ERR_CODE == add_res)
 		{
-			PRINT_ERR("[static_env]: Failed to add env element.");
+			PRINT_ERR("[static_env]: Failed to add initial map level\'s element.");
 			return TERMINATE_ERR_CODE;
 		}
 
-		add_entry_attribute(entry, 3);
-		add_entry_attribute(entry, 2);
+		add_entry_attribute(entry, 3); // Pos
+		add_entry_attribute(entry, 2); // Texture
 
 		apply_entry_attributes(entry);
 
