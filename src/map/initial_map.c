@@ -9,12 +9,13 @@ extern float wWidth;
 extern float wHeight;
 
 static PathSegment** s_Path = NULL;
-#define _INTIAL_MAP_PATH_LEN 7
+#define _INTIAL_MAP_PATH_LEN 5
 
 // ----------------------- PUBLIC FUNCTIONS ----------------------- //
 
 int initial_add_background()
 {
+	// TODO: Rect verices are identical; move somewhere
 	static float vertices[] = {
 		// Position            // Texture
 		-1.f, 1.f, 0.f,       0.f, 1.f,
@@ -28,8 +29,8 @@ int initial_add_background()
 		2, 3, 1
 	};
 
-	static const char* vertex_shader_path = "/res/static/shaders/field_vert.txt";
-	static const char* fragment_shader_path = "/res/static/shaders/field_frag.txt";
+	static const char* vertex_shader_path = "/res/static/shaders/basic_vert.txt";
+	static const char* fragment_shader_path = "/res/static/shaders/basic_frag.txt";
 	static const char* texture_path = "/res/static/textures/field.jpg";
 
 	DrawBufferData draw_buf_data;
@@ -90,8 +91,8 @@ int initial_add_path()
 		2, 3, 1
 	};
 
-	static const char* vertex_shader_path = "/res/static/shaders/field_vert.txt";
-	static const char* fragment_shader_path = "/res/static/shaders/field_frag.txt";
+	static const char* vertex_shader_path = "/res/static/shaders/basic_vert.txt";
+	static const char* fragment_shader_path = "/res/static/shaders/basic_frag.txt";
 	static const char* texture_path = "/res/static/textures/road.jpg";
 
 	// TODO: Clear up "magic"
@@ -104,9 +105,7 @@ int initial_add_path()
 		{ .start = { 550.f, (float)(wHeight - path_y_offset) }, .end = { 550.f, (float)path_y_offset } },
 		{ .start = { 550.f, (float)path_y_offset }, .end = { 1050.f, (float)path_y_offset } },
 		{ .start = { 1050.f, (float)path_y_offset }, .end = { 1050.f, (float)wHeight / 2.f } },
-		{ .start = { 1050.f, (float)wHeight / 2.f }, .end = { 1600.f, (float)wHeight / 2.f } },
-		{ .start = { 1600.f, (float)wHeight / 2.f }, .end = { 1600.f, (float)wHeight / 2.f - 200.f } },
-		{ .start = { 1600.f, (float)wHeight / 2.f - 200.f }, .end = { 1300.f, (float)wHeight / 2.f - 200.f } }
+		{ .start = { 1050.f, (float)wHeight / 2.f }, .end = { 1400.f, (float)wHeight / 2.f } }
 	};
 
 	PathSegment** path = malloc(_INTIAL_MAP_PATH_LEN * sizeof *s_Path);
@@ -204,6 +203,7 @@ int initial_add_path()
 
 		entry->matrices->model = IdentityMat;
 		scale(&entry->matrices->model, scale_x, scale_y, 1.f);
+		// TODO: Z must be moved to place with Z pos hierarchy
 		translate(&entry->matrices->model, pos_x, pos_y, 0.15f);
 		add_uniform_mat4f(entry->shader_prog, "model", &entry->matrices->model);
 

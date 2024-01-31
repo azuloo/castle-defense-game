@@ -33,8 +33,8 @@ static int alloc_entities_arr()
 
 static int add_entity_common(EntityDef* dest, const DrawBufferData* draw_buf_data, const char* texture_path, const Vec3* new_pos, const Vec3* new_scale)
 {
-	static const char* vertex_shader_path = "/res/static/shaders/entity_vert.txt";
-	static const char* fragment_shader_path = "/res/static/shaders/entity_frag.txt";
+	static const char* vertex_shader_path = "/res/static/shaders/basic_vert.txt";
+	static const char* fragment_shader_path = "/res/static/shaders/basic_frag.txt";
 
 	EntryCnf* entry = create_entry();
 	if (NULL == entry)
@@ -141,6 +141,7 @@ static int add_triangle(EntityDef** dest)
 	*dest = entity_def;
 
 	// TODO: Take window res into account
+	// TODO: tri_pos.z must be moved to place with Z pos hierarchy
 	Vec3 tri_pos = { { 600.f, (float)wHeight / 2.f, 0.2f } };
 	Vec3 tri_scale = { { 35.f, 35.f, 1.f } };
 
@@ -152,6 +153,7 @@ static int add_triangle(EntityDef** dest)
 
 static int add_square(EntityDef** dest)
 {
+	// TODO: Rect verices are identical; move somewhere
 	static float vertices[] = {
 		// Position           // Texture
 		-1.f, 1.f, 0.f,       0.f, 1.f,
@@ -175,6 +177,7 @@ static int add_square(EntityDef** dest)
 	*dest = entity_def;
 
 	// TODO: Take window res into account
+	// TODO: tri_pos.z must be moved to place with Z pos hierarchy
 	Vec3 sq_pos = { { 400.f, (float)wHeight / 2.f, 0.2f } };
 	Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
 
@@ -186,6 +189,7 @@ static int add_square(EntityDef** dest)
 
 static int add_circle(EntityDef** dest)
 {
+	// TODO: Rect verices are identical; move somewhere
 	static float vertices[] = {
 		// Position           // Texture
 		-1.f, 1.f, 0.f,       0.f, 1.f,
@@ -209,6 +213,7 @@ static int add_circle(EntityDef** dest)
 	*dest = entity_def;
 
 	// TODO: Take window res into account
+	// TODO: tri_pos.z must be moved to place with Z pos hierarchy
 	Vec3 sq_pos = { { 500.f, (float)wHeight / 2.f, 0.2f } };
 	Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
 

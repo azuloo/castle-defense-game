@@ -7,6 +7,7 @@
 
 #include "map/map_mgr.h"
 #include "entity.h"
+#include "castle.h"
 
 #include <string.h>
 
@@ -71,8 +72,11 @@ int main(int argc, int* argv[])
 	add_entity_path(circle, path, path_len);
 
 	int path_delay_sq = 250;
-	int path_delay_cir = 750;
+	int path_delay_cir = 1250;
 
+	add_castle();
+
+	// TODO: Handle Windows window drag (other events?)
 	while (!should_be_terminated())
 	{
 		float curr_time = (float)glfwGetTime();
@@ -82,7 +86,7 @@ int main(int argc, int* argv[])
 		entity_follow_path(triangle);
 		if (path_delay_sq > 0)
 		{
-			--path_delay_sq;
+			path_delay_sq -= path_delay_sq * dt;
 		}
 		else
 		{
@@ -91,7 +95,7 @@ int main(int argc, int* argv[])
 
 		if (path_delay_cir > 0)
 		{
-			--path_delay_cir;
+			path_delay_cir -= path_delay_cir * dt;
 		}
 		else
 		{

@@ -24,8 +24,8 @@ int add_castle()
 		2, 3, 1
 	};
 
-	static const char* vertex_shader_path = "/res/static/shaders/entity_vert.txt";
-	static const char* fragment_shader_path = "/res/static/shaders/entity_frag.txt";
+	static const char* vertex_shader_path = "/res/static/shaders/basic_vert.txt";
+	static const char* fragment_shader_path = "/res/static/shaders/basic_frag.txt";
 	static const char* texture_path = "/res/static/textures/base.jpg";
 
 	DrawBufferData draw_buf_data;
