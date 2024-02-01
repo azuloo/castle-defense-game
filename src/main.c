@@ -4,6 +4,7 @@
 #include "lin_alg.h"
 #include "key_bindings.h"
 #include "obj_registry.h"
+#include "graphics_defs.h"
 
 #include "map/map_mgr.h"
 #include "entity.h"

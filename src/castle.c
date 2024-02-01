@@ -1,6 +1,8 @@
 #include "castle.h"
 #include "graphics.h"
 #include "utils.h"
+#include "global_defs.h"
+#include "graphics_defs.h"
 
 // TODO: Move to global_defs
 extern float wWidth;
@@ -60,11 +62,10 @@ int add_castle()
 
 	entry->matrices->model = IdentityMat;
 	scale(&entry->matrices->model, 125.f, 125.f, 1.f);
-	// TODO: tri_pos.z must be moved to place with Z pos hierarchy
-	translate(&entry->matrices->model, 1500.f, (float)wHeight / 2.f, 0.17f);
+	translate(&entry->matrices->model, 1500.f, (float)wHeight / 2.f, Z_DEPTH_INITIAL_CASTLE);
 	add_uniform_mat4f(entry->shader_prog, "model", &entry->matrices->model);
-	// TODO: Move ortho matrix to some common place
-	entry->matrices->projection = ortho(0.f, wWidth, 0.f, wHeight, -1.f, 1.f);
+
+	entry->matrices->projection = COMMON_ORTHO_MAT;
 	add_uniform_mat4f(entry->shader_prog, "projection", &entry->matrices->projection);
 
 	return 0;

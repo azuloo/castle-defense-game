@@ -3,6 +3,7 @@
 #include "stb_image.h"
 #include "lin_alg.h"
 #include "obj_registry.h"
+#include "graphics_defs.h"
 
 #include <stdlib.h>
 

@@ -4,6 +4,8 @@
 #include "utils.h"
 #include "lin_alg.h"
 #include "map/map_mgr.h"
+#include "global_defs.h"
+#include "graphics_defs.h"
 
 extern float wWidth;
 extern float wHeight;
@@ -65,10 +67,10 @@ int initial_add_background()
 
 	entry->matrices->model = IdentityMat;
 	scale(&entry->matrices->model, (float)wWidth / 2, (float)wHeight / 2, 1.f);
-	translate(&entry->matrices->model, (float)wWidth / 2, (float)wHeight / 2, 0.1f);
+	translate(&entry->matrices->model, (float)wWidth / 2, (float)wHeight / 2, Z_DEPTH_INITIAL_MAP_BACKGROUND);
 	add_uniform_mat4f(entry->shader_prog, "model", &entry->matrices->model);
 
-	entry->matrices->projection = ortho(0.f, wWidth, 0.f, wHeight, -1.f, 1.f);
+	entry->matrices->projection = COMMON_ORTHO_MAT;
 	add_uniform_mat4f(entry->shader_prog, "projection", &entry->matrices->projection);
 
 	return 0;
@@ -203,11 +205,10 @@ int initial_add_path()
 
 		entry->matrices->model = IdentityMat;
 		scale(&entry->matrices->model, scale_x, scale_y, 1.f);
-		// TODO: Z must be moved to place with Z pos hierarchy
-		translate(&entry->matrices->model, pos_x, pos_y, 0.15f);
+		translate(&entry->matrices->model, pos_x, pos_y, Z_DEPTH_INITIAL_MAP_PATH);
 		add_uniform_mat4f(entry->shader_prog, "model", &entry->matrices->model);
 
-		entry->matrices->projection = ortho(0.f, wWidth, 0.f, wHeight, -1.f, 1.f);
+		entry->matrices->projection = COMMON_ORTHO_MAT;
 		add_uniform_mat4f(entry->shader_prog, "projection", &entry->matrices->projection);
 	}
 

@@ -2,6 +2,8 @@
 #include "file_reader.h"
 #include "utils.h"
 #include "obj_registry.h"
+#include "global_defs.h"
+#include "graphics_defs.h"
 
 #include <stdlib.h>
 #include <stdbool.h>
@@ -85,7 +87,7 @@ static int add_entity_common(EntityDef* dest, const DrawBufferData* draw_buf_dat
 	translate(&entry->matrices->model, new_pos->x, new_pos->y, new_pos->z);
 	add_uniform_mat4f(entry->shader_prog, "model", &entry->matrices->model);
 	
-	entry->matrices->projection = ortho(0.f, wWidth, 0.f, wHeight, -1.f, 1.f);
+	entry->matrices->projection = COMMON_ORTHO_MAT;
 	add_uniform_mat4f(entry->shader_prog, "projection", &entry->matrices->projection);
 
 	return 0;
@@ -141,8 +143,7 @@ static int add_triangle(EntityDef** dest)
 	*dest = entity_def;
 
 	// TODO: Take window res into account
-	// TODO: tri_pos.z must be moved to place with Z pos hierarchy
-	Vec3 tri_pos = { { 600.f, (float)wHeight / 2.f, 0.2f } };
+	Vec3 tri_pos = { { 600.f, (float)wHeight / 2.f, Z_DEPTH_INITIAL_ENTITY } };
 	Vec3 tri_scale = { { 35.f, 35.f, 1.f } };
 
 	const char* texture_path = "/res/static/textures/triangle.png";
@@ -177,8 +178,7 @@ static int add_square(EntityDef** dest)
 	*dest = entity_def;
 
 	// TODO: Take window res into account
-	// TODO: tri_pos.z must be moved to place with Z pos hierarchy
-	Vec3 sq_pos = { { 400.f, (float)wHeight / 2.f, 0.2f } };
+	Vec3 sq_pos = { { 400.f, (float)wHeight / 2.f, Z_DEPTH_INITIAL_ENTITY } };
 	Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
 
 	const char* texture_path = "/res/static/textures/square.png";
@@ -213,8 +213,7 @@ static int add_circle(EntityDef** dest)
 	*dest = entity_def;
 
 	// TODO: Take window res into account
-	// TODO: tri_pos.z must be moved to place with Z pos hierarchy
-	Vec3 sq_pos = { { 500.f, (float)wHeight / 2.f, 0.2f } };
+	Vec3 sq_pos = { { 500.f, (float)wHeight / 2.f, Z_DEPTH_INITIAL_ENTITY } };
 	Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
 
 	const char* texture_path = "/res/static/textures/circle.png";
