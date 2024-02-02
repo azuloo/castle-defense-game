@@ -76,7 +76,7 @@ int readall(char* path, char** data_ptr, size_t* size_ptr)
     return READ_OK;
 }
 
-char* get_file_path(const char* name, char** buf, size_t len)
+void get_file_path(const char* name, char** buf, size_t len)
 {
-    return str_concat(STRVAL(SOURCE_ROOT), name, buf, len);
+    str_concat(STRVAL(SOURCE_ROOT), name, buf, len);
 }

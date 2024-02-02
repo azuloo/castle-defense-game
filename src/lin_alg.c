@@ -1,4 +1,5 @@
 #include "lin_alg.h"
+#include <string.h>
 
 static const double PI = 3.14159265358979323846;
 
@@ -50,7 +51,7 @@ void normaliz_vec4(Vec4* v)
 	{
 		return;
 	}
-	float invrt = 1.f / sqrt(sqr);
+	float invrt = 1.f / (float)sqrt(sqr);
 	v->m[0] *= invrt;
 	v->m[1] *= invrt;
 	v->m[2] *= invrt;
@@ -189,12 +190,12 @@ void translate(const Mat4* m, float x, float y, float z)
 
 float degrees(float radians)
 {
-	return radians * (180.f / PI);
+	return radians * (180.f / (float)PI);
 }
 
 float radians(float degrees)
 {
-	return degrees * (PI / 180.f);
+	return degrees * ((float)PI / 180.f);
 }
 
 Mat4 perspective(float fovy, float aspect_ratio, float near_plane, float far_plane)
@@ -202,7 +203,7 @@ Mat4 perspective(float fovy, float aspect_ratio, float near_plane, float far_pla
 	Mat4 out = { { 0 } };
 
 	const float rad = fovy;
-	const float tan_half_fovy = tan(rad / 2.f);
+	const float tan_half_fovy = (float)tan(rad / 2.f);
 
 	out.m[0] = 1.f / (aspect_ratio * tan_half_fovy);
 	out.m[5] = 1.f / tan_half_fovy;

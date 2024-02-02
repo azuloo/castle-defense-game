@@ -8,7 +8,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-extern float wWidth;
 extern float wHeight;
 extern float dt;
 
@@ -143,7 +142,7 @@ static int add_triangle(EntityDef** dest)
 	*dest = entity_def;
 
 	// TODO: Take window res into account
-	Vec3 tri_pos = { { 600.f, (float)wHeight / 2.f, Z_DEPTH_INITIAL_ENTITY } };
+	Vec3 tri_pos = { { 600.f, wHeight / 2.f, Z_DEPTH_INITIAL_ENTITY } };
 	Vec3 tri_scale = { { 35.f, 35.f, 1.f } };
 
 	const char* texture_path = "/res/static/textures/triangle.png";
@@ -178,7 +177,7 @@ static int add_square(EntityDef** dest)
 	*dest = entity_def;
 
 	// TODO: Take window res into account
-	Vec3 sq_pos = { { 400.f, (float)wHeight / 2.f, Z_DEPTH_INITIAL_ENTITY } };
+	Vec3 sq_pos = { { 400.f, wHeight / 2.f, Z_DEPTH_INITIAL_ENTITY } };
 	Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
 
 	const char* texture_path = "/res/static/textures/square.png";
@@ -213,7 +212,7 @@ static int add_circle(EntityDef** dest)
 	*dest = entity_def;
 
 	// TODO: Take window res into account
-	Vec3 sq_pos = { { 500.f, (float)wHeight / 2.f, Z_DEPTH_INITIAL_ENTITY } };
+	Vec3 sq_pos = { { 500.f, wHeight / 2.f, Z_DEPTH_INITIAL_ENTITY } };
 	Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
 
 	const char* texture_path = "/res/static/textures/circle.png";
@@ -372,7 +371,7 @@ int entity_follow_path(EntityDef* entity)
 				entity->state = Entity_Idle;
 			}
 
-			return;
+			return 0;
 		}
 
 		// TODO: Move to separate func

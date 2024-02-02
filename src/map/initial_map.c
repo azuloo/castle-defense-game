@@ -7,8 +7,8 @@
 #include "global_defs.h"
 #include "graphics_defs.h"
 
-extern float wWidth;
-extern float wHeight;
+extern int wWidth;
+extern int wHeight;
 
 static PathSegment** s_Path = NULL;
 #define _INTIAL_MAP_PATH_LEN 5
@@ -66,8 +66,8 @@ int initial_add_background()
 	apply_entry_attributes(entry);
 
 	entry->matrices->model = IdentityMat;
-	scale(&entry->matrices->model, (float)wWidth / 2, (float)wHeight / 2, 1.f);
-	translate(&entry->matrices->model, (float)wWidth / 2, (float)wHeight / 2, Z_DEPTH_INITIAL_MAP_BACKGROUND);
+	scale(&entry->matrices->model, wWidth / 2.f, wHeight / 2.f, 1.f);
+	translate(&entry->matrices->model, wWidth / 2.f, wHeight / 2.f, Z_DEPTH_INITIAL_MAP_BACKGROUND);
 	add_uniform_mat4f(entry->shader_prog, "model", &entry->matrices->model);
 
 	entry->matrices->projection = COMMON_ORTHO_MAT;
@@ -255,6 +255,8 @@ int initial_map_init()
 	map_func_def->get_path_len      = get_initial_path_len;
 
 	map_mgr_register_map(map_func_def);
+
+	return 0;
 }
 
 // ----------------------- PUBLIC FUNCTIONS END ----------------------- //

@@ -28,7 +28,7 @@ int register_obj(void* obj, int* handle)
 		if (NULL == reg)
 		{
 			PRINT_ERR("[obj_registry]: Failed to allocate sufficient memory for Registry ptr.");
-			return;
+			return 0;
 		}
 
 		g_Registry = reg;
@@ -46,12 +46,12 @@ void* get_obj_from_registry(const int* handle)
 	if (NULL == g_Registry)
 	{
 		PRINT_ERR("[obj_registry]: Registry was not initialized.");
-		return;
+		return NULL;
 	}
 	if (*handle >= g_Count)
 	{
 		PRINT_ERR("[obj_registry]: Handle value is greater than registry entries count.");
-		return;
+		return NULL;
 	}
 
 	return g_Registry[*handle];

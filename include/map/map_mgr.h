@@ -5,12 +5,12 @@
 
 typedef struct MapFuncsDef
 {
-	int    (*add_background)();
-	int    (*add_path)();
-	void   (*free_resources)();
+	int                    (*add_background)();
+	int                    (*add_path)();
+	void                   (*free_resources)();
 
-	PathSegment** (*get_path)();
-	int           (*get_path_len)();
+	const PathSegment**    (*get_path)();
+	int                    (*get_path_len)();
 } MapFuncsDef;
 
 int map_mgr_register_map(const MapFuncsDef* map_funcs_def);

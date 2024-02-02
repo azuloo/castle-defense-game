@@ -11,7 +11,7 @@ static MapFuncsDef**    s_MapFunctions;
 static int init_map_functions()
 {
 	s_MapFunctionsCapacity *= 2;
-	MapFuncsDef* map_funcs_ptr = realloc(s_MapFunctions, s_MapFunctionsCapacity * sizeof *map_funcs_ptr);
+	MapFuncsDef** map_funcs_ptr = realloc(s_MapFunctions, s_MapFunctionsCapacity * sizeof *map_funcs_ptr);
 	if (NULL == map_funcs_ptr)
 	{
 		PRINT_ERR("[map_mgr]: Failed to allocate sufficient memory for MapFuncsDef arr.");
@@ -29,7 +29,7 @@ static const MapFuncsDef* get_curr_map()
 	if (NULL == map_def)
 	{
 		PRINT_ERR("[map_mgr]: Failed to load current map funcs def.");
-		return TERMINATE_ERR_CODE;
+		return NULL;
 	}
 
 	return map_def;
@@ -50,6 +50,8 @@ int map_mgr_init()
 	}
 
 	initial_map_init();
+
+	return 0;
 }
 
 int map_mgr_register_map(const MapFuncsDef* map_funcs_def)
@@ -72,7 +74,7 @@ int map_mgr_register_map(const MapFuncsDef* map_funcs_def)
 
 int map_mgr_load_map()
 {
-	MapFuncsDef* map_def = get_curr_map();
+	const MapFuncsDef* map_def = get_curr_map();
 	if (NULL == map_def)
 	{
 		PRINT_ERR("[map_mgr]: Failed to get current map ptr.");
@@ -95,11 +97,11 @@ int map_mgr_advance_to_next_map()
 
 const PathSegment** map_mgr_get_path()
 {
-	MapFuncsDef* map_def = get_curr_map();
+	const MapFuncsDef* map_def = get_curr_map();
 	if (NULL == map_def)
 	{
 		PRINT_ERR("[map_mgr]: Failed to get current map ptr.");
-		return TERMINATE_ERR_CODE;
+		return NULL;
 	}
 
 	return map_def->get_path();
@@ -107,7 +109,7 @@ const PathSegment** map_mgr_get_path()
 
 int map_mgr_get_path_len()
 {
-	MapFuncsDef* map_def = get_curr_map();
+	const MapFuncsDef* map_def = get_curr_map();
 	if (NULL == map_def)
 	{
 		PRINT_ERR("[map_mgr]: Failed to get current map ptr.");
@@ -121,7 +123,7 @@ int map_mgr_free_resources()
 {
 	if (NULL == s_MapFunctions)
 	{
-		return;
+		return 0;
 	}
 
 	for (int i = 0; i < s_NextAvailableIdx; i++)

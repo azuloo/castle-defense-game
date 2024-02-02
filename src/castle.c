@@ -1,11 +1,10 @@
 #include "castle.h"
 #include "graphics.h"
+#include "file_reader.h"
 #include "utils.h"
 #include "global_defs.h"
 #include "graphics_defs.h"
 
-// TODO: Move to global_defs
-extern float wWidth;
 extern float wHeight;
 
 // ----------------------- PUBLIC FUNCTIONS ----------------------- //
@@ -62,7 +61,7 @@ int add_castle()
 
 	entry->matrices->model = IdentityMat;
 	scale(&entry->matrices->model, 125.f, 125.f, 1.f);
-	translate(&entry->matrices->model, 1500.f, (float)wHeight / 2.f, Z_DEPTH_INITIAL_CASTLE);
+	translate(&entry->matrices->model, 1500.f, wHeight / 2.f, Z_DEPTH_INITIAL_CASTLE);
 	add_uniform_mat4f(entry->shader_prog, "model", &entry->matrices->model);
 
 	entry->matrices->projection = COMMON_ORTHO_MAT;

@@ -12,11 +12,11 @@
 
 #include <string.h>
 
-float wWidth = WINDOW_DEFAULT_RES_W;
-float wHeight = WINDOW_DEFAULT_RES_H;
+int wWidth     = WINDOW_DEFAULT_RES_W;
+int wHeight    = WINDOW_DEFAULT_RES_H;
 
-float dt = 0.0f;     // delta time
-float lft = 0.0f;    // last frame time
+float dt       = 0.0f;  // delta time
+float lft      = 0.0f;  // last frame time
 
 static int should_be_terminated()
 {
@@ -24,7 +24,7 @@ static int should_be_terminated()
 }
 
 // TODO: Take the window param into accout
-void window_resize_hook(GWindow* window, float width, float height)
+void window_resize_hook(GWindow* window, int width, int height)
 {
 	wWidth = width;
 	wHeight = height;

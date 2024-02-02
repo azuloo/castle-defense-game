@@ -25,6 +25,6 @@ static char err_msg_buffer[1024];
 	PRINT_ERR(err_msg_buffer); \
 	memset(err_msg_buffer, 0, sizeof(err_msg_buffer));
 
-char* str_concat(const char* s1, const char* s2, char** buf, size_t len);
+void str_concat(const char* s1, const char* s2, char** buf, size_t len);
 
 #endif // _UTILS_H
