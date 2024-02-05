@@ -59,6 +59,7 @@ typedef struct
 	GAttributes*  attributes;
 	GMatrices*    matrices;
 	int           handle;
+	int           visible;
 } EntryCnf;
 
 typedef struct
@@ -79,6 +80,7 @@ void bind_window_resize_fn(WindowResizeFnPtr ptr);
 
 int init_graphics();
 void set_background_color(BackgroundColor b_color);
+void entry_set_visible(EntryCnf* entry, int visible);
 int graphics_should_be_terminated();
 void graphics_free_resources();
 

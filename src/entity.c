@@ -285,14 +285,34 @@ int add_entity_path(EntityDef* dest, const PathSegment** path, int path_len)
 	return 0;
 }
 
-int entity_follow_path(EntityDef* entity)
+int get_entry_cnf(EntryCnf** dest, EntityDef* src)
 {
-	EntryCnf* entry = (EntryCnf*) GET_FROM_REGISTRY(&entity->entry_handle);
+	EntryCnf* entry = (EntryCnf*) GET_FROM_REGISTRY(&src->entry_handle);
 	if (NULL == entry)
 	{
 		PRINT_ERR("[entity]: Failed to fetch EntryCnf from registry.");
 		return TERMINATE_ERR_CODE;
 	}
+
+	*dest = entry;
+
+	return 0;
+}
+
+int entity_follow_path(EntityDef* entity)
+{
+	EntryCnf* entry = NULL;
+	get_entry_cnf(&entry, entity);
+
+	if (NULL == entry)
+	{
+		PRINT_ERR("[entity]: EntryCnf was not found in Registry.");
+		return TERMINATE_ERR_CODE;
+	}
+
+	// TODO: If we later need to separate 'visible' (graphics) from 'active' (physics) - switch it here
+	if (!entry->visible)
+		return 0;
 
 	// Place at the start of the path
 	if (entity->state == Entity_Setup && entity->path_len != 0)

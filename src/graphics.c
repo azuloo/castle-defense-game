@@ -259,6 +259,7 @@ static EntryCnf* create_entry_cnf()
 	entry->attributes    = NULL;
 	entry->matrices      = NULL;
 	entry->handle        = -1;
+	entry->visible       = 1;
 
 	int create_entry_attributes_res = create_entry_attributes(entry);
 	if (TERMINATE_ERR_CODE == create_entry_attributes_res)
@@ -544,6 +545,11 @@ void set_background_color(BackgroundColor b_color)
 	g_BColor = b_color;
 }
 
+void entry_set_visible(EntryCnf* entry, int visible)
+{
+	entry->visible = visible;
+}
+
 int draw()
 {
 	ASSERT_GRAPHICS_INITED
@@ -564,6 +570,8 @@ int draw()
 	for (int i = 0; i < g_EntriesNum; i++)
 	{
 		EntryCnf* entry = g_EntryCnfData + i;
+		if (!entry->visible)
+			continue;
 		glUseProgram(entry->shader_prog);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, entry->texture);

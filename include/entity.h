@@ -48,6 +48,7 @@ typedef struct EntityDef
 // TODO: Receive pos, scale and rotation as params here
 int add_entity(enum EntityType type, EntityDef** dest);
 int add_entity_path(EntityDef* dest, const PathSegment** path, int path_len);
+int get_entry_cnf(EntryCnf** dest, EntityDef* src);
 int entity_follow_path(EntityDef* entity);
 void entity_free_resources();
 
