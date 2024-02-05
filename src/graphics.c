@@ -15,10 +15,10 @@ static GLFWwindow* window                       = NULL;
 static InputFnPtr input_fn_ptr                  = NULL;
 static WindowResizeFnPtr window_resize_fn_ptr   = NULL;
 
-static int g_EntriesDataCapacity       = 32;
-static int g_EntriesNum                = 0;
-static EntryCnf* g_EntryCnfData        = NULL;
-static BackgroundColor g_BColor        = { 0.f, 0.f, 0.f, 1.f };
+static int s_DrawableDataCapacity       = 32;
+static int s_DrawableNum                = 0;
+static DrawableDef* s_DrawableData      = NULL;
+static BackgroundColor s_BColor         = { 0.f, 0.f, 0.f, 1.f };
 
 #define ASSERT_GRAPHICS_INITED assert( g_Initialized == 1 );
 
@@ -168,35 +168,36 @@ static void create_ebo(unsigned int* ebo, unsigned int* indices, int len)
 }
 
 // ! Allocates memory on heap !
-static int alloc_entry_arr()
+static int alloc_drawable_arr()
 {
-	g_EntriesDataCapacity *= 2;
-	EntryCnf* entries_arr = realloc(g_EntryCnfData, g_EntriesDataCapacity * sizeof *entries_arr);
+	s_DrawableDataCapacity *= 2;
+	DrawableDef* drawable_arr = realloc(s_DrawableData, s_DrawableDataCapacity * sizeof *drawable_arr);
 
-	if (NULL == entries_arr)
+	if (NULL == drawable_arr)
 	{
-		PRINT_ERR("[graphics]: Failed to allocate sufficient memory chunk for EntryCnf arr.");
+		PRINT_ERR("[graphics]: Failed to allocate sufficient memory chunk for DrawableDef arr.");
 		return TERMINATE_ERR_CODE;
 	}
 
-	g_EntryCnfData = entries_arr;
+	s_DrawableData = drawable_arr;
 
 	return 0;
 }
 
-static int add_entry_attributes_cnf(EntryCnf* entry)
+static int add_drawable_attributes(DrawableDef* drawable)
 {
-	entry->attributes->capacity *= 2;
-	AttributeCnf* attr_cnf = realloc(entry->attributes->elements, entry->attributes->capacity * sizeof *attr_cnf);
+	drawable->attributes->capacity *= 2;
+	AttributeCnf* attr_cnf = realloc(drawable->attributes->elements, drawable->attributes->capacity * sizeof *attr_cnf);
 	if (NULL == attr_cnf)
 	{
 		PRINT_ERR("[graphics]: Failed to allocate sufficient memory chunk for AttributeCnf elements.");
 		return TERMINATE_ERR_CODE;
 	}
-	entry->attributes->elements = attr_cnf;
-	for (unsigned int i = entry->attributes->count; i < entry->attributes->capacity; i++)
+
+	drawable->attributes->elements = attr_cnf;
+	for (unsigned int i = drawable->attributes->count; i < drawable->attributes->capacity; i++)
 	{
-		AttributeCnf* attr_cnf = entry->attributes->elements + i;
+		AttributeCnf* attr_cnf = drawable->attributes->elements + i;
 		attr_cnf->idx = 0;
 		attr_cnf->size = 0;
 	}
@@ -204,30 +205,31 @@ static int add_entry_attributes_cnf(EntryCnf* entry)
 	return 0;
 }
 
-static int create_entry_attributes(EntryCnf* entry)
+static int create_drawable_attributes(DrawableDef* drawable)
 {
-	entry->attributes = malloc(sizeof *entry->attributes);
-	if (NULL == entry->attributes)
+	drawable->attributes = malloc(sizeof *drawable->attributes);
+	if (NULL == drawable->attributes)
 	{
 		PRINT_ERR("[graphics]: Failed to allocate sufficient memory chunk for GAttributes elements.");
 		return TERMINATE_ERR_CODE;
 	}
 
-	entry->attributes->elements   = NULL;
-	entry->attributes->type       = GL_FLOAT;
-	entry->attributes->normalize  = GL_FALSE;
-	entry->attributes->stride     = 0;
-	entry->attributes->capacity   = 1;
-	entry->attributes->count      = 0;
+	drawable->attributes->elements   = NULL;
+	drawable->attributes->type       = GL_FLOAT;
+	drawable->attributes->normalize  = GL_FALSE;
+	drawable->attributes->stride     = 0;
+	drawable->attributes->capacity   = 1;
+	drawable->attributes->count      = 0;
 
-	int add_entry_attributes_cnf_res = add_entry_attributes_cnf(entry);
-	return add_entry_attributes_cnf_res;
+	int add_drawable_attributes_res = add_drawable_attributes(drawable);
+
+	return add_drawable_attributes_res;
 }
 
-static int create_entry_matrices(EntryCnf* entry)
+static int create_drawable_matrices(DrawableDef* drawable)
 {
-	entry->matrices = calloc(1, sizeof *entry->matrices);
-	if (NULL == entry->matrices)
+	drawable->matrices = calloc(1, sizeof *drawable->matrices);
+	if (NULL == drawable->matrices)
 	{
 		PRINT_ERR("[graphics]: Failed to allocate sufficient memory chunk for GMatrices elements.");
 		return TERMINATE_ERR_CODE;
@@ -236,97 +238,97 @@ static int create_entry_matrices(EntryCnf* entry)
 	return 0;
 }
 
-static EntryCnf* create_entry_cnf()
+static DrawableDef* create_drawable_def()
 {
 	// TODO: How do we solve pointers invalidation problem? (use Registry)
-	if (g_EntriesNum >= g_EntriesDataCapacity)
+	if (s_DrawableNum >= s_DrawableDataCapacity)
 	{
-		int alloc_entry_res = alloc_entry_arr();
-		if (TERMINATE_ERR_CODE == alloc_entry_res)
+		int alloc_drawable_res = alloc_drawable_arr();
+		if (TERMINATE_ERR_CODE == alloc_drawable_res)
 		{
-			PRINT_ERR("[graphics]: Failed to create entry config.");
+			PRINT_ERR("[graphics]: Failed to create drawable def.");
 			return NULL;
 		}
 	}
 
-	EntryCnf* entry      = g_EntryCnfData + g_EntriesNum;
-	entry->vbo           = 0;
-	entry->vao           = 0;
-	entry->ebo           = 0;
-	entry->shader_prog   = 0;
-	entry->texture       = 0;
-	entry->num_indices   = 0;
-	entry->attributes    = NULL;
-	entry->matrices      = NULL;
-	entry->handle        = -1;
-	entry->visible       = 1;
+	DrawableDef* drawable   = s_DrawableData + s_DrawableNum;
+	drawable->vbo           = 0;
+	drawable->vao           = 0;
+	drawable->ebo           = 0;
+	drawable->shader_prog   = 0;
+	drawable->texture       = 0;
+	drawable->num_indices   = 0;
+	drawable->attributes    = NULL;
+	drawable->matrices      = NULL;
+	drawable->handle        = -1;
+	drawable->visible       = 1;
 
-	int create_entry_attributes_res = create_entry_attributes(entry);
-	if (TERMINATE_ERR_CODE == create_entry_attributes_res)
+	int create_drawable_attributes_res = create_drawable_attributes(drawable);
+	if (TERMINATE_ERR_CODE == create_drawable_attributes_res)
 	{
-		PRINT_ERR("[graphics]: Failed to create entry attibutes.");
+		PRINT_ERR("[graphics]: Failed to create drawable attibutes.");
 		return NULL;
 	}
 
-	int create_entry_matrices_res = create_entry_matrices(entry);
-	if (TERMINATE_ERR_CODE == create_entry_matrices_res)
+	int create_drawable_matrices_res = create_drawable_matrices(drawable);
+	if (TERMINATE_ERR_CODE == create_drawable_matrices_res)
 	{
-		PRINT_ERR("[graphics]: Failed to create entry attibutes.");
+		PRINT_ERR("[graphics]: Failed to create drawable attibutes.");
 		return NULL;
 	}
 
-	REGISTER_OBJ(entry, &entry->handle);
+	REGISTER_OBJ(drawable, &drawable->handle);
 
-	g_EntriesNum++;
+	s_DrawableNum++;
 
-	return entry;
+	return drawable;
 }
 
 static void free_gl_resources()
 {
-	for (int i = 0; i < g_EntriesNum; i++)
+	for (int i = 0; i < s_DrawableNum; i++)
 	{
-		EntryCnf* entry = g_EntryCnfData + i;
-		glDeleteVertexArrays(1, &entry->vao);
-		glDeleteBuffers(1, &entry->vbo);
-		glDeleteProgram(entry->shader_prog);
+		DrawableDef* drawable = s_DrawableData + i;
+		glDeleteVertexArrays(1, &drawable->vao);
+		glDeleteBuffers(1, &drawable->vbo);
+		glDeleteProgram(drawable->shader_prog);
 	}
 }
 
-static void free_entry_attributes_cnf()
+static void free_drawable_attributes_cnf()
 {
-	for (int i = 0; i < g_EntriesNum; i++)
+	for (int i = 0; i < s_DrawableNum; i++)
 	{
-		EntryCnf* entry = g_EntryCnfData + i;
-		if (NULL == entry->attributes)
+		DrawableDef* drawable = s_DrawableData + i;
+		if (NULL == drawable->attributes)
 		{
 			continue;
 		}
 
-		free(entry->attributes->elements);
-		free(entry->attributes);
+		free(drawable->attributes->elements);
+		free(drawable->attributes);
 	}
 }
 
-void free_entry_matrices()
+void free_drawable_matrices()
 {
-	for (int i = 0; i < g_EntriesNum; i++)
+	for (int i = 0; i < s_DrawableNum; i++)
 	{
-		EntryCnf* entry = g_EntryCnfData + i;
-		if (NULL == entry->matrices)
+		DrawableDef* drawable = s_DrawableData + i;
+		if (NULL == drawable->matrices)
 		{
 			continue;
 		}
 
-		free(entry->matrices);
+		free(drawable->matrices);
 	}
 }
 
-static void free_entry_cnf_data()
+static void free_drawable_data()
 {
-	free_entry_attributes_cnf();
-	free_entry_matrices();
-	free(g_EntryCnfData);
+	free_drawable_attributes_cnf();
+	free_drawable_matrices();
+	free(s_DrawableData);
 }
 
 static unsigned char* load_image(const char* path, int* width, int* height, int* nr_channels)
@@ -355,27 +357,27 @@ void graphics_free_resources()
 	ASSERT_GRAPHICS_INITED
 
 	free_gl_resources();
-	free_entry_cnf_data();
+	free_drawable_data();
 
 	glfwTerminate();
 }
 
-EntryCnf* create_entry()
+DrawableDef* create_drawable()
 {
 	ASSERT_GRAPHICS_INITED
 
-	if (NULL == g_EntryCnfData)
+	if (NULL == s_DrawableData)
 	{
-		int alloc_entry_res = alloc_entry_arr();
-		if (TERMINATE_ERR_CODE == alloc_entry_res)
+		int alloc_drawable_res = alloc_drawable_arr();
+		if (TERMINATE_ERR_CODE == alloc_drawable_res)
 		{
-			PRINT_ERR("[graphics]: Failed to create entry config.");
+			PRINT_ERR("[graphics]: Failed to create drawable.");
 			return NULL;
 		}
 	}
 
-	EntryCnf* entry = create_entry_cnf();
-	return entry;
+	DrawableDef* drawable = create_drawable_def();
+	return drawable;
 }
 
 int create_texture_2D(const char* img_path, unsigned int* texture, enum TextureType type)
@@ -426,7 +428,7 @@ int add_uniform_mat4f(unsigned int shader_prog, const char* uniform_name, const 
 	return 0;
 }
 
-int add_element(EntryCnf* entry, const DrawBufferData* buf_data, const char* vertex_shader_path, const char* fragment_shader_path)
+int config_drawable(DrawableDef* drawable, const DrawBufferData* buf_data, const char* vertex_shader_path, const char* fragment_shader_path)
 {
 	ASSERT_GRAPHICS_INITED
 
@@ -444,24 +446,24 @@ int add_element(EntryCnf* entry, const DrawBufferData* buf_data, const char* ver
 	free(vertex_shader_source);
 	free(fragment_shader_source);
 
-	compile_shader_program(&entry->shader_prog, vertex_shader, fragment_shader);
+	compile_shader_program(&drawable->shader_prog, vertex_shader, fragment_shader);
 
-	create_vao(&entry->vao);
-	create_vbo(&entry->vbo, buf_data->vertices, buf_data->vertices_len);
-	create_ebo(&entry->ebo, buf_data->indices, buf_data->indices_len);
-	entry->num_indices = buf_data->indices_len;
+	create_vao(&drawable->vao);
+	create_vbo(&drawable->vbo, buf_data->vertices, buf_data->vertices_len);
+	create_ebo(&drawable->ebo, buf_data->indices, buf_data->indices_len);
+	drawable->num_indices = buf_data->indices_len;
 
 	return 0;
 }
 
-int add_entry_attribute(EntryCnf* entry, unsigned int size)
+int register_drawable_attribute(DrawableDef* drawable, unsigned int size)
 {
 	ASSERT_GRAPHICS_INITED
 
-	GAttributes* attributes = entry->attributes;
+	GAttributes* attributes = drawable->attributes;
 	if (attributes->count == attributes->capacity)
 	{
-		add_entry_attributes_cnf(entry);
+		add_drawable_attributes(drawable);
 	}
 
 	AttributeCnf* attr_cnf = attributes->elements + attributes->count;
@@ -474,12 +476,12 @@ int add_entry_attribute(EntryCnf* entry, unsigned int size)
 	return 0;
 }
 
-int apply_entry_attributes(EntryCnf* entry)
+int process_drawable_attributes(DrawableDef* drawable)
 {
 	ASSERT_GRAPHICS_INITED
 
-	glBindVertexArray(entry->vao);
-	GAttributes* attributes = entry->attributes;
+	glBindVertexArray(drawable->vao);
+	GAttributes* attributes = drawable->attributes;
 	unsigned int offset = 0;
 	for (unsigned int i = 0; i < attributes->count; i++)
 	{
@@ -542,12 +544,12 @@ void set_background_color(BackgroundColor b_color)
 {
 	ASSERT_GRAPHICS_INITED
 
-	g_BColor = b_color;
+	s_BColor = b_color;
 }
 
-void entry_set_visible(EntryCnf* entry, int visible)
+void drawable_set_visible(DrawableDef* drawable, int visible)
 {
-	entry->visible = visible;
+	drawable->visible = visible;
 }
 
 int draw()
@@ -562,23 +564,23 @@ int draw()
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
 
-	glClearColor(g_BColor.R, g_BColor.G, g_BColor.B, g_BColor.A);
+	glClearColor(s_BColor.R, s_BColor.G, s_BColor.B, s_BColor.A);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	for (int i = 0; i < g_EntriesNum; i++)
+	for (int i = 0; i < s_DrawableNum; i++)
 	{
-		EntryCnf* entry = g_EntryCnfData + i;
-		if (!entry->visible)
+		DrawableDef* drawable = s_DrawableData + i;
+		if (!drawable->visible)
 			continue;
-		glUseProgram(entry->shader_prog);
+		glUseProgram(drawable->shader_prog);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, entry->texture);
-		glBindVertexArray(entry->vao);
+		glBindTexture(GL_TEXTURE_2D, drawable->texture);
+		glBindVertexArray(drawable->vao);
 
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, entry->ebo);
-		glDrawElements(GL_TRIANGLES, entry->num_indices, GL_UNSIGNED_INT, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, drawable->ebo);
+		glDrawElements(GL_TRIANGLES, drawable->num_indices, GL_UNSIGNED_INT, 0);
 	}
 
 	glfwSwapBuffers(window);

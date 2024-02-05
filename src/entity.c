@@ -37,36 +37,36 @@ static int add_entity_common(EntityDef* dest, const DrawBufferData* draw_buf_dat
 	static const char* vertex_shader_path = "/res/static/shaders/basic_vert.txt";
 	static const char* fragment_shader_path = "/res/static/shaders/basic_frag.txt";
 
-	EntryCnf* entry = create_entry();
-	if (NULL == entry)
+	DrawableDef* drawable = create_drawable();
+	if (NULL == drawable)
 	{
-		PRINT_ERR("[static_env]: Failed to create entry.");
+		PRINT_ERR("[static_env]: Failed to create drawable.");
 		return TERMINATE_ERR_CODE;
 	}
 
-	dest->entry_handle = entry->handle;
+	dest->drawable_handle = drawable->handle;
 
 	char texture_buf[256];
 	get_file_path(texture_path, &texture_buf, 256);
 
-	int create_texture_2D_res = create_texture_2D(texture_buf, &entry->texture, TexType_RGBA);
+	int create_texture_2D_res = create_texture_2D(texture_buf, &drawable->texture, TexType_RGBA);
 	if (TERMINATE_ERR_CODE == create_texture_2D_res)
 	{
 		PRINT_ERR("[static_env]: Failed to add env texute.");
 		return TERMINATE_ERR_CODE;
 	}
 
-	int add_res = add_element(entry, draw_buf_data, vertex_shader_path, fragment_shader_path);
+	int add_res = config_drawable(drawable, draw_buf_data, vertex_shader_path, fragment_shader_path);
 	if (TERMINATE_ERR_CODE == add_res)
 	{
 		PRINT_ERR("[entity]: Failed to add env element.");
 		return TERMINATE_ERR_CODE;
 	}
 
-	add_entry_attribute(entry, 3); // Pos
-	add_entry_attribute(entry, 2); // Texture
+	register_drawable_attribute(drawable, 3); // Pos
+	register_drawable_attribute(drawable, 2); // Texture
 
-	apply_entry_attributes(entry);
+	process_drawable_attributes(drawable);
 
 	TransformDef* transform = malloc(sizeof *transform);
 	if (NULL == transform)
@@ -81,13 +81,13 @@ static int add_entity_common(EntityDef* dest, const DrawBufferData* draw_buf_dat
 
 	dest->transform = transform;
 
-	entry->matrices->model = IdentityMat;
-	scale(&entry->matrices->model, new_scale->x, new_scale->y, new_scale->z);
-	translate(&entry->matrices->model, new_pos->x, new_pos->y, new_pos->z);
-	add_uniform_mat4f(entry->shader_prog, "model", &entry->matrices->model);
+	drawable->matrices->model = IdentityMat;
+	scale(&drawable->matrices->model, new_scale->x, new_scale->y, new_scale->z);
+	translate(&drawable->matrices->model, new_pos->x, new_pos->y, new_pos->z);
+	add_uniform_mat4f(drawable->shader_prog, "model", &drawable->matrices->model);
 	
-	entry->matrices->projection = COMMON_ORTHO_MAT;
-	add_uniform_mat4f(entry->shader_prog, "projection", &entry->matrices->projection);
+	drawable->matrices->projection = COMMON_ORTHO_MAT;
+	add_uniform_mat4f(drawable->shader_prog, "projection", &drawable->matrices->projection);
 
 	return 0;
 }
@@ -112,7 +112,7 @@ static EntityDef* create_entity_def(enum EntityType type)
 	entity_def->path_idx        = -1;
 	entity_def->path_len        = 0;
 	entity_def->state           = Entity_Setup;
-	entity_def->entry_handle    = -1;
+	entity_def->drawable_handle    = -1;
 
 	g_EntitiesNum++;
 
@@ -285,33 +285,33 @@ int add_entity_path(EntityDef* dest, const PathSegment** path, int path_len)
 	return 0;
 }
 
-int get_entry_cnf(EntryCnf** dest, EntityDef* src)
+int get_drawable_def(DrawableDef** dest, EntityDef* src)
 {
-	EntryCnf* entry = (EntryCnf*) GET_FROM_REGISTRY(&src->entry_handle);
-	if (NULL == entry)
+	DrawableDef* drawable = (DrawableDef*) GET_FROM_REGISTRY(&src->drawable_handle);
+	if (NULL == drawable)
 	{
-		PRINT_ERR("[entity]: Failed to fetch EntryCnf from registry.");
+		PRINT_ERR("[entity]: Failed to fetch DrawableDef from registry.");
 		return TERMINATE_ERR_CODE;
 	}
 
-	*dest = entry;
+	*dest = drawable;
 
 	return 0;
 }
 
 int entity_follow_path(EntityDef* entity)
 {
-	EntryCnf* entry = NULL;
-	get_entry_cnf(&entry, entity);
+	DrawableDef* drawable = NULL;
+	get_drawable_def(&drawable, entity);
 
-	if (NULL == entry)
+	if (NULL == drawable)
 	{
-		PRINT_ERR("[entity]: EntryCnf was not found in Registry.");
+		PRINT_ERR("[entity]: DrawableDef was not found in Registry.");
 		return TERMINATE_ERR_CODE;
 	}
 
 	// TODO: If we later need to separate 'visible' (graphics) from 'active' (physics) - switch it here
-	if (!entry->visible)
+	if (!drawable->visible)
 		return 0;
 
 	// Place at the start of the path
@@ -319,10 +319,10 @@ int entity_follow_path(EntityDef* entity)
 	{
 		Vec3 starting_pos = { { entity->path[0]->start.x, entity->path[0]->start.y, entity->transform->pos.z } };
 
-		entry->matrices->model = IdentityMat;
-		scale(&entry->matrices->model, entity->transform->scale.x, entity->transform->scale.y, entity->transform->scale.z);
-		translate(&entry->matrices->model, starting_pos.x, starting_pos.y, entity->transform->pos.z);
-		add_uniform_mat4f(entry->shader_prog, "model", &entry->matrices->model);
+		drawable->matrices->model = IdentityMat;
+		scale(&drawable->matrices->model, entity->transform->scale.x, entity->transform->scale.y, entity->transform->scale.z);
+		translate(&drawable->matrices->model, starting_pos.x, starting_pos.y, entity->transform->pos.z);
+		add_uniform_mat4f(drawable->shader_prog, "model", &drawable->matrices->model);
 
 		entity->transform->pos = starting_pos;
 		entity->state = Entity_Moving;
@@ -395,10 +395,10 @@ int entity_follow_path(EntityDef* entity)
 		}
 
 		// TODO: Move to separate func
-		entry->matrices->model = IdentityMat;
-		scale(&entry->matrices->model, entity->transform->scale.x, entity->transform->scale.y, entity->transform->scale.z);
-		translate(&entry->matrices->model, new_pos_x, new_pos_y, entity->transform->pos.z);
-		add_uniform_mat4f(entry->shader_prog, "model", &entry->matrices->model);
+		drawable->matrices->model = IdentityMat;
+		scale(&drawable->matrices->model, entity->transform->scale.x, entity->transform->scale.y, entity->transform->scale.z);
+		translate(&drawable->matrices->model, new_pos_x, new_pos_y, entity->transform->pos.z);
+		add_uniform_mat4f(drawable->shader_prog, "model", &drawable->matrices->model);
 
 		entity->transform->pos.x = new_pos_x;
 		entity->transform->pos.y = new_pos_y;

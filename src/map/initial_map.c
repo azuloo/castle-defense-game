@@ -41,37 +41,37 @@ int initial_add_background()
 	draw_buf_data.indices = indices;
 	draw_buf_data.indices_len = sizeof(indices) / sizeof(indices[0]);
 
-	EntryCnf* entry = create_entry();
+	DrawableDef* drawable = create_drawable();
 
 	char texture_buf[256];
 	get_file_path(texture_path, &texture_buf, 256);
 
-	int create_texture_2D_res = create_texture_2D(texture_buf, &entry->texture, TexType_RGB);
+	int create_texture_2D_res = create_texture_2D(texture_buf, &drawable->texture, TexType_RGB);
 	if (TERMINATE_ERR_CODE == create_texture_2D_res)
 	{
 		PRINT_ERR("[static_env]: Failed to add env texute.");
 		return TERMINATE_ERR_CODE;
 	}
 
-	int add_res = add_element(entry, &draw_buf_data, vertex_shader_path, fragment_shader_path);
+	int add_res = config_drawable(drawable, &draw_buf_data, vertex_shader_path, fragment_shader_path);
 	if (TERMINATE_ERR_CODE == add_res)
 	{
 		PRINT_ERR("[static_env]: Failed to add env element.");
 		return TERMINATE_ERR_CODE;
 	}
 
-	add_entry_attribute(entry, 3); // Pos
-	add_entry_attribute(entry, 2); // Texture
+	register_drawable_attribute(drawable, 3); // Pos
+	register_drawable_attribute(drawable, 2); // Texture
 
-	apply_entry_attributes(entry);
+	process_drawable_attributes(drawable);
 
-	entry->matrices->model = IdentityMat;
-	scale(&entry->matrices->model, wWidth / 2.f, wHeight / 2.f, 1.f);
-	translate(&entry->matrices->model, wWidth / 2.f, wHeight / 2.f, Z_DEPTH_INITIAL_MAP_BACKGROUND);
-	add_uniform_mat4f(entry->shader_prog, "model", &entry->matrices->model);
+	drawable->matrices->model = IdentityMat;
+	scale(&drawable->matrices->model, wWidth / 2.f, wHeight / 2.f, 1.f);
+	translate(&drawable->matrices->model, wWidth / 2.f, wHeight / 2.f, Z_DEPTH_INITIAL_MAP_BACKGROUND);
+	add_uniform_mat4f(drawable->shader_prog, "model", &drawable->matrices->model);
 
-	entry->matrices->projection = COMMON_ORTHO_MAT;
-	add_uniform_mat4f(entry->shader_prog, "projection", &entry->matrices->projection);
+	drawable->matrices->projection = COMMON_ORTHO_MAT;
+	add_uniform_mat4f(drawable->shader_prog, "projection", &drawable->matrices->projection);
 
 	return 0;
 }
@@ -141,29 +141,29 @@ int initial_add_path()
 		draw_buf_data.indices = indices;
 		draw_buf_data.indices_len = sizeof(indices) / sizeof(indices[0]);
 
-		EntryCnf* entry = create_entry();
+		DrawableDef* drawable = create_drawable();
 
 		char texture_buf[256];
 		get_file_path(texture_path, &texture_buf, 256);
 
-		int create_texture_2D_res = create_texture_2D(texture_buf, &entry->texture, TexType_RGB);
+		int create_texture_2D_res = create_texture_2D(texture_buf, &drawable->texture, TexType_RGB);
 		if (TERMINATE_ERR_CODE == create_texture_2D_res)
 		{
 			PRINT_ERR("[static_env]: Failed to add initial map level\'s texute.");
 			return TERMINATE_ERR_CODE;
 		}
 
-		int add_res = add_element(entry, &draw_buf_data, vertex_shader_path, fragment_shader_path);
+		int add_res = config_drawable(drawable, &draw_buf_data, vertex_shader_path, fragment_shader_path);
 		if (TERMINATE_ERR_CODE == add_res)
 		{
 			PRINT_ERR("[static_env]: Failed to add initial map level\'s element.");
 			return TERMINATE_ERR_CODE;
 		}
 
-		add_entry_attribute(entry, 3); // Pos
-		add_entry_attribute(entry, 2); // Texture
+		register_drawable_attribute(drawable, 3); // Pos
+		register_drawable_attribute(drawable, 2); // Texture
 
-		apply_entry_attributes(entry);
+		process_drawable_attributes(drawable);
 
 		PathSegment* path_segment = s_Path[i];
 
@@ -203,13 +203,13 @@ int initial_add_path()
 		float pos_x = (path_segment->start.x + path_segment->end.x) / 2.f;
 		float pos_y = (path_segment->start.y + path_segment->end.y) / 2.f;
 
-		entry->matrices->model = IdentityMat;
-		scale(&entry->matrices->model, scale_x, scale_y, 1.f);
-		translate(&entry->matrices->model, pos_x, pos_y, Z_DEPTH_INITIAL_MAP_PATH);
-		add_uniform_mat4f(entry->shader_prog, "model", &entry->matrices->model);
+		drawable->matrices->model = IdentityMat;
+		scale(&drawable->matrices->model, scale_x, scale_y, 1.f);
+		translate(&drawable->matrices->model, pos_x, pos_y, Z_DEPTH_INITIAL_MAP_PATH);
+		add_uniform_mat4f(drawable->shader_prog, "model", &drawable->matrices->model);
 
-		entry->matrices->projection = COMMON_ORTHO_MAT;
-		add_uniform_mat4f(entry->shader_prog, "projection", &entry->matrices->projection);
+		drawable->matrices->projection = COMMON_ORTHO_MAT;
+		add_uniform_mat4f(drawable->shader_prog, "projection", &drawable->matrices->projection);
 	}
 
 	return 0;

@@ -60,7 +60,7 @@ typedef struct
 	GMatrices*    matrices;
 	int           handle;
 	int           visible;
-} EntryCnf;
+} DrawableDef;
 
 typedef struct
 {
@@ -80,16 +80,16 @@ void bind_window_resize_fn(WindowResizeFnPtr ptr);
 
 int init_graphics();
 void set_background_color(BackgroundColor b_color);
-void entry_set_visible(EntryCnf* entry, int visible);
+void drawable_set_visible(DrawableDef* drawable, int visible);
 int graphics_should_be_terminated();
 void graphics_free_resources();
 
-EntryCnf* create_entry();
+DrawableDef* create_drawable();
 int create_texture_2D(const char* img_path, unsigned int* texture, enum TextureType type);
 int add_uniform_mat4f(unsigned int shader_prog, const char* uniform_name, const Mat4* mat);
-int add_element(EntryCnf* entry, const DrawBufferData* buf_data, const char* vertex_shader_path, const char* fragment_shader_path);
-int add_entry_attribute(EntryCnf* entry, unsigned int size);
-int apply_entry_attributes(EntryCnf* entry);
+int config_drawable(DrawableDef* drawable, const DrawBufferData* buf_data, const char* vertex_shader_path, const char* fragment_shader_path);
+int register_drawable_attribute(DrawableDef* drawable, unsigned int size);
+int process_drawable_attributes(DrawableDef* drawable);
 int draw();
 
 #endif // _GRAPHICS_H

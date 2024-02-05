@@ -77,10 +77,10 @@ int main(int argc, int* argv[])
 
 	add_castle();
 
-	EntryCnf* square_entry = NULL;
-	get_entry_cnf(&square_entry, square);
+	DrawableDef* square_drawable = NULL;
+	get_drawable_def(&square_drawable, square);
 
-	entry_set_visible(square_entry, 0);
+	drawable_set_visible(square_drawable, 0);
 
 	// TODO: Handle Windows window drag (other events?)
 	while (!should_be_terminated())
