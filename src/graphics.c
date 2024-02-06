@@ -552,7 +552,7 @@ void drawable_set_visible(DrawableDef* drawable, int visible)
 	drawable->visible = visible;
 }
 
-int draw()
+int graphics_draw()
 {
 	ASSERT_GRAPHICS_INITED
 

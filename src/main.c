@@ -1,4 +1,5 @@
 #include "graphics.h"
+#include "physics.h"
 #include "file_reader.h"
 #include "utils.h"
 #include "lin_alg.h"
@@ -108,7 +109,8 @@ int main(int argc, int* argv[])
 			entity_follow_path(circle);
 		}
 
-		draw();
+		physics_step();
+		graphics_draw();
 	}
 
 	registry_free();

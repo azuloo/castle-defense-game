@@ -90,6 +90,6 @@ int add_uniform_mat4f(unsigned int shader_prog, const char* uniform_name, const 
 int config_drawable(DrawableDef* drawable, const DrawBufferData* buf_data, const char* vertex_shader_path, const char* fragment_shader_path);
 int register_drawable_attribute(DrawableDef* drawable, unsigned int size);
 int process_drawable_attributes(DrawableDef* drawable);
-int draw();
+int graphics_draw();
 
 #endif // _GRAPHICS_H
