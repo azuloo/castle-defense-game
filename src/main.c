@@ -8,7 +8,6 @@
 
 #include "map/map_mgr.h"
 #include "entity.h"
-#include "castle.h"
 
 #include <string.h>
 
@@ -75,7 +74,8 @@ int main(int argc, int* argv[])
 	int path_delay_sq = 250;
 	int path_delay_cir = 1250;
 
-	add_castle();
+	EntityDef* castle = NULL;
+	add_entity(Entity_Castle, &castle);
 
 	DrawableDef* square_drawable = NULL;
 	get_drawable_def(&square_drawable, square);
