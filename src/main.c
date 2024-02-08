@@ -65,6 +65,7 @@ int main(int argc, int* argv[])
 	add_entity(Entity_Square, &square);
 	add_entity(Entity_Circle, &circle);
 
+	// TODO: Pass as arg and return int
 	const PathSegment** path = map_mgr_get_path();
 	int path_len = map_mgr_get_path_len();
 
@@ -77,11 +78,6 @@ int main(int argc, int* argv[])
 
 	EntityDef* castle = NULL;
 	add_entity(Entity_Castle, &castle);
-
-	DrawableDef* square_drawable = NULL;
-	get_drawable_def(&square_drawable, square);
-
-	drawable_set_visible(square_drawable, 0);
 
 	// TODO: Handle Windows window drag (other events?)
 	while (!should_be_terminated())

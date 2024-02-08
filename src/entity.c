@@ -35,7 +35,7 @@ static int alloc_entities_arr()
 static int add_entity_common(EntityDef* dest, const DrawBufferData* draw_buf_data, const char* texture_path, int texture_type, const Vec3* new_pos, const Vec3* new_scale)
 {
 	static const char* vertex_shader_path = "/res/static/shaders/basic_vert.txt";
-	static const char* fragment_shader_path = "/res/static/shaders/basic_frag.txt";
+	static const char* fragment_shader_path = "/res/static/shaders/entity_frag.txt";
 
 	DrawableDef* drawable = create_drawable();
 	if (NULL == drawable)
@@ -90,6 +90,9 @@ static int add_entity_common(EntityDef* dest, const DrawBufferData* draw_buf_dat
 	
 	drawable->matrices->projection = COMMON_ORTHO_MAT;
 	add_uniform_mat4f(drawable->shader_prog, "projection", &drawable->matrices->projection);
+
+	Vec4 color_vec = { { 0.f, 1.f, 0.f, 1.f } };
+	add_uniform_vec4f(drawable->shader_prog, "UColor", &color_vec);
 
 	return 0;
 }
@@ -252,7 +255,7 @@ static int add_castle(EntityDef** dest)
 	Vec3 sq_pos = { { 1500.f, wHeight / 2.f, Z_DEPTH_INITIAL_CASTLE } };
 	Vec3 sq_scale = { { 125.f, 125.f, 1.f } };
 
-	const char* texture_path = "/res/static/textures/castle.jpg";
+	const char* texture_path = "/res/static/textures/castle.png";
 	add_entity_common(*dest, &draw_buf_data, texture_path, TexType_RGB, &sq_pos, &sq_scale);
 
 	return 0;
@@ -341,6 +344,11 @@ int get_drawable_def(DrawableDef** dest, EntityDef* src)
 
 int entity_follow_path(EntityDef* entity)
 {
+	if (NULL == entity->path || 0 == entity->path_len)
+	{
+		return 0;
+	}
+
 	DrawableDef* drawable = NULL;
 	get_drawable_def(&drawable, entity);
 
