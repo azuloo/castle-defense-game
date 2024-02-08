@@ -66,8 +66,8 @@ int initial_add_background()
 	process_drawable_attributes(drawable);
 
 	drawable->matrices->model = IdentityMat;
-	scale(&drawable->matrices->model, wWidth / 2.f, wHeight / 2.f, 1.f);
 	translate(&drawable->matrices->model, wWidth / 2.f, wHeight / 2.f, Z_DEPTH_INITIAL_MAP_BACKGROUND);
+	scale(&drawable->matrices->model, wWidth / 2.f, wHeight / 2.f, 1.f);
 	add_uniform_mat4f(drawable->shader_prog, "model", &drawable->matrices->model);
 
 	drawable->matrices->projection = COMMON_ORTHO_MAT;
@@ -204,8 +204,8 @@ int initial_add_path()
 		float pos_y = (path_segment->start.y + path_segment->end.y) / 2.f;
 
 		drawable->matrices->model = IdentityMat;
-		scale(&drawable->matrices->model, scale_x, scale_y, 1.f);
 		translate(&drawable->matrices->model, pos_x, pos_y, Z_DEPTH_INITIAL_MAP_PATH);
+		scale(&drawable->matrices->model, scale_x, scale_y, 1.f);
 		add_uniform_mat4f(drawable->shader_prog, "model", &drawable->matrices->model);
 
 		drawable->matrices->projection = COMMON_ORTHO_MAT;

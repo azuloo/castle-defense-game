@@ -121,7 +121,7 @@ void rotate(const Vec3* axis, const Mat4* m, float angle)
 	rotation.m[9] = (axis->z * axis->y * del_cos) + xTs;
 	rotation.m[10] = cosine + (pow(axis->z, 2) * del_cos);
 
-	memcpy(m->m, multiply_mat4(m, &rotation).m, sizeof(m->m));
+	memcpy(m->m, multiply_mat4(&rotation, m).m, sizeof(m->m));
 }
 
 void rotate_x(const Mat4* m, float angle)
@@ -135,7 +135,7 @@ void rotate_x(const Mat4* m, float angle)
 	rotation.m[9] = sine;
 	rotation.m[10] = cosine;
 
-	memcpy(m->m, multiply_mat4(m, &rotation).m, sizeof(m->m));
+	memcpy(m->m, multiply_mat4(&rotation, m).m, sizeof(m->m));
 }
 
 void rotate_y(const Mat4* m, float angle)
@@ -149,7 +149,7 @@ void rotate_y(const Mat4* m, float angle)
 	rotation.m[2] = -sine;
 	rotation.m[10] = cosine;
 
-	memcpy(m->m, multiply_mat4(m, &rotation).m, sizeof(m->m));
+	memcpy(m->m, multiply_mat4(&rotation, m).m, sizeof(m->m));
 }
 
 void rotate_z(const Mat4* m, float angle)
@@ -163,7 +163,7 @@ void rotate_z(const Mat4* m, float angle)
 	rotation.m[4] = sine;
 	rotation.m[5] = cosine;
 
-	memcpy(m->m, multiply_mat4(m, &rotation).m, sizeof(m->m));
+	memcpy(m->m, multiply_mat4(&rotation, m).m, sizeof(m->m));
 }
 
 void scale(const Mat4* m, float x, float y, float z)
@@ -174,7 +174,7 @@ void scale(const Mat4* m, float x, float y, float z)
 	scale.m[5] = y;
 	scale.m[10] = z;
 
-	memcpy(m->m, multiply_mat4(m, &scale).m, sizeof(m->m));
+	memcpy(m->m, multiply_mat4(&scale, m).m, sizeof(m->m));
 }
 
 void translate(const Mat4* m, float x, float y, float z)
@@ -185,7 +185,7 @@ void translate(const Mat4* m, float x, float y, float z)
 	translation.m[13] = y;
 	translation.m[14] = z;
 
-	memcpy(m->m, multiply_mat4(m, &translation).m, sizeof(m->m));
+	memcpy(m->m, multiply_mat4(&translation, m).m, sizeof(m->m));
 }
 
 float degrees(float radians)

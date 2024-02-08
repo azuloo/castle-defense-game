@@ -78,14 +78,14 @@ static int add_entity_common(EntityDef* dest, const DrawBufferData* draw_buf_dat
 
 	physics->pos          = *new_pos;
 	physics->scale        = *new_scale;
-	physics->collidable   = 0;
+	physics->collidable   = 1;
 	memset(&physics->rotation, 0, sizeof &physics->rotation);
 
 	dest->physics = physics;
 
 	drawable->matrices->model = IdentityMat;
-	scale(&drawable->matrices->model, new_scale->x, new_scale->y, new_scale->z);
 	translate(&drawable->matrices->model, new_pos->x, new_pos->y, new_pos->z);
+	scale(&drawable->matrices->model, new_scale->x, new_scale->y, new_scale->z);
 	add_uniform_mat4f(drawable->shader_prog, "model", &drawable->matrices->model);
 	
 	drawable->matrices->projection = COMMON_ORTHO_MAT;
@@ -360,8 +360,8 @@ int entity_follow_path(EntityDef* entity)
 		Vec3 starting_pos = { { entity->path[0]->start.x, entity->path[0]->start.y, entity->physics->pos.z } };
 
 		drawable->matrices->model = IdentityMat;
-		scale(&drawable->matrices->model, entity->physics->scale.x, entity->physics->scale.y, entity->physics->scale.z);
 		translate(&drawable->matrices->model, starting_pos.x, starting_pos.y, entity->physics->pos.z);
+		scale(&drawable->matrices->model, entity->physics->scale.x, entity->physics->scale.y, entity->physics->scale.z);
 		add_uniform_mat4f(drawable->shader_prog, "model", &drawable->matrices->model);
 
 		entity->physics->pos = starting_pos;
@@ -436,8 +436,8 @@ int entity_follow_path(EntityDef* entity)
 
 		// TODO: Move to separate func
 		drawable->matrices->model = IdentityMat;
-		scale(&drawable->matrices->model, entity->physics->scale.x, entity->physics->scale.y, entity->physics->scale.z);
 		translate(&drawable->matrices->model, new_pos_x, new_pos_y, entity->physics->pos.z);
+		scale(&drawable->matrices->model, entity->physics->scale.x, entity->physics->scale.y, entity->physics->scale.z);
 		add_uniform_mat4f(drawable->shader_prog, "model", &drawable->matrices->model);
 
 		entity->physics->pos.x = new_pos_x;
