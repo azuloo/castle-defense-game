@@ -48,18 +48,26 @@ typedef struct
 	Mat4 projection;
 } GMatrices;
 
+typedef struct TransformDef
+{
+	Vec3 translation;
+	Vec3 rotation;
+	Vec3 scale;
+} TransformDef;
+
 typedef struct
 {
-	unsigned int  vbo;
-	unsigned int  vao;
-	unsigned int  ebo;
-	unsigned int  shader_prog;
-	unsigned int  texture;
-	unsigned int  num_indices;
-	GAttributes*  attributes;
-	GMatrices*    matrices;
-	int           handle;
-	int           visible;
+	unsigned int    vbo;
+	unsigned int    vao;
+	unsigned int    ebo;
+	unsigned int    shader_prog;
+	unsigned int    texture;
+	unsigned int    num_indices;
+	GAttributes*    attributes;
+	GMatrices*      matrices;
+	TransformDef*   transform;
+	int             handle;
+	int             visible;
 } DrawableDef;
 
 typedef struct
@@ -87,6 +95,7 @@ void graphics_free_resources();
 DrawableDef* create_drawable();
 int create_texture_2D(const char* img_path, unsigned int* texture, enum TextureType type);
 int add_uniform_mat4f(unsigned int shader_prog, const char* uniform_name, const Mat4* mat);
+int add_uniform_vec4f(unsigned int shader_prog, const char* uniform_name, const Vec4* vec);
 int config_drawable(DrawableDef* drawable, const DrawBufferData* buf_data, const char* vertex_shader_path, const char* fragment_shader_path);
 int register_drawable_attribute(DrawableDef* drawable, unsigned int size);
 int process_drawable_attributes(DrawableDef* drawable);

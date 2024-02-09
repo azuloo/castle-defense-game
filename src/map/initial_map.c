@@ -6,12 +6,16 @@
 #include "map/map_mgr.h"
 #include "global_defs.h"
 #include "graphics_defs.h"
+#include "drawable_ops.h"
+
+#define INITIAL_MAP_SHADER_MODEL_UNIFORM_NAME   "model"
+#define INTIAL_MAP_PATH_LEN                     5
 
 extern int wWidth;
 extern int wHeight;
 
 static PathSegment** s_Path = NULL;
-#define _INTIAL_MAP_PATH_LEN 5
+
 
 // ----------------------- PUBLIC FUNCTIONS ----------------------- //
 
@@ -65,10 +69,15 @@ int initial_add_background()
 
 	process_drawable_attributes(drawable);
 
-	drawable->matrices->model = IdentityMat;
-	translate(&drawable->matrices->model, wWidth / 2.f, wHeight / 2.f, Z_DEPTH_INITIAL_MAP_BACKGROUND);
-	scale(&drawable->matrices->model, wWidth / 2.f, wHeight / 2.f, 1.f);
-	add_uniform_mat4f(drawable->shader_prog, "model", &drawable->matrices->model);
+	drawable->transform->translation.x = wWidth / 2.f;
+	drawable->transform->translation.y = wHeight / 2.f;
+	drawable->transform->translation.z = Z_DEPTH_INITIAL_MAP_BACKGROUND;
+
+	drawable->transform->scale.x = wWidth / 2.f;
+	drawable->transform->scale.y = wHeight / 2.f;
+	drawable->transform->scale.z = 1.f;
+
+	drawable_transform_ts(drawable, INITIAL_MAP_SHADER_MODEL_UNIFORM_NAME);
 
 	drawable->matrices->projection = COMMON_ORTHO_MAT;
 	add_uniform_mat4f(drawable->shader_prog, "projection", &drawable->matrices->projection);
@@ -102,7 +111,7 @@ int initial_add_path()
 	float half_path_h = path_h / 2.f;
 	float path_y_offset = wHeight / 6;
 
-	PathSegment predefined_path[_INTIAL_MAP_PATH_LEN] = {
+	PathSegment predefined_path[INTIAL_MAP_PATH_LEN] = {
 		{ .start = { 0.f, (float)(wHeight - path_y_offset) }, .end = { 550.f, (float)(wHeight - path_y_offset) } },
 		{ .start = { 550.f, (float)(wHeight - path_y_offset) }, .end = { 550.f, (float)path_y_offset } },
 		{ .start = { 550.f, (float)path_y_offset }, .end = { 1050.f, (float)path_y_offset } },
@@ -110,15 +119,15 @@ int initial_add_path()
 		{ .start = { 1050.f, (float)wHeight / 2.f }, .end = { 1400.f, (float)wHeight / 2.f } }
 	};
 
-	PathSegment** path = malloc(_INTIAL_MAP_PATH_LEN * sizeof *s_Path);
+	PathSegment** path = malloc(INTIAL_MAP_PATH_LEN * sizeof *s_Path);
 	if (NULL == path)
 	{
 		PRINT_ERR("[static_env]: Failed to create path ptr.");
 		return TERMINATE_ERR_CODE;
 	}
 
-	assert((sizeof(predefined_path) / sizeof(predefined_path[0])) == _INTIAL_MAP_PATH_LEN);
-	for (int i = 0; i < _INTIAL_MAP_PATH_LEN; i++)
+	assert((sizeof(predefined_path) / sizeof(predefined_path[0])) == INTIAL_MAP_PATH_LEN);
+	for (int i = 0; i < INTIAL_MAP_PATH_LEN; i++)
 	{
 		PathSegment* path_seg = malloc(sizeof *path_seg);
 		if (NULL == path_seg)
@@ -133,7 +142,7 @@ int initial_add_path()
 
 	s_Path = path;
 
-	for (int i = 0; i < _INTIAL_MAP_PATH_LEN; i++)
+	for (int i = 0; i < INTIAL_MAP_PATH_LEN; i++)
 	{
 		DrawBufferData draw_buf_data;
 		draw_buf_data.vertices = vertices;
@@ -203,10 +212,15 @@ int initial_add_path()
 		float pos_x = (path_segment->start.x + path_segment->end.x) / 2.f;
 		float pos_y = (path_segment->start.y + path_segment->end.y) / 2.f;
 
-		drawable->matrices->model = IdentityMat;
-		translate(&drawable->matrices->model, pos_x, pos_y, Z_DEPTH_INITIAL_MAP_PATH);
-		scale(&drawable->matrices->model, scale_x, scale_y, 1.f);
-		add_uniform_mat4f(drawable->shader_prog, "model", &drawable->matrices->model);
+		drawable->transform->translation.x = pos_x;
+		drawable->transform->translation.y = pos_y;
+		drawable->transform->translation.z = Z_DEPTH_INITIAL_MAP_PATH;
+
+		drawable->transform->scale.x = scale_x;
+		drawable->transform->scale.y = scale_y;
+		drawable->transform->scale.z = 1.f;
+
+		drawable_transform_ts(drawable, INITIAL_MAP_SHADER_MODEL_UNIFORM_NAME);
 
 		drawable->matrices->projection = COMMON_ORTHO_MAT;
 		add_uniform_mat4f(drawable->shader_prog, "projection", &drawable->matrices->projection);
@@ -219,7 +233,7 @@ void initial_free_resources()
 {
 	if (NULL != s_Path)
 	{
-		for (int i = 0; i < _INTIAL_MAP_PATH_LEN; i++)
+		for (int i = 0; i < INTIAL_MAP_PATH_LEN; i++)
 		{
 			free(s_Path[i]);
 		}
@@ -235,7 +249,7 @@ const PathSegment** get_initial_path()
 
 int get_initial_path_len()
 {
-	return _INTIAL_MAP_PATH_LEN;
+	return INTIAL_MAP_PATH_LEN;
 }
 
 int initial_map_init()

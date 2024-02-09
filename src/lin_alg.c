@@ -101,7 +101,7 @@ Vec4 cross(Vec4 v1, Vec4 v2)
 	return out;
 }
 
-void rotate(const Vec3* axis, const Mat4* m, float angle)
+void rotate(const Mat4* m, const Vec3* axis, float angle)
 {
 	Mat4 rotation = IdentityMat;
 	float sine = (float)sin(angle);

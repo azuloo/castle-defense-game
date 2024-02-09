@@ -4,9 +4,14 @@
 #include "obj_registry.h"
 #include "global_defs.h"
 #include "graphics_defs.h"
+#include "drawable_ops.h"
 
 #include <stdlib.h>
 #include <stdbool.h>
+
+#define ENTITY_SHADER_MODEL_UNIFORM_NAME         "model"
+#define ENTITY_SHADER_PROJECTION_UNIFORM_NAME    "projection"
+#define ENTITY_SHADER_COLOR_UNIFORM_NAME         "UColor"
 
 extern float wHeight;
 extern float dt;
@@ -76,6 +81,7 @@ static int add_entity_common(EntityDef* dest, const DrawBufferData* draw_buf_dat
 		return TERMINATE_ERR_CODE;
 	}
 
+	// TODO: Change to and use physics quantities
 	physics->pos          = *new_pos;
 	physics->scale        = *new_scale;
 	physics->collidable   = 1;
@@ -83,16 +89,16 @@ static int add_entity_common(EntityDef* dest, const DrawBufferData* draw_buf_dat
 
 	dest->physics = physics;
 
-	drawable->matrices->model = IdentityMat;
-	translate(&drawable->matrices->model, new_pos->x, new_pos->y, new_pos->z);
-	scale(&drawable->matrices->model, new_scale->x, new_scale->y, new_scale->z);
-	add_uniform_mat4f(drawable->shader_prog, "model", &drawable->matrices->model);
+	drawable->transform->translation    = *new_pos;
+	drawable->transform->scale          = *new_scale;
+
+	drawable_transform_ts(drawable, ENTITY_SHADER_MODEL_UNIFORM_NAME);
 	
 	drawable->matrices->projection = COMMON_ORTHO_MAT;
-	add_uniform_mat4f(drawable->shader_prog, "projection", &drawable->matrices->projection);
+	add_uniform_mat4f(drawable->shader_prog, ENTITY_SHADER_PROJECTION_UNIFORM_NAME, &drawable->matrices->projection);
 
 	Vec4 color_vec = { { 0.f, 1.f, 0.f, 1.f } };
-	add_uniform_vec4f(drawable->shader_prog, "UColor", &color_vec);
+	add_uniform_vec4f(drawable->shader_prog, ENTITY_SHADER_COLOR_UNIFORM_NAME, &color_vec);
 
 	return 0;
 }
@@ -367,13 +373,13 @@ int entity_follow_path(EntityDef* entity)
 	{
 		Vec3 starting_pos = { { entity->path[0]->start.x, entity->path[0]->start.y, entity->physics->pos.z } };
 
-		drawable->matrices->model = IdentityMat;
-		translate(&drawable->matrices->model, starting_pos.x, starting_pos.y, entity->physics->pos.z);
-		scale(&drawable->matrices->model, entity->physics->scale.x, entity->physics->scale.y, entity->physics->scale.z);
-		add_uniform_mat4f(drawable->shader_prog, "model", &drawable->matrices->model);
-
+		// TODO: Change to and use physics quantities
 		entity->physics->pos = starting_pos;
 		entity->state = Entity_Moving;
+
+		drawable->transform->translation = starting_pos;
+
+		drawable_transform_ts(drawable, ENTITY_SHADER_MODEL_UNIFORM_NAME);
 	}
 
 	if (entity->state == Entity_Moving && entity->path_len != 0)
@@ -442,14 +448,14 @@ int entity_follow_path(EntityDef* entity)
 			return 0;
 		}
 
-		// TODO: Move to separate func
-		drawable->matrices->model = IdentityMat;
-		translate(&drawable->matrices->model, new_pos_x, new_pos_y, entity->physics->pos.z);
-		scale(&drawable->matrices->model, entity->physics->scale.x, entity->physics->scale.y, entity->physics->scale.z);
-		add_uniform_mat4f(drawable->shader_prog, "model", &drawable->matrices->model);
-
+		// TODO: Change to and use physics quantities
 		entity->physics->pos.x = new_pos_x;
 		entity->physics->pos.y = new_pos_y;
+
+		drawable->transform->translation.x = new_pos_x;
+		drawable->transform->translation.y = new_pos_y;
+
+		drawable_transform_ts(drawable, ENTITY_SHADER_MODEL_UNIFORM_NAME);
 	}
 
 	return 0;

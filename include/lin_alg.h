@@ -53,7 +53,7 @@ Vec4 add(Vec4 v1, Vec4 v2);
 Vec4 multipty_by_scalar(Vec4 v, float s);
 float dot(Vec4 v1, Vec4 v2);
 Vec4 cross(Vec4 v1, Vec4 v2);
-void rotate(const Vec3* axis, const Mat4* m, float angle);
+void rotate(const Mat4* m, const Vec3* axis, float angle);
 void rotate_x(const Mat4* m, float angle);
 void rotate_y(const Mat4* m, float angle);
 void rotate_z(const Mat4* m, float angle);

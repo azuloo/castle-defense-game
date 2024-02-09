@@ -238,6 +238,16 @@ static int create_drawable_matrices(DrawableDef* drawable)
 	return 0;
 }
 
+static int create_drawable_transform(DrawableDef* drawable)
+{
+	drawable->transform = malloc(sizeof *drawable->transform);
+	if (NULL == drawable->transform)
+	{
+		PRINT_ERR("[graphics]: Failed to allocate sufficient memory chunk for TransformDef elements.");
+		return TERMINATE_ERR_CODE;
+	}
+}
+
 static DrawableDef* create_drawable_def()
 {
 	// TODO: How do we solve pointers invalidation problem? (use Registry)
@@ -260,6 +270,7 @@ static DrawableDef* create_drawable_def()
 	drawable->num_indices   = 0;
 	drawable->attributes    = NULL;
 	drawable->matrices      = NULL;
+	drawable->transform     = NULL;
 	drawable->handle        = -1;
 	drawable->visible       = 1;
 
@@ -274,6 +285,13 @@ static DrawableDef* create_drawable_def()
 	if (TERMINATE_ERR_CODE == create_drawable_matrices_res)
 	{
 		PRINT_ERR("[graphics]: Failed to create drawable attibutes.");
+		return NULL;
+	}
+
+	int create_drawable_transform_res = create_drawable_transform(drawable);
+	if (TERMINATE_ERR_CODE == create_drawable_transform_res)
+	{
+		PRINT_ERR("[graphics]: Failed to create drawable transform vectors.");
 		return NULL;
 	}
 
@@ -310,7 +328,7 @@ static void free_drawable_attributes_cnf()
 	}
 }
 
-void free_drawable_matrices()
+static void free_drawable_matrices()
 {
 	for (int i = 0; i < s_DrawableNum; i++)
 	{
@@ -324,10 +342,25 @@ void free_drawable_matrices()
 	}
 }
 
+static void free_drawable_transform()
+{
+	for (int i = 0; i < s_DrawableNum; i++)
+	{
+		DrawableDef* drawable = s_DrawableData + i;
+		if (NULL == drawable->transform)
+		{
+			continue;
+		}
+
+		free(drawable->transform);
+	}
+}
+
 static void free_drawable_data()
 {
 	free_drawable_attributes_cnf();
 	free_drawable_matrices();
+	free_drawable_transform();
 	free(s_DrawableData);
 }
 
@@ -425,6 +458,16 @@ int add_uniform_mat4f(unsigned int shader_prog, const char* uniform_name, const 
 	glUseProgram(shader_prog);
 	unsigned int transformLoc = glGetUniformLocation(shader_prog, uniform_name);
 	glUniformMatrix4fv(transformLoc, 1, GL_FALSE, &mat->m[0]);
+	return 0;
+}
+
+int add_uniform_vec4f(unsigned int shader_prog, const char* uniform_name, const Vec4* vec)
+{
+	ASSERT_GRAPHICS_INITED
+
+	glUseProgram(shader_prog);
+	unsigned int transformLoc = glGetUniformLocation(shader_prog, uniform_name);
+	glUniform4f(transformLoc, vec->x, vec->y, vec->z, vec->w);
 	return 0;
 }
 
