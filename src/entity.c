@@ -73,24 +73,8 @@ static int add_entity_common(EntityDef* dest, const DrawBufferData* draw_buf_dat
 
 	process_drawable_attributes(drawable);
 
-	// TODO: Move to separate function
-	PhysicsDef* physics = malloc(sizeof *physics);
-	if (NULL == physics)
-	{
-		PRINT_ERR("[static_env]: Failed to allocate sufficient memory chunk for TransformDef.");
-		return TERMINATE_ERR_CODE;
-	}
-
-	// TODO: Change to and use physics quantities
-	physics->pos          = *new_pos;
-	physics->scale        = *new_scale;
-	physics->collidable   = 1;
-	memset(&physics->rotation, 0, sizeof &physics->rotation);
-
-	dest->physics = physics;
-
-	drawable->transform->translation    = *new_pos;
-	drawable->transform->scale          = *new_scale;
+	drawable->transform->translation   = *new_pos;
+	drawable->transform->scale         = *new_scale;
 
 	drawable_transform_ts(drawable, ENTITY_SHADER_MODEL_UNIFORM_NAME);
 	
@@ -124,6 +108,7 @@ static EntityDef* create_entity_def(enum EntityType type)
 	entity_def->path_len           = 0;
 	entity_def->state              = Entity_Setup;
 	entity_def->drawable_handle    = -1;
+	entity_def->collidable         = 1;
 
 	s_EntitiesNum++;
 
@@ -371,12 +356,9 @@ int entity_follow_path(EntityDef* entity)
 	// Place at the start of the path
 	if (entity->state == Entity_Setup && entity->path_len != 0)
 	{
-		Vec3 starting_pos = { { entity->path[0]->start.x, entity->path[0]->start.y, entity->physics->pos.z } };
-
-		// TODO: Change to and use physics quantities
-		entity->physics->pos = starting_pos;
 		entity->state = Entity_Moving;
 
+		Vec3 starting_pos = { { entity->path[0]->start.x, entity->path[0]->start.y, drawable->transform->translation.z } };
 		drawable->transform->translation = starting_pos;
 
 		drawable_transform_ts(drawable, ENTITY_SHADER_MODEL_UNIFORM_NAME);
@@ -410,8 +392,8 @@ int entity_follow_path(EntityDef* entity)
 			pos_y_step = -ENTITY_MOVEMENT_SPEED;
 		}
 
-		float new_pos_x = entity->physics->pos.x + pos_x_step * dt;
-		float new_pos_y = entity->physics->pos.y + pos_y_step * dt;
+		float new_pos_x = drawable->transform->translation.x + pos_x_step * dt;
+		float new_pos_y = drawable->transform->translation.y + pos_y_step * dt;
 
 		// TODO: Better way to do this?
 		bool move_to_next_segment = false;
@@ -436,8 +418,8 @@ int entity_follow_path(EntityDef* entity)
 		{
 			entity->path_idx++;
 
-			entity->physics->pos.x = pos_end->x;
-			entity->physics->pos.y = pos_end->y;
+			drawable->transform->translation.x = pos_end->x;
+			drawable->transform->translation.y = pos_end->y;
 
 			if (entity->path_idx >= entity->path_len)
 			{
@@ -447,10 +429,6 @@ int entity_follow_path(EntityDef* entity)
 
 			return 0;
 		}
-
-		// TODO: Change to and use physics quantities
-		entity->physics->pos.x = new_pos_x;
-		entity->physics->pos.y = new_pos_y;
 
 		drawable->transform->translation.x = new_pos_x;
 		drawable->transform->translation.y = new_pos_y;

@@ -65,7 +65,6 @@ int main(int argc, int* argv[])
 	add_entity(Entity_Square, &square);
 	add_entity(Entity_Circle, &circle);
 
-	// TODO: Pass as arg and return int
 	const PathSegment** path = map_mgr_get_path();
 	int path_len = map_mgr_get_path_len();
 

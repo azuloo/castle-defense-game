@@ -69,13 +69,11 @@ int initial_add_background()
 
 	process_drawable_attributes(drawable);
 
-	drawable->transform->translation.x = wWidth / 2.f;
-	drawable->transform->translation.y = wHeight / 2.f;
-	drawable->transform->translation.z = Z_DEPTH_INITIAL_MAP_BACKGROUND;
+	Vec3 translation = { { wWidth / 2.f, wHeight / 2.f, Z_DEPTH_INITIAL_MAP_BACKGROUND } };
+	drawable->transform->translation = translation;
 
-	drawable->transform->scale.x = wWidth / 2.f;
-	drawable->transform->scale.y = wHeight / 2.f;
-	drawable->transform->scale.z = 1.f;
+	Vec3 scale = { { wWidth / 2.f, wHeight / 2.f, 1.f } };
+	drawable->transform->scale = scale;
 
 	drawable_transform_ts(drawable, INITIAL_MAP_SHADER_MODEL_UNIFORM_NAME);
 
@@ -212,13 +210,11 @@ int initial_add_path()
 		float pos_x = (path_segment->start.x + path_segment->end.x) / 2.f;
 		float pos_y = (path_segment->start.y + path_segment->end.y) / 2.f;
 
-		drawable->transform->translation.x = pos_x;
-		drawable->transform->translation.y = pos_y;
-		drawable->transform->translation.z = Z_DEPTH_INITIAL_MAP_PATH;
+		Vec3 translation = { { pos_x, pos_y, Z_DEPTH_INITIAL_MAP_PATH } };
+		drawable->transform->translation = translation;
 
-		drawable->transform->scale.x = scale_x;
-		drawable->transform->scale.y = scale_y;
-		drawable->transform->scale.z = 1.f;
+		Vec3 scale = { { scale_x, scale_y, 1.f } };
+		drawable->transform->scale = scale;
 
 		drawable_transform_ts(drawable, INITIAL_MAP_SHADER_MODEL_UNIFORM_NAME);
 

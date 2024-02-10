@@ -24,7 +24,7 @@ int register_obj(void* obj, int* handle)
 	if (NULL == g_Registry)
 	{
 		// TODO: Free memory
-		void** reg = malloc(g_RegistryEntires * sizeof * reg);
+		void** reg = malloc(g_RegistryEntires * sizeof *reg);
 		if (NULL == reg)
 		{
 			PRINT_ERR("[obj_registry]: Failed to allocate sufficient memory for Registry ptr.");

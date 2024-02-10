@@ -1,12 +1,18 @@
+#include "entity.h"
 #include "physics.h"
 
-// TODO: Use physics 'width', 'height' and 'pos' instead of graphics' pos and scale
-int isCollidedAABB(EntityDef* first, EntityDef* second)
+int is_collided_AABB(DrawableDef* first, DrawableDef* second)
 {
-    int x_collided = first->physics->pos.x + first->physics->scale.x >= second->physics->pos.x - second->physics->scale.x &&
-        second->physics->pos.x + second->physics->scale.x >= first->physics->pos.x - first->physics->scale.x;
-    int y_collided = first->physics->pos.y + first->physics->scale.y >= second->physics->pos.y - second->physics->scale.y &&
-        second->physics->pos.y + second->physics->scale.y >= first->physics->pos.y - second->physics->scale.y;
+    Vec3* translation_first   = &first->transform->translation;
+    Vec3* scale_first         = &first->transform->scale;
+
+    Vec3* translation_second  = &second->transform->translation;
+    Vec3* scale_second        = &second->transform->scale;
+
+    int x_collided = translation_first->x + scale_first->x >= translation_second->x - scale_second->x &&
+        translation_second->x + scale_second->x >= translation_first->x - scale_first->x;
+    int y_collided = translation_first->y + scale_first->y >= translation_second->y - scale_second->y &&
+        translation_second->y + scale_second->y >= translation_first->y - scale_second->y;
 
     return x_collided && y_collided;
 }
@@ -23,32 +29,40 @@ int physics_step()
     {
         // TODO: Check visibility
         EntityDef* first_entity = entities + i;
-        if (!first_entity->physics->collidable)
+        if (!first_entity->collidable)
             continue;
 
         for (int j = i + 1; j < entities_num; j++)
         {
             // TODO: Check visibility
             EntityDef* second_entity = entities + j;
-            if (!second_entity->physics->collidable)
+            if (!second_entity->collidable)
                 continue;
             if (first_entity->type == second_entity->type)
                 continue;
 
-            int collides = isCollidedAABB(first_entity, second_entity);
+            DrawableDef* first_drawable = NULL;
+            get_drawable_def(&first_drawable, first_entity);
+
+            DrawableDef* second_drawable = NULL;
+            get_drawable_def(&second_drawable, second_entity);
+
+            if (NULL == first_drawable || NULL == second_drawable)
+            {
+                // TODO: Report error
+                continue;
+            }
+
+            int collides = is_collided_AABB(first_drawable, second_drawable);
 
             if (collides)
             {
-                DrawableDef* first_drawable = NULL;
-                get_drawable_def(&first_drawable, first_entity);
                 if (NULL != first_drawable && first_entity->type == Entity_Castle)
                 {
                     Vec4 color_vec = { { 1.f, 0.f, 0.f, 1.f } };
                     add_uniform_vec4f(first_drawable->shader_prog, "UColor", &color_vec);
                 }
 
-                DrawableDef* second_drawable = NULL;
-                get_drawable_def(&second_drawable, second_entity);
                 if (NULL != second_drawable && second_entity->type == Entity_Castle)
                 {
                     Vec4 color_vec = { { 1.f, 0.f, 0.f, 1.f } };
