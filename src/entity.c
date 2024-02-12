@@ -149,25 +149,13 @@ static int add_triangle(EntityDef** dest)
 
 static int add_square(EntityDef** dest)
 {
-	// TODO: Rect verices are identical; move somewhere
-	static float vertices[] = {
-		// Position           // Texture
-		-1.f, 1.f, 0.f,       0.f, 1.f,
-		1.f, 1.f, 0.f,        1.f, 1.f,
-		1.f, -1.f, 0.0f,      1.f, 0.f,
-		-1.f, -1.f, 0.0f,     0.f, 0.f
-	};
-
-	static unsigned int indices[] = {
-		0, 1, 3,
-		2, 3, 1
-	};
-
-	DrawBufferData draw_buf_data;
-	draw_buf_data.vertices = vertices;
-	draw_buf_data.vertices_len = sizeof(vertices) / sizeof(vertices[0]);
-	draw_buf_data.indices = indices;
-	draw_buf_data.indices_len = sizeof(indices) / sizeof(indices[0]);
+	DrawBufferData* draw_buf_data = NULL;
+	get_square_draw_buffer_data(&draw_buf_data);
+	if (NULL == draw_buf_data)
+	{
+		PRINT_ERR("[entity]: Failed to retrieve square DrawBufferData.");
+		return TERMINATE_ERR_CODE;
+	}
 
 	EntityDef* entity_def = create_entity_def(Entity_Square);
 	*dest = entity_def;
@@ -177,32 +165,20 @@ static int add_square(EntityDef** dest)
 	Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
 
 	const char* texture_path = "/res/static/textures/square.png";
-	add_entity_common(*dest, &draw_buf_data, texture_path, TexType_RGBA, &sq_pos, &sq_scale);
+	add_entity_common(*dest, draw_buf_data, texture_path, TexType_RGBA, &sq_pos, &sq_scale);
 
 	return 0;
 }
 
 static int add_circle(EntityDef** dest)
 {
-	// TODO: Rect verices are identical; move somewhere
-	static float vertices[] = {
-		// Position           // Texture
-		-1.f, 1.f, 0.f,       0.f, 1.f,
-		1.f, 1.f, 0.f,        1.f, 1.f,
-		1.f, -1.f, 0.0f,      1.f, 0.f,
-		-1.f, -1.f, 0.0f,     0.f, 0.f
-	};
-
-	static unsigned int indices[] = {
-		0, 1, 3,
-		2, 3, 1
-	};
-
-	DrawBufferData draw_buf_data;
-	draw_buf_data.vertices = vertices;
-	draw_buf_data.vertices_len = sizeof(vertices) / sizeof(vertices[0]);
-	draw_buf_data.indices = indices;
-	draw_buf_data.indices_len = sizeof(indices) / sizeof(indices[0]);
+	DrawBufferData* draw_buf_data = NULL;
+	get_square_draw_buffer_data(&draw_buf_data);
+	if (NULL == draw_buf_data)
+	{
+		PRINT_ERR("[entity]: Failed to retrieve square DrawBufferData.");
+		return TERMINATE_ERR_CODE;
+	}
 
 	EntityDef* entity_def = create_entity_def(Entity_Circle);
 	*dest = entity_def;
@@ -212,33 +188,22 @@ static int add_circle(EntityDef** dest)
 	Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
 
 	const char* texture_path = "/res/static/textures/circle.png";
-	add_entity_common(*dest , &draw_buf_data, texture_path, TexType_RGBA, &sq_pos, &sq_scale);
+	add_entity_common(*dest , draw_buf_data, texture_path, TexType_RGBA, &sq_pos, &sq_scale);
 
 	return 0;
 }
 
 static int add_castle(EntityDef** dest)
 {
-	// TODO: Rect verices are identical; move somewhere
-	static float vertices[] = {
-		// Position           // Texture
-		-1.f, 1.f, 0.f,       0.f, 1.f,
-		1.f, 1.f, 0.f,        1.f, 1.f,
-		1.f, -1.f, 0.0f,      1.f, 0.f,
-		-1.f, -1.f, 0.0f,     0.f, 0.f
-	};
+	DrawBufferData* draw_buf_data = NULL;
+	get_square_draw_buffer_data(&draw_buf_data);
+	if (NULL == draw_buf_data)
+	{
+		PRINT_ERR("[entity]: Failed to retrieve square DrawBufferData.");
+		return TERMINATE_ERR_CODE;
+	}
 
-	static unsigned int indices[] = {
-		0, 1, 3,
-		2, 3, 1
-	};
-
-	DrawBufferData draw_buf_data;
-	draw_buf_data.vertices = vertices;
-	draw_buf_data.vertices_len = sizeof(vertices) / sizeof(vertices[0]);
-	draw_buf_data.indices = indices;
-	draw_buf_data.indices_len = sizeof(indices) / sizeof(indices[0]);
-
+	// TODO: Pass dest directly into the function and return int
 	EntityDef* entity_def = create_entity_def(Entity_Castle);
 	*dest = entity_def;
 
@@ -247,7 +212,7 @@ static int add_castle(EntityDef** dest)
 	Vec3 sq_scale = { { 125.f, 125.f, 1.f } };
 
 	const char* texture_path = "/res/static/textures/castle.png";
-	add_entity_common(*dest, &draw_buf_data, texture_path, TexType_RGB, &sq_pos, &sq_scale);
+	add_entity_common(*dest, draw_buf_data, texture_path, TexType_RGB, &sq_pos, &sq_scale);
 
 	return 0;
 }
