@@ -7,7 +7,7 @@
 #define SQUARE_VERTICES_LEN   32
 #define SQUARE_INDICES_LEN    6
 
-// Translation - Scale
+// Translate - Scale
 int drawable_transform_ts(DrawableDef* drawable, const char* uniform_name);
 
 int get_square_draw_buffer_data(DrawBufferData** dest);

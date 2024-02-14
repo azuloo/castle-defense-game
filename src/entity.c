@@ -87,7 +87,7 @@ static int add_entity_common(EntityDef* dest, const DrawBufferData* draw_buf_dat
 	return 0;
 }
 
-static EntityDef* create_entity_def(enum EntityType type)
+static int create_entity_def(EntityDef** dest, enum EntityType type)
 {
     // TODO: How do we solve pointers invalidation problem? (use Registry)
 	if (s_EntitiesNum >= s_EntitiesCnfCapacity)
@@ -110,9 +110,11 @@ static EntityDef* create_entity_def(enum EntityType type)
 	entity_def->drawable_handle    = -1;
 	entity_def->collidable         = 1;
 
+	*dest = entity_def;
+
 	s_EntitiesNum++;
 
-	return entity_def;
+	return 0;
 }
 
 static int add_triangle(EntityDef** dest)
@@ -134,8 +136,7 @@ static int add_triangle(EntityDef** dest)
 	draw_buf_data.indices = indices;
 	draw_buf_data.indices_len = sizeof(indices) / sizeof(indices[0]);
 
-	EntityDef* entity_def = create_entity_def(Entity_Triangle);
-	*dest = entity_def;
+	create_entity_def(dest, Entity_Triangle);
 
 	// TODO: Take window res into account
 	Vec3 tri_pos = { { 600.f, wHeight / 2.f, Z_DEPTH_INITIAL_ENTITY } };
@@ -157,8 +158,7 @@ static int add_square(EntityDef** dest)
 		return TERMINATE_ERR_CODE;
 	}
 
-	EntityDef* entity_def = create_entity_def(Entity_Square);
-	*dest = entity_def;
+	create_entity_def(dest, Entity_Square);
 
 	// TODO: Take window res into account
 	Vec3 sq_pos = { { 400.f, wHeight / 2.f, Z_DEPTH_INITIAL_ENTITY } };
@@ -180,8 +180,7 @@ static int add_circle(EntityDef** dest)
 		return TERMINATE_ERR_CODE;
 	}
 
-	EntityDef* entity_def = create_entity_def(Entity_Circle);
-	*dest = entity_def;
+	create_entity_def(dest, Entity_Circle);
 
 	// TODO: Take window res into account
 	Vec3 sq_pos = { { 500.f, wHeight / 2.f, Z_DEPTH_INITIAL_ENTITY } };
@@ -203,9 +202,7 @@ static int add_castle(EntityDef** dest)
 		return TERMINATE_ERR_CODE;
 	}
 
-	// TODO: Pass dest directly into the function and return int
-	EntityDef* entity_def = create_entity_def(Entity_Castle);
-	*dest = entity_def;
+	create_entity_def(dest, Entity_Castle);
 
 	// TODO: Take window res into account
 	Vec3 sq_pos = { { 1500.f, wHeight / 2.f, Z_DEPTH_INITIAL_CASTLE } };
