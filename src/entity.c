@@ -9,9 +9,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#define ENTITY_SHADER_MODEL_UNIFORM_NAME         "model"
-#define ENTITY_SHADER_PROJECTION_UNIFORM_NAME    "projection"
-#define ENTITY_SHADER_COLOR_UNIFORM_NAME         "UColor"
+#define ENTITY_SHADER_COLOR_UNIFORM_NAME "UColor"
 
 extern float wHeight;
 extern float dt;
@@ -76,10 +74,10 @@ static int add_entity_common(EntityDef* dest, const DrawBufferData* draw_buf_dat
 	drawable->transform->translation   = *new_pos;
 	drawable->transform->scale         = *new_scale;
 
-	drawable_transform_ts(drawable, ENTITY_SHADER_MODEL_UNIFORM_NAME);
+	drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
 	
 	drawable->matrices->projection = COMMON_ORTHO_MAT;
-	add_uniform_mat4f(drawable->shader_prog, ENTITY_SHADER_PROJECTION_UNIFORM_NAME, &drawable->matrices->projection);
+	add_uniform_mat4f(drawable->shader_prog, COMMON_PROJECTION_UNIFORM_NAME, &drawable->matrices->projection);
 
 	Vec4 color_vec = { { 0.f, 1.f, 0.f, 1.f } };
 	add_uniform_vec4f(drawable->shader_prog, ENTITY_SHADER_COLOR_UNIFORM_NAME, &color_vec);
@@ -323,7 +321,7 @@ int entity_follow_path(EntityDef* entity)
 		Vec3 starting_pos = { { entity->path[0]->start.x, entity->path[0]->start.y, drawable->transform->translation.z } };
 		drawable->transform->translation = starting_pos;
 
-		drawable_transform_ts(drawable, ENTITY_SHADER_MODEL_UNIFORM_NAME);
+		drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
 	}
 
 	if (entity->state == Entity_Moving && entity->path_len != 0)
@@ -395,7 +393,7 @@ int entity_follow_path(EntityDef* entity)
 		drawable->transform->translation.x = new_pos_x;
 		drawable->transform->translation.y = new_pos_y;
 
-		drawable_transform_ts(drawable, ENTITY_SHADER_MODEL_UNIFORM_NAME);
+		drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
 	}
 
 	return 0;

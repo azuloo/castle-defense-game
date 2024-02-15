@@ -8,8 +8,7 @@
 #include "graphics_defs.h"
 #include "drawable_ops.h"
 
-#define INITIAL_MAP_SHADER_MODEL_UNIFORM_NAME   "model"
-#define INTIAL_MAP_PATH_LEN                     5
+#define INTIAL_MAP_PATH_LEN 5
 
 extern int wWidth;
 extern int wHeight;
@@ -63,11 +62,11 @@ int initial_add_background()
 	Vec3 scale = { { wWidth / 2.f, wHeight / 2.f, 1.f } };
 	drawable->transform->scale = scale;
 
-	drawable_transform_ts(drawable, INITIAL_MAP_SHADER_MODEL_UNIFORM_NAME);
+	drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
 
 	drawable->matrices->projection = COMMON_ORTHO_MAT;
     // TODO: Move "projection" into defs
-	add_uniform_mat4f(drawable->shader_prog, "projection", &drawable->matrices->projection);
+	add_uniform_mat4f(drawable->shader_prog, COMMON_PROJECTION_UNIFORM_NAME, &drawable->matrices->projection);
 
 	return 0;
 }
@@ -192,7 +191,7 @@ int initial_add_path()
 		Vec3 scale = { { scale_x, scale_y, 1.f } };
 		drawable->transform->scale = scale;
 
-		drawable_transform_ts(drawable, INITIAL_MAP_SHADER_MODEL_UNIFORM_NAME);
+		drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
 
 		drawable->matrices->projection = COMMON_ORTHO_MAT;
 		add_uniform_mat4f(drawable->shader_prog, "projection", &drawable->matrices->projection);
