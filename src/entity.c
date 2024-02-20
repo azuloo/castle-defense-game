@@ -59,6 +59,8 @@ static int add_entity_common(EntityDef* dest, const DrawBufferData* draw_buf_dat
 	fr_read_image_data(path_buf, &img_data, &width, &height);
 
 	int create_texture_2D_res = create_texture_2D(img_data, width, height, &drawable->texture, texture_type);
+	fr_free_image_resources(img_data);
+
 	if (TERMINATE_ERR_CODE == create_texture_2D_res)
 	{
 		PRINT_ERR("[static_env]: Failed to add env texute.");

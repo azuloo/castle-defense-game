@@ -16,5 +16,6 @@ typedef enum _ReadOpResult {
 int readall(char* path, char** data_ptr, size_t* size_ptr);
 void get_file_path(const char* name, char** buf, size_t len);
 int fr_read_image_data(const char* path, unsigned char** data, int* width, int* height);
+int fr_free_image_resources(unsigned char* img_data);
 
 #endif // _FILE_READER_H

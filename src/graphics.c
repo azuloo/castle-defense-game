@@ -364,11 +364,6 @@ static void free_drawable_data()
 	free(s_DrawableData);
 }
 
-static void free_img_data(unsigned char* img_data)
-{
-	stbi_image_free(img_data);
-}
-
 // ----------------------- PUBLIC FUNCTIONS ----------------------- //
 
 int graphics_should_be_terminated()
@@ -432,7 +427,6 @@ int create_texture_2D(unsigned char* data, int width, int height, unsigned int* 
 	}
 
 	glGenerateMipmap(GL_TEXTURE_2D);
-	free_img_data(data);
 
 	return 0;
 }

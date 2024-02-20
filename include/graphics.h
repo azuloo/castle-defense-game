@@ -93,7 +93,7 @@ int graphics_should_be_terminated();
 void graphics_free_resources();
 
 DrawableDef* create_drawable();
-int create_texture_2D(const char* img_path, unsigned int* texture, enum TextureType type);
+int create_texture_2D(unsigned char* data, int width, int height, unsigned int* texture, enum TextureType type);
 int add_uniform_mat4f(unsigned int shader_prog, const char* uniform_name, const Mat4* mat);
 int add_uniform_vec4f(unsigned int shader_prog, const char* uniform_name, const Vec4* vec);
 int config_drawable(DrawableDef* drawable, const DrawBufferData* buf_data, const char* vertex_shader_path, const char* fragment_shader_path);

@@ -43,6 +43,8 @@ int initial_add_background()
 	fr_read_image_data(path_buf, &img_data, &width, &height);
 
 	int create_texture_2D_res = create_texture_2D(img_data, width, height, &drawable->texture, TexType_RGB);
+	fr_free_image_resources(img_data);
+
 	if (TERMINATE_ERR_CODE == create_texture_2D_res)
 	{
 		PRINT_ERR("[static_env]: Failed to add env texute.");
@@ -139,6 +141,8 @@ int initial_add_path()
 		fr_read_image_data(path_buf, &img_data, &width, &height);
 
 		int create_texture_2D_res = create_texture_2D(img_data, width, height, &drawable->texture, TexType_RGB);
+		fr_free_image_resources(img_data);
+
 		if (TERMINATE_ERR_CODE == create_texture_2D_res)
 		{
 			PRINT_ERR("[static_env]: Failed to add initial map level\'s texute.");
