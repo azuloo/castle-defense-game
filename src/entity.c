@@ -5,6 +5,7 @@
 #include "global_defs.h"
 #include "graphics_defs.h"
 #include "drawable_ops.h"
+#include "file_reader.h"
 
 #include <stdlib.h>
 #include <stdbool.h>
@@ -49,10 +50,15 @@ static int add_entity_common(EntityDef* dest, const DrawBufferData* draw_buf_dat
 
 	dest->drawable_handle = drawable->handle;
 
-	char texture_buf[256];
-	get_file_path(texture_path, &texture_buf, 256);
+	// TODO: Common code - move to separate function
+	char path_buf[256];
+	get_file_path(texture_path, &path_buf, 256);
 
-	int create_texture_2D_res = create_texture_2D(texture_buf, &drawable->texture, texture_type);
+	unsigned char* img_data;
+	int width, height;
+	fr_read_image_data(path_buf, &img_data, &width, &height);
+
+	int create_texture_2D_res = create_texture_2D(img_data, width, height, &drawable->texture, texture_type);
 	if (TERMINATE_ERR_CODE == create_texture_2D_res)
 	{
 		PRINT_ERR("[static_env]: Failed to add env texute.");

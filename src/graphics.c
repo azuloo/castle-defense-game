@@ -364,13 +364,6 @@ static void free_drawable_data()
 	free(s_DrawableData);
 }
 
-static unsigned char* load_image(const char* path, int* width, int* height, int* nr_channels)
-{
-	stbi_set_flip_vertically_on_load(1);
-	unsigned char* data = stbi_load(path, width, height, nr_channels, 0);
-	return data;
-}
-
 static void free_img_data(unsigned char* img_data)
 {
 	stbi_image_free(img_data);
@@ -413,7 +406,7 @@ DrawableDef* create_drawable()
 	return drawable;
 }
 
-int create_texture_2D(const char* img_path, unsigned int* texture, enum TextureType type)
+int create_texture_2D(unsigned char* data, int width, int height, unsigned int* texture, enum TextureType type)
 {
 	ASSERT_GRAPHICS_INITED
 
@@ -425,13 +418,6 @@ int create_texture_2D(const char* img_path, unsigned int* texture, enum TextureT
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	int width, height, nr_channels;
-	unsigned char* data = load_image(img_path, &width, &height, &nr_channels);
-	if (NULL == data)
-	{
-		PRINT_ERR("[graphics]: Failed to load texture.");
-		return TERMINATE_ERR_CODE;
-	}
 
 	switch (type)
 	{

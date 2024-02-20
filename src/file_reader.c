@@ -1,7 +1,15 @@
 #include "file_reader.h"
 #include "utils.h"
+#include "stb_image.h"
 
 #include <stdlib.h>
+
+static unsigned char* load_image(const char* path, int* width, int* height, int* nr_channels)
+{
+    stbi_set_flip_vertically_on_load(1);
+    unsigned char* data = stbi_load(path, width, height, nr_channels, 0);
+    return data;
+}
 
 // ! Allocates memory on heap !
 int readall(char* path, char** data_ptr, size_t* size_ptr)
@@ -79,4 +87,18 @@ int readall(char* path, char** data_ptr, size_t* size_ptr)
 void get_file_path(const char* name, char** buf, size_t len)
 {
     str_concat(STRVAL(SOURCE_ROOT), name, buf, len);
+}
+
+int fr_read_image_data(const char* path, unsigned char** data, int* width, int* height)
+{
+    int nr_channels;
+    // TODO: Pass nr_channels as arg when needed
+    *data = load_image(path, width, height, &nr_channels);
+    if (NULL == data)
+    {
+        PRINT_ERR("[file_reader]: Failed to load image.");
+        return TERMINATE_ERR_CODE;
+    }
+
+    return 0;
 }
