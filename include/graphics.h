@@ -11,6 +11,10 @@
 #define LIB_MINOR_VER 3
 #define LIB_DEFUALT_PROFILE GLFW_OPENGL_CORE_PROFILE
 
+#define DRAW_MODE_STATIC     GL_STATIC_DRAW
+#define DRAW_MODE_DYNAMIC    GL_DYNAMIC_DRAW
+#define DRAW_MODE_STREAM     GL_STREAM_DRAW
+
 enum TextureType
 {
 	TexType_RGB,
@@ -68,14 +72,15 @@ typedef struct
 	TransformDef*   transform;
 	int             handle;
 	int             visible;
+	int             draw_mode;
 } DrawableDef;
 
 typedef struct
 {
-	float*       vertices;
-	unsigned int vertices_len;
-	int*         indices;
-	unsigned int indices_len;
+	float*          vertices;
+	unsigned int    vertices_len;
+	int*            indices;
+	unsigned int    indices_len;
 } DrawBufferData;
 
 typedef struct GLFWwindow GWindow;

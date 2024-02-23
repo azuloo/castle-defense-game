@@ -147,11 +147,11 @@ static void set_viewport(int width, int height)
 	glViewport(0, 0, width, height);
 }
 
-static void create_vbo(unsigned int* vbo, float* vertices, int len)
+static void create_vbo(unsigned int* vbo, float* vertices, int len, int draw_mode)
 {
 	glGenBuffers(1, vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, *vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices) * len, vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices) * len, vertices, draw_mode);
 }
 
 static void create_vao(unsigned int* vao)
@@ -160,11 +160,11 @@ static void create_vao(unsigned int* vao)
 	glBindVertexArray(*vao);
 }
 
-static void create_ebo(unsigned int* ebo, unsigned int* indices, int len)
+static void create_ebo(unsigned int* ebo, unsigned int* indices, int len, int draw_mode)
 {
 	glGenBuffers(1, ebo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *ebo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices) * len, indices, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices) * len, indices, draw_mode);
 }
 
 // ! Allocates memory on heap !
@@ -273,6 +273,7 @@ static DrawableDef* create_drawable_def()
 	drawable->transform     = NULL;
 	drawable->handle        = -1;
 	drawable->visible       = 1;
+	drawable->draw_mode     = DRAW_MODE_STATIC;
 
 	int create_drawable_attributes_res = create_drawable_attributes(drawable);
 	if (TERMINATE_ERR_CODE == create_drawable_attributes_res)
@@ -472,8 +473,8 @@ int config_drawable(DrawableDef* drawable, const DrawBufferData* buf_data, const
 	compile_shader_program(&drawable->shader_prog, vertex_shader, fragment_shader);
 
 	create_vao(&drawable->vao);
-	create_vbo(&drawable->vbo, buf_data->vertices, buf_data->vertices_len);
-	create_ebo(&drawable->ebo, buf_data->indices, buf_data->indices_len);
+	create_vbo(&drawable->vbo, buf_data->vertices, buf_data->vertices_len, drawable->draw_mode);
+	create_ebo(&drawable->ebo, buf_data->indices, buf_data->indices_len, drawable->draw_mode);
 	drawable->num_indices = buf_data->indices_len;
 
 	return 0;
