@@ -4,6 +4,7 @@
 #include "lin_alg.h"
 #include "obj_registry.h"
 #include "graphics_defs.h"
+#include "freetype_text.h"
 
 #include <stdlib.h>
 
@@ -19,6 +20,8 @@ static int s_DrawableDataCapacity       = 32;
 static int s_DrawableNum                = 0;
 static DrawableDef* s_DrawableData      = NULL;
 static BackgroundColor s_BColor         = { 0.f, 0.f, 0.f, 1.f };
+
+static GBuffers s_FreetypeBuffers;
 
 #define ASSERT_GRAPHICS_INITED assert( g_Initialized == 1 );
 
@@ -55,6 +58,7 @@ static char* get_shader_source(const char* name)
 		return NULL;
 	}
 
+	// TODO: Work throug return type (char*)
 	return data_buf;
 }
 
@@ -151,7 +155,7 @@ static void create_vbo(unsigned int* vbo, float* vertices, int len, int draw_mod
 {
 	glGenBuffers(1, vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, *vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices) * len, vertices, draw_mode);
+	glBufferData(GL_ARRAY_BUFFER, len * sizeof * vertices, vertices, draw_mode);
 }
 
 static void create_vao(unsigned int* vao)
@@ -165,6 +169,29 @@ static void create_ebo(unsigned int* ebo, unsigned int* indices, int len, int dr
 	glGenBuffers(1, ebo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *ebo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices) * len, indices, draw_mode);
+}
+
+static int compile_shaders(unsigned int* shader_prog, const char* vertex_shader_src, const char* fragment_shader_src)
+{
+	unsigned int vertex_shader = create_vertex_shader(&vertex_shader_src);
+	unsigned int fragment_shader = create_fragment_shader(&fragment_shader_src);
+
+	compile_shader_program(shader_prog, vertex_shader, fragment_shader);
+
+	return 0;
+}
+
+static int create_freetype_buffers()
+{
+	unsigned int vao, vbo;
+
+	create_vao(&vao);
+	create_vbo(&vbo, NULL, 24, GL_DYNAMIC_DRAW);
+
+	s_FreetypeBuffers.vao = vao;
+	s_FreetypeBuffers.vbo = vbo;
+
+	return 0;
 }
 
 // ! Allocates memory on heap !
@@ -226,26 +253,40 @@ static int create_drawable_attributes(DrawableDef* drawable)
 	return add_drawable_attributes_res;
 }
 
-static int create_drawable_matrices(DrawableDef* drawable)
+// ! Allocates memory on heap !
+static int create_drawable_buffer_data(DrawableDef* drawable, DrawBufferData* src)
 {
-	drawable->matrices = calloc(1, sizeof *drawable->matrices);
-	if (NULL == drawable->matrices)
+	if (NULL != src->vertices && src->vertices_len != 0)
 	{
-		PRINT_ERR("[graphics]: Failed to allocate sufficient memory chunk for GMatrices elements.");
-		return TERMINATE_ERR_CODE;
+		float* vertices = malloc(src->vertices_len * sizeof * vertices);
+		if (NULL == vertices)
+		{
+			PRINT_ERR("[graphics] Failed to allocate sufficient memory for buffer_data vertices.");
+			return TERMINATE_ERR_CODE;
+		}
+
+		drawable->buffer_data.vertices        = vertices;
+		drawable->buffer_data.vertices_len    = src->vertices_len; 
+
+		memcpy(drawable->buffer_data.vertices, src->vertices, src->vertices_len * sizeof * src->vertices);
+	}
+
+	if (NULL != src->indices && src->indices_len != 0)
+	{
+		float* indices = malloc(src->indices_len * sizeof * indices);
+		if (NULL == indices)
+		{
+			PRINT_ERR("[graphics] Failed to allocate sufficient memory for buffer_data indices.");
+			return TERMINATE_ERR_CODE;
+		}
+
+		drawable->buffer_data.indices        = indices;
+		drawable->buffer_data.indices_len    = src->indices_len;
+
+		memcpy(drawable->buffer_data.indices, src->indices, src->indices_len * sizeof * src->indices);
 	}
 
 	return 0;
-}
-
-static int create_drawable_transform(DrawableDef* drawable)
-{
-	drawable->transform = malloc(sizeof *drawable->transform);
-	if (NULL == drawable->transform)
-	{
-		PRINT_ERR("[graphics]: Failed to allocate sufficient memory chunk for TransformDef elements.");
-		return TERMINATE_ERR_CODE;
-	}
 }
 
 static DrawableDef* create_drawable_def()
@@ -262,37 +303,22 @@ static DrawableDef* create_drawable_def()
 	}
 
 	DrawableDef* drawable   = s_DrawableData + s_DrawableNum;
-	drawable->vbo           = 0;
-	drawable->vao           = 0;
-	drawable->ebo           = 0;
 	drawable->shader_prog   = 0;
 	drawable->texture       = 0;
 	drawable->num_indices   = 0;
 	drawable->attributes    = NULL;
-	drawable->matrices      = NULL;
-	drawable->transform     = NULL;
 	drawable->handle        = -1;
 	drawable->visible       = 1;
 	drawable->draw_mode     = DRAW_MODE_STATIC;
+
+	memset(&drawable->buffers, 0, sizeof * &drawable->buffers);
+	memset(&drawable->matrices, 0, sizeof * &drawable->matrices);
+	memset(&drawable->transform, 0, sizeof * &drawable->transform);
 
 	int create_drawable_attributes_res = create_drawable_attributes(drawable);
 	if (TERMINATE_ERR_CODE == create_drawable_attributes_res)
 	{
 		PRINT_ERR("[graphics]: Failed to create drawable attibutes.");
-		return NULL;
-	}
-
-	int create_drawable_matrices_res = create_drawable_matrices(drawable);
-	if (TERMINATE_ERR_CODE == create_drawable_matrices_res)
-	{
-		PRINT_ERR("[graphics]: Failed to create drawable attibutes.");
-		return NULL;
-	}
-
-	int create_drawable_transform_res = create_drawable_transform(drawable);
-	if (TERMINATE_ERR_CODE == create_drawable_transform_res)
-	{
-		PRINT_ERR("[graphics]: Failed to create drawable transform vectors.");
 		return NULL;
 	}
 
@@ -308,8 +334,8 @@ static void free_gl_resources()
 	for (int i = 0; i < s_DrawableNum; i++)
 	{
 		DrawableDef* drawable = s_DrawableData + i;
-		glDeleteVertexArrays(1, &drawable->vao);
-		glDeleteBuffers(1, &drawable->vbo);
+		glDeleteVertexArrays(1, &drawable->buffers.vao);
+		glDeleteBuffers(1, &drawable->buffers.vbo);
 		glDeleteProgram(drawable->shader_prog);
 	}
 }
@@ -329,39 +355,9 @@ static void free_drawable_attributes_cnf()
 	}
 }
 
-static void free_drawable_matrices()
-{
-	for (int i = 0; i < s_DrawableNum; i++)
-	{
-		DrawableDef* drawable = s_DrawableData + i;
-		if (NULL == drawable->matrices)
-		{
-			continue;
-		}
-
-		free(drawable->matrices);
-	}
-}
-
-static void free_drawable_transform()
-{
-	for (int i = 0; i < s_DrawableNum; i++)
-	{
-		DrawableDef* drawable = s_DrawableData + i;
-		if (NULL == drawable->transform)
-		{
-			continue;
-		}
-
-		free(drawable->transform);
-	}
-}
-
 static void free_drawable_data()
 {
 	free_drawable_attributes_cnf();
-	free_drawable_matrices();
-	free_drawable_transform();
 	free(s_DrawableData);
 }
 
@@ -384,6 +380,83 @@ void graphics_free_resources()
 	glfwTerminate();
 }
 
+int render_text(const char* text, float x, float y, float scale, Vec3 color)
+{
+	ASSERT_GRAPHICS_INITED
+
+	// TODO: Buffers should be created only once
+	create_freetype_buffers();
+
+	Mat4 ortho_mat = COMMON_ORTHO_MAT;
+
+	char* vertex_shader_src = get_shader_source("/res/static/shaders/text_vert.txt");
+	char* fragment_shader_src = get_shader_source("/res/static/shaders/text_frag.txt");
+
+	if (NULL == vertex_shader_src || NULL == fragment_shader_src)
+	{
+		return TERMINATE_ERR_CODE;
+	}
+
+	char* glyph = text;
+	CharacterDef* char_def = NULL;
+	for (int i = 0; i < strlen(text); i++)
+	{
+		if (find_char_def(*glyph, &char_def))
+		{
+			DrawableDef* drawable = create_drawable();
+			drawable->buffers.vao = s_FreetypeBuffers.vao;
+			drawable->buffers.vbo = s_FreetypeBuffers.vbo;
+
+			drawable->texture = char_def->tex_id;
+			drawable->draw_mode = DRAW_MODE_DYNAMIC;
+
+			compile_shaders(&drawable->shader_prog, vertex_shader_src, fragment_shader_src);
+
+			// TODO: Move this out of here
+			add_uniform_vec3f(drawable->shader_prog, "textColor", &color);
+			add_uniform_mat4f(drawable->shader_prog, "projection", &ortho_mat);
+
+			float xpos    = x + char_def->bearing.x * scale;
+			float ypos    = y - (char_def->size.y - char_def->bearing.y) * scale;
+			float w       = char_def->size.x * scale;
+			float h       = char_def->size.y * scale;
+
+			float vertices[] = {
+				xpos,     ypos + h,   0.0f, 0.0f,
+				xpos,     ypos,       0.0f, 1.0f,
+				xpos + w, ypos,       1.0f, 1.0f,
+
+				xpos,     ypos + h,   0.0f, 0.0f,
+				xpos + w, ypos,       1.0f, 1.0f,
+				xpos + w, ypos + h,   1.0f, 0.0f
+			};
+
+			register_drawable_attribute(drawable, 4);
+			process_drawable_attributes(drawable);
+
+			DrawBufferData buf_data;
+			buf_data.vertices = vertices;
+			buf_data.vertices_len = 24;
+			buf_data.indices = NULL;
+			buf_data.indices_len = 0;
+
+			create_drawable_buffer_data(drawable, &buf_data);
+
+			x += (char_def->advance >> 6) * scale; // bitshift by 6 to get value in pixels (2^6 = 64)
+
+			glyph++;
+		}
+	}
+
+	free(vertex_shader_src);
+	free(fragment_shader_src);
+
+	glBindVertexArray(0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	return 0;
+}
+
 DrawableDef* create_drawable()
 {
 	ASSERT_GRAPHICS_INITED
@@ -398,6 +471,7 @@ DrawableDef* create_drawable()
 		}
 	}
 
+	// TODO: Work through return type (DrawableDef* -> int)
 	DrawableDef* drawable = create_drawable_def();
 	return drawable;
 }
@@ -422,6 +496,9 @@ int create_texture_2D(unsigned char* data, int width, int height, unsigned int* 
 		break;
 	case TexType_RGBA:
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		break;
+	case TexType_RED:
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, data);
 		break;
 	default:
 		break;
@@ -452,30 +529,37 @@ int add_uniform_vec4f(unsigned int shader_prog, const char* uniform_name, const 
 	return 0;
 }
 
-int config_drawable(DrawableDef* drawable, const DrawBufferData* buf_data, const char* vertex_shader_path, const char* fragment_shader_path)
+int add_uniform_vec3f(unsigned int shader_prog, const char* uniform_name, const Vec3* vec)
 {
 	ASSERT_GRAPHICS_INITED
 
-	char* vertex_shader_source = get_shader_source(vertex_shader_path);
-	char* fragment_shader_source = get_shader_source(fragment_shader_path);
+	glUseProgram(shader_prog);
+	unsigned int transformLoc = glGetUniformLocation(shader_prog, uniform_name);
+	glUniform3f(transformLoc, vec->x, vec->y, vec->z);
+	return 0;
+}
 
-	if (NULL == vertex_shader_source || NULL == fragment_shader_source)
+int setup_drawable(DrawableDef* drawable, const DrawBufferData* buf_data, const char* vertex_shader_path, const char* fragment_shader_path)
+{
+	ASSERT_GRAPHICS_INITED
+
+	char* vertex_shader_src = get_shader_source(vertex_shader_path);
+	char* fragment_shader_src = get_shader_source(fragment_shader_path);
+
+	if (NULL == vertex_shader_src || NULL == fragment_shader_src)
 	{
 		return TERMINATE_ERR_CODE;
 	}
 
-	unsigned int vertex_shader = create_vertex_shader(&vertex_shader_source);
-	unsigned int fragment_shader = create_fragment_shader(&fragment_shader_source);
+	compile_shaders(&drawable->shader_prog, vertex_shader_src, fragment_shader_src);
 
-	free(vertex_shader_source);
-	free(fragment_shader_source);
-
-	compile_shader_program(&drawable->shader_prog, vertex_shader, fragment_shader);
-
-	create_vao(&drawable->vao);
-	create_vbo(&drawable->vbo, buf_data->vertices, buf_data->vertices_len, drawable->draw_mode);
-	create_ebo(&drawable->ebo, buf_data->indices, buf_data->indices_len, drawable->draw_mode);
+	create_vao(&drawable->buffers.vao);
+	create_vbo(&drawable->buffers.vbo, buf_data->vertices, buf_data->vertices_len, drawable->draw_mode);
+	create_ebo(&drawable->buffers.ebo, buf_data->indices, buf_data->indices_len, drawable->draw_mode);
 	drawable->num_indices = buf_data->indices_len;
+
+	free(vertex_shader_src);
+	free(fragment_shader_src);
 
 	return 0;
 }
@@ -504,7 +588,7 @@ int process_drawable_attributes(DrawableDef* drawable)
 {
 	ASSERT_GRAPHICS_INITED
 
-	glBindVertexArray(drawable->vao);
+	glBindVertexArray(drawable->buffers.vao);
 	GAttributes* attributes = drawable->attributes;
 	unsigned int offset = 0;
 	for (unsigned int i = 0; i < attributes->count; i++)
@@ -600,11 +684,22 @@ int graphics_draw()
 			continue;
 		glUseProgram(drawable->shader_prog);
 		glActiveTexture(GL_TEXTURE0);
+		glBindVertexArray(drawable->buffers.vao);
 		glBindTexture(GL_TEXTURE_2D, drawable->texture);
-		glBindVertexArray(drawable->vao);
 
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, drawable->ebo);
-		glDrawElements(GL_TRIANGLES, drawable->num_indices, GL_UNSIGNED_INT, 0);
+		if (DRAW_MODE_STATIC == drawable->draw_mode)
+		{
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, drawable->buffers.ebo);
+			glDrawElements(GL_TRIANGLES, drawable->num_indices, GL_UNSIGNED_INT, 0);
+		}
+
+		if (DRAW_MODE_DYNAMIC == drawable->draw_mode)
+		{
+			glBindBuffer(GL_ARRAY_BUFFER, drawable->buffers.vbo);
+			glBufferSubData(GL_ARRAY_BUFFER, 0, drawable->buffer_data.vertices_len * sizeof * drawable->buffer_data.vertices, drawable->buffer_data.vertices);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+			glDrawArrays(GL_TRIANGLES, 0, drawable->buffer_data.vertices_len / 4);
+		}
 	}
 
 	glfwSwapBuffers(window);

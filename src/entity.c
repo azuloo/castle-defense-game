@@ -67,7 +67,7 @@ static int add_entity_common(EntityDef* dest, const DrawBufferData* draw_buf_dat
 		return TERMINATE_ERR_CODE;
 	}
 
-	int add_res = config_drawable(drawable, draw_buf_data, vertex_shader_path, fragment_shader_path);
+	int add_res = setup_drawable(drawable, draw_buf_data, vertex_shader_path, fragment_shader_path);
 	if (TERMINATE_ERR_CODE == add_res)
 	{
 		PRINT_ERR("[entity]: Failed to add env element.");
@@ -79,13 +79,13 @@ static int add_entity_common(EntityDef* dest, const DrawBufferData* draw_buf_dat
 
 	process_drawable_attributes(drawable);
 
-	drawable->transform->translation   = *new_pos;
-	drawable->transform->scale         = *new_scale;
+	drawable->transform.translation   = *new_pos;
+	drawable->transform.scale         = *new_scale;
 
 	drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
 	
-	drawable->matrices->projection = COMMON_ORTHO_MAT;
-	add_uniform_mat4f(drawable->shader_prog, COMMON_PROJECTION_UNIFORM_NAME, &drawable->matrices->projection);
+	drawable->matrices.projection = COMMON_ORTHO_MAT;
+	add_uniform_mat4f(drawable->shader_prog, COMMON_PROJECTION_UNIFORM_NAME, &drawable->matrices.projection);
 
 	Vec4 color_vec = { { 0.f, 1.f, 0.f, 1.f } };
 	add_uniform_vec4f(drawable->shader_prog, ENTITY_SHADER_COLOR_UNIFORM_NAME, &color_vec);
@@ -138,9 +138,9 @@ static int add_triangle(EntityDef** dest)
 
 	DrawBufferData draw_buf_data;
 	draw_buf_data.vertices = vertices;
-	draw_buf_data.vertices_len = sizeof(vertices) / sizeof(vertices[0]);
+	draw_buf_data.vertices_len = sizeof(vertices);
 	draw_buf_data.indices = indices;
-	draw_buf_data.indices_len = sizeof(indices) / sizeof(indices[0]);
+	draw_buf_data.indices_len = sizeof(indices);
 
 	create_entity_def(dest, Entity_Triangle);
 
@@ -326,8 +326,8 @@ int entity_follow_path(EntityDef* entity)
 	{
 		entity->state = Entity_Moving;
 
-		Vec3 starting_pos = { { entity->path[0]->start.x, entity->path[0]->start.y, drawable->transform->translation.z } };
-		drawable->transform->translation = starting_pos;
+		Vec3 starting_pos = { { entity->path[0]->start.x, entity->path[0]->start.y, drawable->transform.translation.z } };
+		drawable->transform.translation = starting_pos;
 
 		drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
 	}
@@ -360,8 +360,8 @@ int entity_follow_path(EntityDef* entity)
 			pos_y_step = -ENTITY_MOVEMENT_SPEED;
 		}
 
-		float new_pos_x = drawable->transform->translation.x + pos_x_step * dt;
-		float new_pos_y = drawable->transform->translation.y + pos_y_step * dt;
+		float new_pos_x = drawable->transform.translation.x + pos_x_step * dt;
+		float new_pos_y = drawable->transform.translation.y + pos_y_step * dt;
 
 		// TODO: Better way to do this?
 		bool move_to_next_segment = false;
@@ -386,8 +386,8 @@ int entity_follow_path(EntityDef* entity)
 		{
 			entity->path_idx++;
 
-			drawable->transform->translation.x = pos_end->x;
-			drawable->transform->translation.y = pos_end->y;
+			drawable->transform.translation.x = pos_end->x;
+			drawable->transform.translation.y = pos_end->y;
 
 			if (entity->path_idx >= entity->path_len)
 			{
@@ -398,8 +398,8 @@ int entity_follow_path(EntityDef* entity)
 			return 0;
 		}
 
-		drawable->transform->translation.x = new_pos_x;
-		drawable->transform->translation.y = new_pos_y;
+		drawable->transform.translation.x = new_pos_x;
+		drawable->transform.translation.y = new_pos_y;
 
 		drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
 	}

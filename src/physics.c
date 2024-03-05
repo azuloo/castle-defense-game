@@ -3,11 +3,11 @@
 
 int is_collided_AABB(DrawableDef* first, DrawableDef* second)
 {
-    Vec3* translation_first   = &first->transform->translation;
-    Vec3* scale_first         = &first->transform->scale;
+    Vec3* translation_first   = &first->transform.translation;
+    Vec3* scale_first         = &first->transform.scale;
 
-    Vec3* translation_second  = &second->transform->translation;
-    Vec3* scale_second        = &second->transform->scale;
+    Vec3* translation_second  = &second->transform.translation;
+    Vec3* scale_second        = &second->transform.scale;
 
     int x_collided = translation_first->x + scale_first->x >= translation_second->x - scale_second->x &&
         translation_second->x + scale_second->x >= translation_first->x - scale_first->x;

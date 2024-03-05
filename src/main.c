@@ -6,6 +6,7 @@
 #include "key_bindings.h"
 #include "obj_registry.h"
 #include "graphics_defs.h"
+#include "freetype_text.h"
 
 #include "map/map_mgr.h"
 #include "entity.h"
@@ -77,6 +78,12 @@ int main(int argc, int* argv[])
 
 	EntityDef* castle = NULL;
 	add_entity(Entity_Castle, &castle);
+
+	init_ft();
+	load_ascii_chars();
+
+	Vec3 color = { 1.f, 1.f, 1.f };
+	render_text("Sample text", wWidth - 300.f, wHeight - 50.f, 1.0f, color);
 
 	// TODO: Handle Windows window drag (other events?)
 	while (!should_be_terminated())

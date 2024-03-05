@@ -51,7 +51,7 @@ int initial_add_background()
 		return TERMINATE_ERR_CODE;
 	}
 
-	int add_res = config_drawable(drawable, draw_buf_data, vertex_shader_path, fragment_shader_path);
+	int add_res = setup_drawable(drawable, draw_buf_data, vertex_shader_path, fragment_shader_path);
 	if (TERMINATE_ERR_CODE == add_res)
 	{
 		PRINT_ERR("[static_env]: Failed to add env element.");
@@ -64,16 +64,16 @@ int initial_add_background()
 	process_drawable_attributes(drawable);
 
 	Vec3 translation = { { wWidth / 2.f, wHeight / 2.f, Z_DEPTH_INITIAL_MAP_BACKGROUND } };
-	drawable->transform->translation = translation;
+	drawable->transform.translation = translation;
 
 	Vec3 scale = { { wWidth / 2.f, wHeight / 2.f, 1.f } };
-	drawable->transform->scale = scale;
+	drawable->transform.scale = scale;
 
 	drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
 
-	drawable->matrices->projection = COMMON_ORTHO_MAT;
+	drawable->matrices.projection = COMMON_ORTHO_MAT;
     // TODO: Move "projection" into defs
-	add_uniform_mat4f(drawable->shader_prog, COMMON_PROJECTION_UNIFORM_NAME, &drawable->matrices->projection);
+	add_uniform_mat4f(drawable->shader_prog, COMMON_PROJECTION_UNIFORM_NAME, &drawable->matrices.projection);
 
 	return 0;
 }
@@ -149,7 +149,7 @@ int initial_add_path()
 			return TERMINATE_ERR_CODE;
 		}
 
-		int add_res = config_drawable(drawable, draw_buf_data, vertex_shader_path, fragment_shader_path);
+		int add_res = setup_drawable(drawable, draw_buf_data, vertex_shader_path, fragment_shader_path);
 		if (TERMINATE_ERR_CODE == add_res)
 		{
 			PRINT_ERR("[static_env]: Failed to add initial map level\'s element.");
@@ -200,15 +200,15 @@ int initial_add_path()
 		float pos_y = (path_segment->start.y + path_segment->end.y) / 2.f;
 
 		Vec3 translation = { { pos_x, pos_y, Z_DEPTH_INITIAL_MAP_PATH } };
-		drawable->transform->translation = translation;
+		drawable->transform.translation = translation;
 
 		Vec3 scale = { { scale_x, scale_y, 1.f } };
-		drawable->transform->scale = scale;
+		drawable->transform.scale = scale;
 
 		drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
 
-		drawable->matrices->projection = COMMON_ORTHO_MAT;
-		add_uniform_mat4f(drawable->shader_prog, "projection", &drawable->matrices->projection);
+		drawable->matrices.projection = COMMON_ORTHO_MAT;
+		add_uniform_mat4f(drawable->shader_prog, "projection", &drawable->matrices.projection);
 	}
 
 	return 0;

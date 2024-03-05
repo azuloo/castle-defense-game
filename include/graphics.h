@@ -18,7 +18,8 @@
 enum TextureType
 {
 	TexType_RGB,
-	TexType_RGBA
+	TexType_RGBA,
+	TexType_RED
 };
 
 typedef struct
@@ -52,6 +53,13 @@ typedef struct
 	Mat4 projection;
 } GMatrices;
 
+typedef struct
+{
+	unsigned int vbo;
+	unsigned int vao;
+	unsigned int ebo;
+} GBuffers;
+
 typedef struct TransformDef
 {
 	Vec3 translation;
@@ -61,27 +69,26 @@ typedef struct TransformDef
 
 typedef struct
 {
-	unsigned int    vbo;
-	unsigned int    vao;
-	unsigned int    ebo;
-	unsigned int    shader_prog;
-	unsigned int    texture;
-	unsigned int    num_indices;
-	GAttributes*    attributes;
-	GMatrices*      matrices;
-	TransformDef*   transform;
-	int             handle;
-	int             visible;
-	int             draw_mode;
-} DrawableDef;
+	float*          vertices;
+	int             vertices_len;
+	int*            indices;
+	int             indices_len;
+} DrawBufferData;
 
 typedef struct
 {
-	float*          vertices;
-	unsigned int    vertices_len;
-	int*            indices;
-	unsigned int    indices_len;
-} DrawBufferData;
+	GBuffers          buffers;
+	DrawBufferData    buffer_data;
+	unsigned int      shader_prog;
+	unsigned int      texture;
+	unsigned int      num_indices;
+	GAttributes*      attributes;
+	GMatrices         matrices;
+	TransformDef      transform;
+	int               handle;
+	int               visible;
+	int               draw_mode;
+} DrawableDef;
 
 typedef struct GLFWwindow GWindow;
 typedef void (*InputFnPtr)(GWindow* window);
@@ -97,11 +104,14 @@ void drawable_set_visible(DrawableDef* drawable, int visible);
 int graphics_should_be_terminated();
 void graphics_free_resources();
 
+int render_text(const char* text, float x, float y, float scale, Vec3 color);
+
 DrawableDef* create_drawable();
 int create_texture_2D(unsigned char* data, int width, int height, unsigned int* texture, enum TextureType type);
 int add_uniform_mat4f(unsigned int shader_prog, const char* uniform_name, const Mat4* mat);
 int add_uniform_vec4f(unsigned int shader_prog, const char* uniform_name, const Vec4* vec);
-int config_drawable(DrawableDef* drawable, const DrawBufferData* buf_data, const char* vertex_shader_path, const char* fragment_shader_path);
+int add_uniform_vec3f(unsigned int shader_prog, const char* uniform_name, const Vec3* vec);
+int setup_drawable(DrawableDef* drawable, const DrawBufferData* buf_data, const char* vertex_shader_path, const char* fragment_shader_path);
 int register_drawable_attribute(DrawableDef* drawable, unsigned int size);
 int process_drawable_attributes(DrawableDef* drawable);
 int graphics_draw();
