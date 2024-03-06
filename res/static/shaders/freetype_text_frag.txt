@@ -1,0 +1,13 @@
+#version 330 core
+
+in vec2 TexCoords;
+out vec4 color;
+
+uniform sampler2D text;
+uniform vec3 TextColor;
+
+void main()
+{    
+    vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, TexCoords).r); // each color is represented as 8-bit value, stored in r component
+    color = vec4(TextColor, 1.0) * sampled;
+}

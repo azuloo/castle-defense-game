@@ -15,6 +15,9 @@
 #define DRAW_MODE_DYNAMIC    GL_DYNAMIC_DRAW
 #define DRAW_MODE_STREAM     GL_STREAM_DRAW
 
+int check_graphics_initialized();
+#define ASSERT_GRAPHICS_INITIALIZED assert( check_graphics_initialized() == 1 );
+
 enum TextureType
 {
 	TexType_RGB,
@@ -93,6 +96,19 @@ typedef struct
 typedef struct GLFWwindow GWindow;
 typedef void (*InputFnPtr)(GWindow* window);
 typedef void (*WindowResizeFnPtr)(GWindow* window, int width, int height);
+
+// Graphics sub-module functions
+
+int create_vbo(unsigned int* vbo, float* vertices, int len, int draw_mode);
+int create_vao(unsigned int* vao);
+int create_ebo(unsigned int* ebo, unsigned int* indices, int len, int draw_mode);
+int compile_shaders(unsigned int* shader_prog, const char* vertex_shader_src, const char* fragment_shader_src);
+// ! Allocates memory on heap (indirect) !
+char* get_shader_source(const char* name);
+// ! Allocates memory on heap !
+int create_drawable_buffer_data(DrawableDef* drawable, DrawBufferData* src);
+
+// Graphics sub-module functions end
 
 void close_window(GWindow* window);
 void bind_input_fn(InputFnPtr ptr);

@@ -7,6 +7,7 @@
 #include "obj_registry.h"
 #include "graphics_defs.h"
 #include "freetype_text.h"
+#include "freetype_renderer.h"
 
 #include "map/map_mgr.h"
 #include "entity.h"
@@ -74,7 +75,7 @@ int main(int argc, int* argv[])
 	add_entity_path(circle, path, path_len);
 
 	int path_delay_sq = 250;
-	int path_delay_cir = 1250;
+	int path_delay_cir = 800;
 
 	EntityDef* castle = NULL;
 	add_entity(Entity_Castle, &castle);
@@ -82,6 +83,7 @@ int main(int argc, int* argv[])
 	init_ft();
 	load_ascii_chars();
 
+	ft_renderer_init();
 	Vec3 color = { 1.f, 1.f, 1.f };
 	render_text("Sample text", wWidth - 300.f, wHeight - 50.f, 1.0f, color);
 
