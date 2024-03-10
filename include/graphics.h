@@ -119,6 +119,7 @@ void set_background_color(BackgroundColor b_color);
 void drawable_set_visible(DrawableDef* drawable, int visible);
 int graphics_should_be_terminated();
 void graphics_free_resources();
+void set_unpack_alignment(int align);
 
 int render_text(const char* text, float x, float y, float scale, Vec3 color);
 

@@ -19,6 +19,14 @@ static int s_EntitiesCnfCapacity    = 32;
 static int s_EntitiesNum            = 0;
 static EntityDef* s_EntityDefs      = NULL;
 
+static const char* entity_vertex_shader_path     = "/res/static/shaders/basic_vert.txt";
+static const char* entity_fragment_shader_path   = "/res/static/shaders/entity_frag.txt";
+
+static const char* triangle_texture_path   = "/res/static/textures/triangle.png";
+static const char* square_texture_path     = "/res/static/textures/square.png";
+static const char* circle_texture_path     = "/res/static/textures/circle.png";
+static const char* castle_texture_path     = "/res/static/textures/castle.png";
+
 // ! Allocates memory on heap !
 static int alloc_entities_arr()
 {
@@ -38,9 +46,6 @@ static int alloc_entities_arr()
 
 static int add_entity_common(EntityDef* dest, const DrawBufferData* draw_buf_data, const char* texture_path, int texture_type, const Vec3* new_pos, const Vec3* new_scale)
 {
-	static const char* vertex_shader_path = "/res/static/shaders/basic_vert.txt";
-	static const char* fragment_shader_path = "/res/static/shaders/entity_frag.txt";
-
 	DrawableDef* drawable = create_drawable();
 	if (NULL == drawable)
 	{
@@ -67,7 +72,7 @@ static int add_entity_common(EntityDef* dest, const DrawBufferData* draw_buf_dat
 		return TERMINATE_ERR_CODE;
 	}
 
-	int add_res = setup_drawable(drawable, draw_buf_data, vertex_shader_path, fragment_shader_path);
+	int add_res = setup_drawable(drawable, draw_buf_data, entity_vertex_shader_path, entity_fragment_shader_path);
 	if (TERMINATE_ERR_CODE == add_res)
 	{
 		PRINT_ERR("[entity]: Failed to add env element.");
@@ -102,7 +107,7 @@ static int create_entity_def(EntityDef** dest, enum EntityType type)
 		if (TERMINATE_ERR_CODE == alloc_entities_arr_res)
 		{
 			PRINT_ERR("[entity]: Failed to create entities arr.");
-			return NULL;
+			return TERMINATE_ERR_CODE;
 		}
 	}
 
@@ -148,8 +153,7 @@ static int add_triangle(EntityDef** dest)
 	Vec3 tri_pos = { { 600.f, wHeight / 2.f, Z_DEPTH_INITIAL_ENTITY } };
 	Vec3 tri_scale = { { 35.f, 35.f, 1.f } };
 
-	const char* texture_path = "/res/static/textures/triangle.png";
-	add_entity_common(*dest, &draw_buf_data, texture_path, TexType_RGBA, &tri_pos, &tri_scale);
+	add_entity_common(*dest, &draw_buf_data, triangle_texture_path, TexType_RGBA, &tri_pos, &tri_scale);
 
 	return 0;
 }
@@ -170,8 +174,7 @@ static int add_square(EntityDef** dest)
 	Vec3 sq_pos = { { 400.f, wHeight / 2.f, Z_DEPTH_INITIAL_ENTITY } };
 	Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
 
-	const char* texture_path = "/res/static/textures/square.png";
-	add_entity_common(*dest, draw_buf_data, texture_path, TexType_RGBA, &sq_pos, &sq_scale);
+	add_entity_common(*dest, draw_buf_data, square_texture_path, TexType_RGBA, &sq_pos, &sq_scale);
 
 	return 0;
 }
@@ -192,8 +195,7 @@ static int add_circle(EntityDef** dest)
 	Vec3 sq_pos = { { 500.f, wHeight / 2.f, Z_DEPTH_INITIAL_ENTITY } };
 	Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
 
-	const char* texture_path = "/res/static/textures/circle.png";
-	add_entity_common(*dest , draw_buf_data, texture_path, TexType_RGBA, &sq_pos, &sq_scale);
+	add_entity_common(*dest , draw_buf_data, circle_texture_path, TexType_RGBA, &sq_pos, &sq_scale);
 
 	return 0;
 }
@@ -214,8 +216,7 @@ static int add_castle(EntityDef** dest)
 	Vec3 sq_pos = { { 1500.f, wHeight / 2.f, Z_DEPTH_INITIAL_CASTLE } };
 	Vec3 sq_scale = { { 125.f, 125.f, 1.f } };
 
-	const char* texture_path = "/res/static/textures/castle.png";
-	add_entity_common(*dest, draw_buf_data, texture_path, TexType_RGB, &sq_pos, &sq_scale);
+	add_entity_common(*dest, draw_buf_data, castle_texture_path, TexType_RGB, &sq_pos, &sq_scale);
 
 	return 0;
 }

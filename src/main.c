@@ -74,8 +74,9 @@ int main(int argc, int* argv[])
 	add_entity_path(square, path, path_len);
 	add_entity_path(circle, path, path_len);
 
-	int path_delay_sq = 250;
-	int path_delay_cir = 800;
+	const float time_step = 250;
+	float path_delay_sq = 250;
+	float path_delay_cir = 500;
 
 	EntityDef* castle = NULL;
 	add_entity(Entity_Castle, &castle);
@@ -85,7 +86,7 @@ int main(int argc, int* argv[])
 
 	ft_renderer_init();
 	Vec3 color = { 1.f, 1.f, 1.f };
-	render_text("Sample text", wWidth - 300.f, wHeight - 50.f, 1.0f, color);
+	render_text("Sample text", wWidth - 300.f, wHeight - 50.f, color);
 
 	// TODO: Handle Windows window drag (other events?)
 	while (!should_be_terminated())
@@ -97,7 +98,7 @@ int main(int argc, int* argv[])
 		entity_follow_path(triangle);
 		if (path_delay_sq > 0)
 		{
-			path_delay_sq -= path_delay_sq * dt;
+			path_delay_sq -= time_step * dt;
 		}
 		else
 		{
@@ -106,7 +107,7 @@ int main(int argc, int* argv[])
 
 		if (path_delay_cir > 0)
 		{
-			path_delay_cir -= path_delay_cir * dt;
+			path_delay_cir -= time_step * dt;
 		}
 		else
 		{

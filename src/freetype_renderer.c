@@ -7,6 +7,7 @@ static int s_FtBuffersCreated = 0;
 static GBuffers s_FreetypeBuffers;
 
 #define TEXT_QUAD_VERTICES_COUNT 24
+#define TEXT_DEFUALT_SCALE       1.f
 
 static int create_freetype_buffers()
 {
@@ -55,7 +56,7 @@ int ft_renderer_init()
 	return 0;
 }
 
-int render_text(const char* text, float x, float y, float scale, Vec3 color)
+int render_text(const char* text, float x, float y, Vec3 color)
 {
 	ASSERT_GRAPHICS_INITIALIZED
 	ASSERT_FT_BUFFERS_CREATED
@@ -82,14 +83,13 @@ int render_text(const char* text, float x, float y, float scale, Vec3 color)
 
 			compile_shaders(&drawable->shader_prog, vertex_shader_src, fragment_shader_src);
 
-			// TODO: Move this out of here
 			add_uniform_vec3f(drawable->shader_prog, "TextColor", &color);
 			add_uniform_mat4f(drawable->shader_prog, "projection", &ortho_mat);
 
-			float xpos = x + char_def->bearing.x * scale;
-			float ypos = y - (char_def->size.y - char_def->bearing.y) * scale;
-			float w = char_def->size.x * scale;
-			float h = char_def->size.y * scale;
+			float xpos = x + char_def->bearing.x * TEXT_DEFUALT_SCALE;
+			float ypos = y - (char_def->size.y - char_def->bearing.y) * TEXT_DEFUALT_SCALE;
+			float w = char_def->size.x * TEXT_DEFUALT_SCALE;
+			float h = char_def->size.y * TEXT_DEFUALT_SCALE;
 
 			float vertices[] = {
 				xpos,     ypos + h,   0.0f, 0.0f,
@@ -112,7 +112,7 @@ int render_text(const char* text, float x, float y, float scale, Vec3 color)
 
 			create_drawable_buffer_data(drawable, &buf_data);
 
-			x += (char_def->advance >> 6) * scale; // Bitshift by 6 to get value in pixels (2^6 = 64)
+			x += (char_def->advance >> 6) * TEXT_DEFUALT_SCALE; // Bitshift by 6 to get value in pixels (2^6 = 64)
 
 			glyph++;
 		}

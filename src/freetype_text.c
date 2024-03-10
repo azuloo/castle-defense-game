@@ -7,8 +7,10 @@
 #include "file_reader.h"
 
 static FT_Library      s_FTLib;
-static FT_Face         s_Face;
-static CharacterDef    s_Chars[128];
+static FT_Face         s_Face; // TODO: Different faces for different fonts
+static CharacterDef    s_Chars[128]; // TODO: Use c map impl here
+
+#define FT_DEFAULT_FONT_SIZE 48
 
 int init_ft()
 {
@@ -36,8 +38,8 @@ int init_ft()
 
 	s_Face = face;
 
-	// TODO: Move to other func
-	FT_Set_Pixel_Sizes(s_Face, 0, 48);
+	// TODO: Add different sized glyphs support
+	FT_Set_Pixel_Sizes(s_Face, 0, FT_DEFAULT_FONT_SIZE);
 
 	return 0;
 }
@@ -52,8 +54,7 @@ int ft_free_resources()
 
 int load_ascii_chars()
 {
-	// TODO: Graphics related; move out of here
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	set_unpack_alignment(1);
 
 	for (unsigned char c = 0; c < 128; c++)
 	{

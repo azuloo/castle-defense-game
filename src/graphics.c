@@ -206,7 +206,7 @@ int create_drawable_buffer_data(DrawableDef* drawable, DrawBufferData* src)
 	if (NULL != src->indices && src->indices_len != 0)
 	{
 		// TODO: Free memory
-		float* indices = malloc(src->indices_len * sizeof * indices);
+		int* indices = malloc(src->indices_len * sizeof * indices);
 		if (NULL == indices)
 		{
 			PRINT_ERR("[graphics] Failed to allocate sufficient memory for buffer_data indices.");
@@ -296,14 +296,16 @@ static DrawableDef* create_drawable_def()
 		}
 	}
 
-	DrawableDef* drawable   = s_DrawableData + s_DrawableNum;
-	drawable->shader_prog   = 0;
-	drawable->texture       = 0;
-	drawable->num_indices   = 0;
-	drawable->attributes    = NULL;
-	drawable->handle        = -1;
-	drawable->visible       = 1;
-	drawable->draw_mode     = DRAW_MODE_STATIC;
+	DrawableDef* drawable             = s_DrawableData + s_DrawableNum;
+	drawable->buffer_data.vertices    = NULL;
+	drawable->buffer_data.indices     = NULL;
+	drawable->shader_prog             = 0;
+	drawable->texture                 = 0;
+	drawable->num_indices             = 0;
+	drawable->attributes              = NULL;
+	drawable->handle                  = -1;
+	drawable->visible                 = 1;
+	drawable->draw_mode               = DRAW_MODE_STATIC;
 
 	memset(&drawable->buffers, 0, sizeof * &drawable->buffers);
 	memset(&drawable->matrices, 0, sizeof * &drawable->matrices);
@@ -349,9 +351,27 @@ static void free_drawable_attributes_cnf()
 	}
 }
 
+static void free_drawable_buffer_data()
+{
+	for (int i = 0; i < s_DrawableNum; i++)
+	{
+		DrawableDef* drawable = s_DrawableData + i;
+		if (NULL != drawable->buffer_data.vertices)
+		{
+			free(drawable->buffer_data.vertices);
+		}
+
+		if (NULL != drawable->buffer_data.indices)
+		{
+			free(drawable->buffer_data.indices);
+		}
+	}
+}
+
 static void free_drawable_data()
 {
 	free_drawable_attributes_cnf();
+	free_drawable_buffer_data();
 	free(s_DrawableData);
 }
 
@@ -377,6 +397,11 @@ void graphics_free_resources()
 	free_drawable_data();
 
 	glfwTerminate();
+}
+
+void set_unpack_alignment(int align)
+{
+	glPixelStorei(GL_UNPACK_ALIGNMENT, align);
 }
 
 DrawableDef* create_drawable()

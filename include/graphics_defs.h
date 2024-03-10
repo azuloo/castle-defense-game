@@ -1,8 +1,8 @@
 #ifndef _GRAPHICS_DEFS_H
 #define _GRAPHICS_DEFS_H
 
-extern float wWidth;
-extern float wHeight;
+extern int wWidth;
+extern int wHeight;
 
 #include "lin_alg.h"
 
