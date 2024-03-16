@@ -1,6 +1,8 @@
 #ifndef _GLOBAL_DEFS_H
 #define _GLOBAL_DEFS_H
 
+#define MAX_FRAME_TIME 0.1f
+
 // Literals
 #define COMMON_MODEL_UNIFORM_NAME         "model"
 #define COMMON_PROJECTION_UNIFORM_NAME    "projection"

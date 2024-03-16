@@ -3,7 +3,22 @@
 
 static const double PI = 3.14159265358979323846;
 
-float lerp(float a, float b, float f)
+float math_min(float a, float b)
+{
+	return a > b ? b : a;
+}
+
+float math_max(float a, float b)
+{
+	return a > b ? a : b;
+}
+
+float math_clamp(float a, float min_val, float max_val)
+{
+	return math_min(math_max(a, min_val), max_val);
+}
+
+float math_lerp(float a, float b, float f)
 {
 	return a + f * (b - a);
 }

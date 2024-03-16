@@ -50,7 +50,10 @@ static const Mat4 IdentityMat = { {
 	0, 0, 0, 1
 } };
 
-float lerp(float a, float b, float f);
+float math_min(float a, float b);
+float math_max(float a, float b);
+float math_clamp(float a, float min_val, float max_val);
+float math_lerp(float a, float b, float f);
 
 Mat4 multiply_mat4(const Mat4* m1, const Mat4* m2);
 Vec4 mulmat_vec4(const Mat4* m, const Vec4* v);

@@ -8,6 +8,7 @@
 #include "graphics_defs.h"
 #include "freetype_text.h"
 #include "freetype_renderer.h"
+#include "global_defs.h"
 
 #include "map/map_mgr.h"
 #include "entity.h"
@@ -94,6 +95,8 @@ int main(int argc, int* argv[])
 		float curr_time = (float)glfwGetTime();
 		dt = curr_time - lft;
 		lft = curr_time;
+
+		dt = math_clamp(dt, 0.f, MAX_FRAME_TIME);
 
 		entity_follow_path(triangle);
 		if (path_delay_sq > 0)
