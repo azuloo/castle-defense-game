@@ -44,60 +44,6 @@ static int alloc_entities_arr()
 	return 0;
 }
 
-static int add_entity_common(EntityDef* dest, const DrawBufferData* draw_buf_data, const char* texture_path, int texture_type, const Vec3* new_pos, const Vec3* new_scale)
-{
-	DrawableDef* drawable = create_drawable();
-	if (NULL == drawable)
-	{
-		PRINT_ERR("[static_env]: Failed to create drawable.");
-		return TERMINATE_ERR_CODE;
-	}
-
-	dest->drawable_handle = drawable->handle;
-
-	// TODO: Common code - move to separate function
-	char path_buf[256];
-	get_file_path(texture_path, &path_buf, 256);
-
-	unsigned char* img_data;
-	int width, height;
-	fr_read_image_data(path_buf, &img_data, &width, &height);
-
-	int create_texture_2D_res = create_texture_2D(img_data, width, height, &drawable->texture, texture_type);
-	fr_free_image_resources(img_data);
-
-	if (TERMINATE_ERR_CODE == create_texture_2D_res)
-	{
-		PRINT_ERR("[static_env]: Failed to add env texute.");
-		return TERMINATE_ERR_CODE;
-	}
-
-	int add_res = setup_drawable(drawable, draw_buf_data, entity_vertex_shader_path, entity_fragment_shader_path);
-	if (TERMINATE_ERR_CODE == add_res)
-	{
-		PRINT_ERR("[entity]: Failed to add env element.");
-		return TERMINATE_ERR_CODE;
-	}
-
-	register_drawable_attribute(drawable, 3); // Pos
-	register_drawable_attribute(drawable, 2); // Texture
-
-	process_drawable_attributes(drawable);
-
-	drawable->transform.translation   = *new_pos;
-	drawable->transform.scale         = *new_scale;
-
-	drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
-	
-	drawable->matrices.projection = COMMON_ORTHO_MAT;
-	add_uniform_mat4f(drawable->shader_prog, COMMON_PROJECTION_UNIFORM_NAME, &drawable->matrices.projection);
-
-	Vec4 color_vec = { { 0.f, 1.f, 0.f, 1.f } };
-	add_uniform_vec4f(drawable->shader_prog, ENTITY_SHADER_COLOR_UNIFORM_NAME, &color_vec);
-
-	return 0;
-}
-
 static int create_entity_def(EntityDef** dest, enum EntityType type)
 {
     // TODO: How do we solve pointers invalidation problem? (use Registry)
@@ -130,93 +76,92 @@ static int create_entity_def(EntityDef** dest, enum EntityType type)
 
 static int add_triangle(EntityDef** dest)
 {
-	static float vertices[] = {
-		// Position           // Texture
-		0.f, 1.f, 0.f,        0.5f, 1.f,
-		-1.f, -1.f, 0.f,      0.f, 0.f,
-		1.f, -1.f, 0.0f,      1.f, 0.f
-	};
-
-	static unsigned int indices[] = {
-		0, 1, 2
-	};
-
-	DrawBufferData draw_buf_data;
-	draw_buf_data.vertices = vertices;
-	draw_buf_data.vertices_len = sizeof(vertices);
-	draw_buf_data.indices = indices;
-	draw_buf_data.indices_len = sizeof(indices);
-
 	create_entity_def(dest, Entity_Triangle);
 
 	// TODO: Take window res into account
 	Vec3 tri_pos = { { 600.f, wHeight / 2.f, Z_DEPTH_INITIAL_ENTITY } };
 	Vec3 tri_scale = { { 35.f, 35.f, 1.f } };
+	Vec4 tri_color = { { 0.f, 1.f, 0.f, 1.f } };
 
-	add_entity_common(*dest, &draw_buf_data, triangle_texture_path, TexType_RGBA, &tri_pos, &tri_scale);
+	DrawableDef* drawable = NULL;
+	draw_quad(&drawable, triangle_texture_path, TexType_RGBA, &tri_pos, &tri_scale, &tri_color);
+
+	if (NULL == drawable)
+	{
+		PRINT_ERR("[entity]: Failed to draw triangle entity (empty quad drawable).");
+		return TERMINATE_ERR_CODE;
+	}
+
+	(*dest)->drawable_handle = drawable->handle;
 
 	return 0;
 }
 
 static int add_square(EntityDef** dest)
 {
-	DrawBufferData* draw_buf_data = NULL;
-	get_square_draw_buffer_data(&draw_buf_data);
-	if (NULL == draw_buf_data)
-	{
-		PRINT_ERR("[entity]: Failed to retrieve square DrawBufferData.");
-		return TERMINATE_ERR_CODE;
-	}
-
 	create_entity_def(dest, Entity_Square);
 
 	// TODO: Take window res into account
 	Vec3 sq_pos = { { 400.f, wHeight / 2.f, Z_DEPTH_INITIAL_ENTITY } };
 	Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
+	Vec4 sq_color = { { 0.f, 1.f, 0.f, 1.f } };
 
-	add_entity_common(*dest, draw_buf_data, square_texture_path, TexType_RGBA, &sq_pos, &sq_scale);
+	DrawableDef* drawable = NULL;
+	draw_quad(&drawable, square_texture_path, TexType_RGBA, &sq_pos, &sq_scale, &sq_color);
+
+	if (NULL == drawable)
+	{
+		PRINT_ERR("[entity]: Failed to draw square entity (empty quad drawable).");
+		return TERMINATE_ERR_CODE;
+	}
+
+	(*dest)->drawable_handle = drawable->handle;
 
 	return 0;
 }
 
 static int add_circle(EntityDef** dest)
 {
-	DrawBufferData* draw_buf_data = NULL;
-	get_square_draw_buffer_data(&draw_buf_data);
-	if (NULL == draw_buf_data)
-	{
-		PRINT_ERR("[entity]: Failed to retrieve square DrawBufferData.");
-		return TERMINATE_ERR_CODE;
-	}
-
 	create_entity_def(dest, Entity_Circle);
 
 	// TODO: Take window res into account
-	Vec3 sq_pos = { { 500.f, wHeight / 2.f, Z_DEPTH_INITIAL_ENTITY } };
-	Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
+	Vec3 circle_pos = { { 500.f, wHeight / 2.f, Z_DEPTH_INITIAL_ENTITY } };
+	Vec3 circle_scale = { { 35.f, 35.f, 1.f } };
+	Vec4 circle_color = { { 0.f, 1.f, 0.f, 1.f } };
 
-	add_entity_common(*dest , draw_buf_data, circle_texture_path, TexType_RGBA, &sq_pos, &sq_scale);
+	DrawableDef* drawable = NULL;
+	draw_quad(&drawable, circle_texture_path, TexType_RGBA, &circle_pos, &circle_scale, &circle_color);
+
+	if (NULL == drawable)
+	{
+		PRINT_ERR("[entity]: Failed to draw circle entity (empty quad drawable).");
+		return TERMINATE_ERR_CODE;
+	}
+
+	(*dest)->drawable_handle = drawable->handle;
 
 	return 0;
 }
 
 static int add_castle(EntityDef** dest)
 {
-	DrawBufferData* draw_buf_data = NULL;
-	get_square_draw_buffer_data(&draw_buf_data);
-	if (NULL == draw_buf_data)
-	{
-		PRINT_ERR("[entity]: Failed to retrieve square DrawBufferData.");
-		return TERMINATE_ERR_CODE;
-	}
-
 	create_entity_def(dest, Entity_Castle);
 
 	// TODO: Take window res into account
-	Vec3 sq_pos = { { 1500.f, wHeight / 2.f, Z_DEPTH_INITIAL_CASTLE } };
-	Vec3 sq_scale = { { 125.f, 125.f, 1.f } };
+	Vec3 castle_pos = { { 1600.f, wHeight / 2.f, Z_DEPTH_INITIAL_CASTLE } };
+	Vec3 castle_scale = { { 125.f, 125.f, 1.f } };
+	Vec4 castle_color = { { 1.f, 1.f, 1.f, 1.f } };
 
-	add_entity_common(*dest, draw_buf_data, castle_texture_path, TexType_RGB, &sq_pos, &sq_scale);
+	DrawableDef* drawable = NULL;
+	draw_quad(&drawable, castle_texture_path, TexType_RGBA, &castle_pos, &castle_scale, &castle_color);
+
+	if (NULL == drawable)
+	{
+		PRINT_ERR("[entity]: Failed to draw castle entity (empty quad drawable).");
+		return TERMINATE_ERR_CODE;
+	}
+
+	(*dest)->drawable_handle = drawable->handle;
 
 	return 0;
 }

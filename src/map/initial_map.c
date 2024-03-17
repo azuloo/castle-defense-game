@@ -21,7 +21,7 @@ static PathSegment** s_Path = NULL;
 int initial_add_background()
 {
 	DrawBufferData* draw_buf_data = NULL;
-	get_square_draw_buffer_data(&draw_buf_data);
+	get_quad_draw_buffer_data(&draw_buf_data);
 	if (NULL == draw_buf_data)
 	{
 		PRINT_ERR("[entity]: Failed to retrieve square DrawBufferData.");
@@ -94,7 +94,7 @@ int initial_add_path()
 		{ .start = { 550.f, (float)(wHeight - path_y_offset) }, .end = { 550.f, (float)path_y_offset } },
 		{ .start = { 550.f, (float)path_y_offset }, .end = { 1050.f, (float)path_y_offset } },
 		{ .start = { 1050.f, (float)path_y_offset }, .end = { 1050.f, (float)wHeight / 2.f } },
-		{ .start = { 1050.f, (float)wHeight / 2.f }, .end = { 1400.f, (float)wHeight / 2.f } }
+		{ .start = { 1050.f, (float)wHeight / 2.f }, .end = { 1650.f, (float)wHeight / 2.f } }
 	};
 
 	PathSegment** path = malloc(INTIAL_MAP_PATH_LEN * sizeof *s_Path);
@@ -123,7 +123,7 @@ int initial_add_path()
 	for (int i = 0; i < INTIAL_MAP_PATH_LEN; i++)
 	{
 		DrawBufferData* draw_buf_data = NULL;
-		get_square_draw_buffer_data(&draw_buf_data);
+		get_quad_draw_buffer_data(&draw_buf_data);
 		if (NULL == draw_buf_data)
 		{
 			PRINT_ERR("[entity]: Failed to retrieve square DrawBufferData.");

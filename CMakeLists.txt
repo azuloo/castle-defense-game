@@ -15,8 +15,14 @@ add_executable(castle_defense_game ${HEADER_FILES} ${SOURCE_FILES})
 
 set_property(TARGET castle_defense_game PROPERTY C_STANDARD 99)
 
+target_compile_options(
+    castle_defense_game PRIVATE 
+    /W3 /nologo /EHsc
+    "$<$<CONFIG:Debug>:/Oy-;/Ob0;/Zi;/DDEBUG;/D_DEBUG>"
+)
+
 target_include_directories(castle_defense_game PRIVATE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
-target_link_libraries(castle_defense_game glfw3 OpenGL::GL)
+target_link_libraries(castle_defense_game glfw3 freetype OpenGL::GL)
