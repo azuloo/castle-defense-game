@@ -94,7 +94,7 @@ int initial_add_path()
 		{ .start = { 550.f, (float)(wHeight - path_y_offset) }, .end = { 550.f, (float)path_y_offset } },
 		{ .start = { 550.f, (float)path_y_offset }, .end = { 1050.f, (float)path_y_offset } },
 		{ .start = { 1050.f, (float)path_y_offset }, .end = { 1050.f, (float)wHeight / 2.f } },
-		{ .start = { 1050.f, (float)wHeight / 2.f }, .end = { 1650.f, (float)wHeight / 2.f } }
+		{ .start = { 1050.f, (float)wHeight / 2.f }, .end = { 1600.f, (float)wHeight / 2.f } }
 	};
 
 	PathSegment** path = malloc(INTIAL_MAP_PATH_LEN * sizeof *s_Path);

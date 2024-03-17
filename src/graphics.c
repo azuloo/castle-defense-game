@@ -621,7 +621,7 @@ int graphics_draw()
 
 	glClearColor(s_BColor.R, s_BColor.G, s_BColor.B, s_BColor.A);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+	// TODO: Sort Drawables by z-val, because of alpha-blending issues
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	for (int i = 0; i < s_DrawableNum; i++)
@@ -645,7 +645,7 @@ int graphics_draw()
 			glBindBuffer(GL_ARRAY_BUFFER, drawable->buffers.vbo);
 			glBufferSubData(GL_ARRAY_BUFFER, 0, drawable->buffer_data.vertices_len * sizeof * drawable->buffer_data.vertices, drawable->buffer_data.vertices);
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
-			glDrawArrays(GL_TRIANGLES, 0, drawable->buffer_data.vertices_len / 4);
+			glDrawArrays(GL_TRIANGLES, 0, drawable->buffer_data.vertices_len / 4); // TODO: Remove magic number
 		}
 	}
 

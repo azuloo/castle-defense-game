@@ -60,7 +60,7 @@ int physics_step()
                 if (NULL != first_drawable && first_entity->type == Entity_Castle)
                 {
                     Vec4 color_vec = { { 1.f, 0.f, 0.f, 1.f } };
-                    add_uniform_vec4f(first_drawable->shader_prog, "UColor", &color_vec);
+                    add_uniform_vec4f(second_drawable->shader_prog, "UColor", &color_vec);
                 }
 
                 if (NULL != second_drawable && second_entity->type == Entity_Castle)

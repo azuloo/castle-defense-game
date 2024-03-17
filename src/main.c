@@ -60,6 +60,9 @@ int main(int argc, int* argv[])
 		APP_EXIT(TERMINATE_ERR_CODE);
 	}
 
+	EntityDef* castle = NULL;
+	add_entity(Entity_Castle, &castle);
+
 	EntityDef* triangle = NULL;
 	EntityDef* square = NULL;
 	EntityDef* circle = NULL;
@@ -78,9 +81,6 @@ int main(int argc, int* argv[])
 	const float time_step = 250;
 	float path_delay_sq = 250;
 	float path_delay_cir = 500;
-
-	EntityDef* castle = NULL;
-	add_entity(Entity_Castle, &castle);
 
 	init_ft();
 	load_ascii_chars();
