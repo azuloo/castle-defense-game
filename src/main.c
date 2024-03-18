@@ -41,6 +41,42 @@ void process_input(GWindow* window)
 	}
 }
 
+int draw_triangle_entity(EntityDef** triangle)
+{
+	Vec3 tri_pos = { { 600.f, wHeight / 2.f, Z_DEPTH_INITIAL_ENTITY } };
+	Vec3 tri_scale = { { 35.f, 35.f, 1.f } };
+	Vec4 tri_color = { { 0.f, 1.f, 0.f, 1.f } };
+
+	add_entity(Entity_Triangle, triangle, &tri_pos, &tri_scale, &tri_color);
+}
+
+int draw_square_entity(EntityDef** square)
+{
+	Vec3 sq_pos = { { 400.f, wHeight / 2.f, Z_DEPTH_INITIAL_ENTITY } };
+	Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
+	Vec4 sq_color = { { 0.f, 1.f, 0.f, 1.f } };
+
+	add_entity(Entity_Square, square, &sq_pos, &sq_scale, &sq_color);
+}
+
+int draw_circle_entity(EntityDef** circle)
+{
+	Vec3 circle_pos = { { 500.f, wHeight / 2.f, Z_DEPTH_INITIAL_ENTITY } };
+	Vec3 circle_scale = { { 35.f, 35.f, 1.f } };
+	Vec4 circle_color = { { 0.f, 1.f, 0.f, 1.f } };
+
+	add_entity(Entity_Circle, circle, &circle_pos, &circle_scale, &circle_color);
+}
+
+int draw_castle_entity(EntityDef** castle)
+{
+	Vec3 castle_pos = { { 1600.f, wHeight / 2.f, Z_DEPTH_INITIAL_CASTLE } };
+	Vec3 castle_scale = { { 125.f, 125.f, 1.f } };
+	Vec4 castle_color = { { 1.f, 1.f, 1.f, 1.f } };
+
+	add_entity(Entity_Castle, castle, &castle_pos, &castle_scale, &castle_color);
+}
+
 int main(int argc, int* argv[])
 {
 	int init_graphics_res = init_graphics();
@@ -61,15 +97,15 @@ int main(int argc, int* argv[])
 	}
 
 	EntityDef* castle = NULL;
-	add_entity(Entity_Castle, &castle);
+	draw_castle_entity(&castle);
 
-	EntityDef* triangle = NULL;
-	EntityDef* square = NULL;
 	EntityDef* circle = NULL;
+	EntityDef* square = NULL;
+	EntityDef* triangle = NULL;
 
-	add_entity(Entity_Triangle, &triangle);
-	add_entity(Entity_Square, &square);
-	add_entity(Entity_Circle, &circle);
+	draw_triangle_entity(&triangle);
+	draw_square_entity(&square);
+	draw_circle_entity(&circle);
 
 	const PathSegment** path = map_mgr_get_path();
 	int path_len = map_mgr_get_path_len();

@@ -74,17 +74,12 @@ static int create_entity_def(EntityDef** dest, enum EntityType type)
 	return 0;
 }
 
-static int add_triangle(EntityDef** dest)
+static int add_triangle(EntityDef** dest, const Vec3* pos, const Vec3* scale, const Vec4* color)
 {
 	create_entity_def(dest, Entity_Triangle);
 
-	// TODO: Take window res into account
-	Vec3 tri_pos = { { 600.f, wHeight / 2.f, Z_DEPTH_INITIAL_ENTITY } };
-	Vec3 tri_scale = { { 35.f, 35.f, 1.f } };
-	Vec4 tri_color = { { 0.f, 1.f, 0.f, 1.f } };
-
 	DrawableDef* drawable = NULL;
-	draw_quad(&drawable, triangle_texture_path, TexType_RGBA, &tri_pos, &tri_scale, &tri_color);
+	draw_quad(&drawable, triangle_texture_path, TexType_RGBA, pos, scale, color);
 
 	if (NULL == drawable)
 	{
@@ -97,17 +92,12 @@ static int add_triangle(EntityDef** dest)
 	return 0;
 }
 
-static int add_square(EntityDef** dest)
+static int add_square(EntityDef** dest, const Vec3* pos, const Vec3* scale, const Vec4* color)
 {
 	create_entity_def(dest, Entity_Square);
 
-	// TODO: Take window res into account
-	Vec3 sq_pos = { { 400.f, wHeight / 2.f, Z_DEPTH_INITIAL_ENTITY } };
-	Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
-	Vec4 sq_color = { { 0.f, 1.f, 0.f, 1.f } };
-
 	DrawableDef* drawable = NULL;
-	draw_quad(&drawable, square_texture_path, TexType_RGBA, &sq_pos, &sq_scale, &sq_color);
+	draw_quad(&drawable, square_texture_path, TexType_RGBA, pos, scale, color);
 
 	if (NULL == drawable)
 	{
@@ -120,17 +110,12 @@ static int add_square(EntityDef** dest)
 	return 0;
 }
 
-static int add_circle(EntityDef** dest)
+static int add_circle(EntityDef** dest, const Vec3* pos, const Vec3* scale, const Vec4* color)
 {
 	create_entity_def(dest, Entity_Circle);
 
-	// TODO: Take window res into account
-	Vec3 circle_pos = { { 500.f, wHeight / 2.f, Z_DEPTH_INITIAL_ENTITY } };
-	Vec3 circle_scale = { { 35.f, 35.f, 1.f } };
-	Vec4 circle_color = { { 0.f, 1.f, 0.f, 1.f } };
-
 	DrawableDef* drawable = NULL;
-	draw_quad(&drawable, circle_texture_path, TexType_RGBA, &circle_pos, &circle_scale, &circle_color);
+	draw_quad(&drawable, circle_texture_path, TexType_RGBA, pos, scale, color);
 
 	if (NULL == drawable)
 	{
@@ -143,17 +128,12 @@ static int add_circle(EntityDef** dest)
 	return 0;
 }
 
-static int add_castle(EntityDef** dest)
+static int add_castle(EntityDef** dest, const Vec3* pos, const Vec3* scale, const Vec4* color)
 {
 	create_entity_def(dest, Entity_Castle);
 
-	// TODO: Take window res into account
-	Vec3 castle_pos = { { 1600.f, wHeight / 2.f, Z_DEPTH_INITIAL_CASTLE } };
-	Vec3 castle_scale = { { 125.f, 125.f, 1.f } };
-	Vec4 castle_color = { { 1.f, 1.f, 1.f, 1.f } };
-
 	DrawableDef* drawable = NULL;
-	draw_quad(&drawable, castle_texture_path, TexType_RGBA, &castle_pos, &castle_scale, &castle_color);
+	draw_quad(&drawable, castle_texture_path, TexType_RGBA, pos, scale, color);
 
 	if (NULL == drawable)
 	{
@@ -168,7 +148,7 @@ static int add_castle(EntityDef** dest)
 
 // ----------------------- PUBLIC FUNCTIONS ----------------------- //
 
-int add_entity(enum EntityType type, EntityDef** dest)
+int add_entity(enum EntityType type, EntityDef** dest, const Vec3* pos, const Vec3* scale, const Vec4* color)
 {
 	if (NULL == s_EntityDefs)
 	{
@@ -183,16 +163,16 @@ int add_entity(enum EntityType type, EntityDef** dest)
 	switch (type)
 	{
 	case Entity_Triangle:
-		add_triangle(dest);
+		add_triangle(dest, pos, scale, color);
 		break;
 	case Entity_Square:
-		add_square(dest);
+		add_square(dest, pos, scale, color);
 		break;
 	case Entity_Circle:
-		add_circle(dest);
+		add_circle(dest, pos, scale, color);
 		break;
 	case Entity_Castle:
-		add_castle(dest);
+		add_castle(dest, pos, scale, color);
 		break;
 	default:
 		PRINT_ERR("[entity]: Unknown entity type.");

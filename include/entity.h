@@ -43,8 +43,7 @@ typedef struct EntityDef
 	int               collidable;
 } EntityDef;
 
-// TODO: Receive pos, scale and rotation as params here
-int add_entity(enum EntityType type, EntityDef** dest);
+int add_entity(enum EntityType type, EntityDef** dest, const Vec3* pos, const Vec3* scale, const Vec4* color);
 int add_entity_path(EntityDef* dest, const PathSegment** path, int path_len);
 
 int get_drawable_def(DrawableDef** dest, EntityDef* src);
