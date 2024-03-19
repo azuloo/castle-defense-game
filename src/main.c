@@ -9,6 +9,7 @@
 #include "freetype_text.h"
 #include "freetype_renderer.h"
 #include "global_defs.h"
+#include "drawable_ops.h"
 
 #include "map/map_mgr.h"
 #include "entity.h"
@@ -20,6 +21,34 @@ int wHeight    = WINDOW_DEFAULT_RES_H;
 
 float dt       = 0.0f;  // delta time
 float lft      = 0.0f;  // last frame time
+
+static void entities_collided_hook(EntityDef* first, EntityDef* second)
+{
+	DrawableDef* first_drawable = NULL;
+	get_drawable_def(&first_drawable, first);
+
+	DrawableDef* second_drawable = NULL;
+	get_drawable_def(&second_drawable, second);
+
+	if (NULL == first_drawable || NULL == second_drawable)
+	{
+		// TODO: Report error
+		return;
+	}
+
+	// TODO: Move this out of here
+	if (NULL != first_drawable && first->type == Entity_Castle)
+	{
+		Vec4 color_vec = { { 1.f, 0.f, 0.f, 1.f } };
+		add_uniform_vec4f(second_drawable->shader_prog, "UColor", &color_vec);
+	}
+	// TODO: Move this out of here
+	if (NULL != second_drawable && second->type == Entity_Castle)
+	{
+		Vec4 color_vec = { { 1.f, 0.f, 0.f, 1.f } };
+		add_uniform_vec4f(first_drawable->shader_prog, "UColor", &color_vec);
+	}
+}
 
 static int should_be_terminated()
 {
@@ -87,6 +116,7 @@ int main(int argc, int* argv[])
 
 	bind_input_fn(&process_input);
 	bind_window_resize_fn(&window_resize_hook);
+	physics_bind_entities_collided_cb(&entities_collided_hook);
 
 	map_mgr_init();
 

@@ -3,6 +3,12 @@
 
 #include "graphics.h"
 
+typedef struct EntityDef EntityDef;
+
+typedef void (*PhysicsEntitiesCollidedCb)(EntityDef* first, EntityDef* second);
+
+void physics_bind_entities_collided_cb(PhysicsEntitiesCollidedCb cb);
+
 int is_collided_AABB(DrawableDef* first, DrawableDef* second);
 int physics_step();
 

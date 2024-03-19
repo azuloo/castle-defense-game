@@ -1,6 +1,8 @@
 #include "entity.h"
 #include "physics.h"
 
+static PhysicsEntitiesCollidedCb s_entitiesCollidedCb = NULL;
+
 int is_collided_AABB(DrawableDef* first, DrawableDef* second)
 {
     Vec3* translation_first   = &first->transform.translation;
@@ -15,6 +17,11 @@ int is_collided_AABB(DrawableDef* first, DrawableDef* second)
         translation_second->y + scale_second->y >= translation_first->y - scale_second->y;
 
     return x_collided && y_collided;
+}
+
+void physics_bind_entities_collided_cb(PhysicsEntitiesCollidedCb cb)
+{
+    s_entitiesCollidedCb = cb;
 }
 
 // TODO: Add broad phase detection
@@ -53,23 +60,16 @@ int physics_step()
                 continue;
             }
 
+            // TODO: Replace with physics quontities? (e.g. pos, size?)
             int collides = is_collided_AABB(first_drawable, second_drawable);
 
             if (collides)
             {
-                if (NULL != first_drawable && first_entity->type == Entity_Castle)
+                if (NULL != s_entitiesCollidedCb)
                 {
-                    Vec4 color_vec = { { 1.f, 0.f, 0.f, 1.f } };
-                    add_uniform_vec4f(second_drawable->shader_prog, "UColor", &color_vec);
-                }
-
-                if (NULL != second_drawable && second_entity->type == Entity_Castle)
-                {
-                    Vec4 color_vec = { { 1.f, 0.f, 0.f, 1.f } };
-                    add_uniform_vec4f(first_drawable->shader_prog, "UColor", &color_vec);
+                    (*s_entitiesCollidedCb)(first_entity, second_entity);
                 }
             }
-            
         }
     }
 
