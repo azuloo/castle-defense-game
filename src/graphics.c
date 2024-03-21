@@ -80,6 +80,7 @@ static unsigned int create_fragment_shader(const char** source)
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
+
 	if (NULL != window_resize_fn_ptr)
 	{
 		(*window_resize_fn_ptr)(window, width, height);
@@ -107,6 +108,7 @@ static GLFWwindow* create_window()
 		PRINT_ERR("[graphics]: Failed to init window.");
 		return NULL;
 	}
+
 	set_context_current(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
@@ -310,6 +312,7 @@ static DrawableDef* create_drawable_def()
 	memset(&drawable->buffers, 0, sizeof * &drawable->buffers);
 	memset(&drawable->matrices, 0, sizeof * &drawable->matrices);
 	memset(&drawable->transform, 0, sizeof * &drawable->transform);
+	memset(&drawable->init_transform, 0, sizeof * &drawable->init_transform);
 
 	int create_drawable_attributes_res = create_drawable_attributes(drawable);
 	if (TERMINATE_ERR_CODE == create_drawable_attributes_res)
@@ -376,6 +379,14 @@ static void free_drawable_data()
 }
 
 // ----------------------- PUBLIC FUNCTIONS ----------------------- //
+
+int graphics_get_cursor_pos(double* xpos, double* ypos)
+{
+	ASSERT_GRAPHICS_INITIALIZED
+
+	glfwGetCursorPos(window, xpos, ypos);
+	return 0;
+}
 
 int check_graphics_initialized()
 {
@@ -575,6 +586,13 @@ void bind_window_resize_fn(WindowResizeFnPtr ptr)
 	ASSERT_GRAPHICS_INITIALIZED
 
 	window_resize_fn_ptr = ptr;
+}
+
+void bind_key_pressed_cb(KeyCbPtr ptr)
+{
+	ASSERT_GRAPHICS_INITIALIZED
+
+	glfwSetKeyCallback(window, ptr);
 }
 
 int init_graphics()

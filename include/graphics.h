@@ -88,6 +88,7 @@ typedef struct
 	GAttributes*      attributes;
 	GMatrices         matrices;
 	TransformDef      transform;
+	TransformDef      init_transform;
 	int               handle;
 	int               visible;
 	int               draw_mode;
@@ -96,6 +97,7 @@ typedef struct
 typedef struct GLFWwindow GWindow;
 typedef void (*InputFnPtr)(GWindow* window);
 typedef void (*WindowResizeFnPtr)(GWindow* window, int width, int height);
+typedef void (*KeyCbPtr)(GWindow* window, int key, int scancode, int action, int mods);
 
 // Graphics sub-module functions
 
@@ -113,6 +115,8 @@ int create_drawable_buffer_data(DrawableDef* drawable, DrawBufferData* src);
 void close_window(GWindow* window);
 void bind_input_fn(InputFnPtr ptr);
 void bind_window_resize_fn(WindowResizeFnPtr ptr);
+void bind_key_pressed_cb(KeyCbPtr ptr);
+int graphics_get_cursor_pos(double* xpos, double* ypos);
 
 int init_graphics();
 void set_background_color(BackgroundColor b_color);
@@ -120,8 +124,6 @@ void drawable_set_visible(DrawableDef* drawable, int visible);
 int graphics_should_be_terminated();
 void graphics_free_resources();
 void set_unpack_alignment(int align);
-
-int render_text(const char* text, float x, float y, float scale, Vec3 color);
 
 DrawableDef* create_drawable();
 int create_texture_2D(unsigned char* data, int width, int height, unsigned int* texture, enum TextureType type);

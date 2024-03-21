@@ -99,6 +99,9 @@ int draw_quad(DrawableDef** dest, const char* texture_path, int texture_type, co
 	drawable->transform.translation   = *new_pos;
 	drawable->transform.scale         = *new_scale;
 
+	drawable->init_transform.translation   = *new_pos;
+	drawable->init_transform.scale         = *new_scale;
+
 	drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
 
 	drawable->matrices.projection = COMMON_ORTHO_MAT;

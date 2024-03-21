@@ -3,8 +3,11 @@
 
 #include "GLFW/glfw3.h"
 
-#define KEY_PRESSED(_window, _key) glfwGetKey(_window, _key) == GLFW_PRESS
-#define KEY_RELEASED(_window, _key) glfwGetKey(_window, _key) == GLFW_RELEASE
+#define KEY_PRESS         GLFW_PRESS
+#define KEY_RELEASE       GLFW_RELEASE
+
+#define KEY_PRESSED(_window, _key) glfwGetKey(_window, _key) == KEY_PRESS
+#define KEY_RELEASED(_window, _key) glfwGetKey(_window, _key) == KEY_RELEASE
 
 #define K_ENTER           GLFW_KEY_ENTER
 #define K_ESCAPE          GLFW_KEY_ESCAPE

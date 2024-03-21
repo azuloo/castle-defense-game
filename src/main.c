@@ -22,6 +22,8 @@ int wHeight    = WINDOW_DEFAULT_RES_H;
 float dt       = 0.0f;  // delta time
 float lft      = 0.0f;  // last frame time
 
+int s_trackCursorPos = 0;
+
 static void entities_collided_hook(EntityDef* first, EntityDef* second)
 {
 	DrawableDef* first_drawable = NULL;
@@ -47,6 +49,14 @@ static void entities_collided_hook(EntityDef* first, EntityDef* second)
 	{
 		Vec4 color_vec = { { 1.f, 0.f, 0.f, 1.f } };
 		add_uniform_vec4f(first_drawable->shader_prog, "UColor", &color_vec);
+	}
+}
+
+static void process_key_hook(GWindow* window, int key, int scancode, int action, int mods)
+{
+	if (key == K_F && action == KEY_PRESS)
+	{
+		s_trackCursorPos = !s_trackCursorPos;
 	}
 }
 
@@ -116,6 +126,7 @@ int main(int argc, int* argv[])
 
 	bind_input_fn(&process_input);
 	bind_window_resize_fn(&window_resize_hook);
+	bind_key_pressed_cb(&process_key_hook);
 	physics_bind_entities_collided_cb(&entities_collided_hook);
 
 	map_mgr_init();
@@ -132,10 +143,12 @@ int main(int argc, int* argv[])
 	EntityDef* circle = NULL;
 	EntityDef* square = NULL;
 	EntityDef* triangle = NULL;
+	EntityDef* building = NULL;
 
 	draw_triangle_entity(&triangle);
 	draw_square_entity(&square);
 	draw_circle_entity(&circle);
+	draw_square_entity(&building);
 
 	const PathSegment** path = map_mgr_get_path();
 	int path_len = map_mgr_get_path_len();
@@ -154,6 +167,12 @@ int main(int argc, int* argv[])
 	ft_renderer_init();
 	Vec3 color = { 1.f, 1.f, 1.f };
 	render_text("Sample text", wWidth - 300.f, wHeight - 50.f, color);
+
+	double cursor_xpos = 0;
+	double cursor_ypos = 0;
+
+	DrawableDef* drawable = NULL;
+	get_drawable_def(&drawable, building);
 
 	// TODO: Handle Windows window drag (other events?)
 	while (!should_be_terminated())
@@ -181,6 +200,22 @@ int main(int argc, int* argv[])
 		else
 		{
 			entity_follow_path(circle);
+		}
+
+		if (s_trackCursorPos)
+		{
+			graphics_get_cursor_pos(&cursor_xpos, &cursor_ypos);
+
+			drawable->transform.scale.x = drawable->init_transform.scale.x * wWidth / WINDOW_DEFAULT_RES_W;
+			drawable->transform.scale.y = drawable->init_transform.scale.y * wHeight / WINDOW_DEFAULT_RES_H;
+
+			drawable->transform.translation.x = cursor_xpos;
+			drawable->transform.translation.y = wHeight - cursor_ypos;
+
+			drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
+
+			drawable->matrices.projection = COMMON_ORTHO_MAT;
+			add_uniform_mat4f(drawable->shader_prog, COMMON_PROJECTION_UNIFORM_NAME, &drawable->matrices.projection);
 		}
 
 		physics_step();
