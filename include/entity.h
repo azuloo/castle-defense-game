@@ -41,10 +41,15 @@ typedef struct EntityDef
 	enum EntityState  state;
 	int               drawable_handle;
 	int               collidable;
+	CollisionBox2D*   collision_box;
 } EntityDef;
 
 int add_entity(enum EntityType type, EntityDef** dest, const Vec3* pos, const Vec3* scale, const Vec4* color);
 int add_entity_path(EntityDef* dest, const PathSegment** path, int path_len);
+int add_entity_collision_box(EntityDef* dest);
+
+int move_entity(EntityDef* dest, float pos_x, float pos_y);
+int resize_entity(EntityDef* dest, float scale_x, float scale_y);
 
 int get_drawable_def(DrawableDef** dest, EntityDef* src);
 int entity_follow_path(EntityDef* entity);

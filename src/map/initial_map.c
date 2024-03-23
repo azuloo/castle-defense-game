@@ -72,7 +72,6 @@ int initial_add_background()
 	drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
 
 	drawable->matrices.projection = COMMON_ORTHO_MAT;
-    // TODO: Move "projection" into defs
 	add_uniform_mat4f(drawable->shader_prog, COMMON_PROJECTION_UNIFORM_NAME, &drawable->matrices.projection);
 
 	return 0;

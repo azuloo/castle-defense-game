@@ -143,12 +143,12 @@ int main(int argc, int* argv[])
 	EntityDef* circle = NULL;
 	EntityDef* square = NULL;
 	EntityDef* triangle = NULL;
-	EntityDef* building = NULL;
+	EntityDef* tower = NULL;
 
 	draw_triangle_entity(&triangle);
 	draw_square_entity(&square);
 	draw_circle_entity(&circle);
-	draw_square_entity(&building);
+	draw_square_entity(&tower);
 
 	const PathSegment** path = map_mgr_get_path();
 	int path_len = map_mgr_get_path_len();
@@ -172,7 +172,9 @@ int main(int argc, int* argv[])
 	double cursor_ypos = 0;
 
 	DrawableDef* drawable = NULL;
-	get_drawable_def(&drawable, building);
+	get_drawable_def(&drawable, tower);
+
+	add_entity_collision_box(tower);
 
 	// TODO: Handle Windows window drag (other events?)
 	while (!should_be_terminated())
@@ -206,16 +208,11 @@ int main(int argc, int* argv[])
 		{
 			graphics_get_cursor_pos(&cursor_xpos, &cursor_ypos);
 
-			drawable->transform.scale.x = drawable->init_transform.scale.x * wWidth / WINDOW_DEFAULT_RES_W;
-			drawable->transform.scale.y = drawable->init_transform.scale.y * wHeight / WINDOW_DEFAULT_RES_H;
+			float tower_scale_x = drawable->init_transform.scale.x * wWidth / WINDOW_DEFAULT_RES_W;
+			float tower_scale_y = drawable->init_transform.scale.y * wHeight / WINDOW_DEFAULT_RES_H;
 
-			drawable->transform.translation.x = cursor_xpos;
-			drawable->transform.translation.y = wHeight - cursor_ypos;
-
-			drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
-
-			drawable->matrices.projection = COMMON_ORTHO_MAT;
-			add_uniform_mat4f(drawable->shader_prog, COMMON_PROJECTION_UNIFORM_NAME, &drawable->matrices.projection);
+			resize_entity(tower, tower_scale_x, tower_scale_y);
+			move_entity(tower, cursor_xpos, wHeight - cursor_ypos);
 		}
 
 		physics_step();

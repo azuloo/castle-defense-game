@@ -67,6 +67,8 @@ static int create_entity_def(EntityDef** dest, enum EntityType type)
 	entity_def->drawable_handle    = -1;
 	entity_def->collidable         = 1;
 
+	memset(&entity_def->collision_box, 0, sizeof * &entity_def->collision_box);
+
 	*dest = entity_def;
 
 	s_EntitiesNum++;
@@ -182,6 +184,7 @@ int add_entity(enum EntityType type, EntityDef** dest, const Vec3* pos, const Ve
 	return 0;
 }
 
+// ! Allocates memory on heap !
 int add_entity_path(EntityDef* dest, const PathSegment** path, int path_len)
 {
 	PathSegment** path_ptr = malloc(path_len * sizeof *path_ptr);
@@ -209,6 +212,128 @@ int add_entity_path(EntityDef* dest, const PathSegment** path, int path_len)
 
 	dest->path_len = path_len;
 	dest->path_idx = 0;
+
+	return 0;
+}
+
+// ! Allocates memory on heap !
+int add_entity_collision_box(EntityDef* dest)
+{
+	CollisionBox2D* new_collision_box = malloc(sizeof *new_collision_box);
+	if (NULL == new_collision_box)
+	{
+		PRINT_ERR("[entity]: Failed to allocate sufficient memory chunk for CollisionBox2D.");
+		return TERMINATE_ERR_CODE;
+	}
+
+	DrawableDef* drawable = NULL;
+	get_drawable_def(&drawable, dest);
+
+	if (NULL == drawable)
+	{
+		PRINT_ERR("[entity] Failed to fetch drawable for the entity.");
+		return TERMINATE_ERR_CODE;
+	}
+
+	dest->collision_box = new_collision_box;
+
+	// TODO: Calcualte offset here, if a collision box is bigger than the drawable
+	dest->collision_box->position.x = drawable->transform.translation.x;
+	dest->collision_box->position.y = drawable->transform.translation.y;
+	dest->collision_box->position.z = Z_DEPTH_DEBUG_QUAD;
+
+	dest->collision_box->size.x = drawable->transform.scale.x;
+	dest->collision_box->size.y = drawable->transform.scale.y;
+	dest->collision_box->size.z = drawable->transform.scale.z;
+
+	// TODO: Should be configurated by client.
+#if DEBUG
+	dest->collision_box->DEBUG_draw_bounds = 1;
+	static const char* debug_quad_texture_path = "/res/static/textures/debug_quad.png";
+
+	DrawableDef* debug_drawable = NULL;
+
+	Vec4 debug_color = { { 1.f, 0.f, 0.f, 1.f } };
+	draw_quad(&debug_drawable, debug_quad_texture_path, TexType_RGBA, &dest->collision_box->position, &dest->collision_box->size, &debug_color);
+
+	if (NULL == debug_drawable)
+	{
+		PRINT_ERR("[entity] Failed to create drawable for debug quad.");
+		return TERMINATE_ERR_CODE;
+	}
+
+	dest->collision_box->DEBUG_bounds_drawable = debug_drawable;
+#endif // DEBUG
+
+	return 0;
+}
+
+int move_entity(EntityDef* dest, float pos_x, float pos_y)
+{
+	DrawableDef* drawable = NULL;
+	get_drawable_def(&drawable, dest);
+
+	if (NULL == drawable)
+	{
+		PRINT_ERR("[entity] Failed to fetch drawable for the entity.");
+		return TERMINATE_ERR_CODE;
+	}
+
+	drawable->transform.translation.x = pos_x;
+	drawable->transform.translation.y = pos_y;
+
+	if (NULL != dest->collision_box)
+	{
+		// TODO: Is it OK to auto move collision box on drawable move?
+		dest->collision_box->position.x = pos_x;
+		dest->collision_box->position.y = pos_y;
+
+		// TODO: Optimize
+		if (NULL != dest->collision_box->DEBUG_bounds_drawable)
+		{
+			dest->collision_box->DEBUG_bounds_drawable->transform.translation.x = pos_x;
+			dest->collision_box->DEBUG_bounds_drawable->transform.translation.y = pos_y;
+			drawable_transform_ts(dest->collision_box->DEBUG_bounds_drawable, COMMON_MODEL_UNIFORM_NAME);
+		}
+	}
+
+	// TODO: Optimize
+	drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
+
+	return 0;
+}
+
+int resize_entity(EntityDef* dest, float scale_x, float scale_y)
+{
+	DrawableDef* drawable = NULL;
+	get_drawable_def(&drawable, dest);
+
+	if (NULL == drawable)
+	{
+		PRINT_ERR("[entity] Failed to fetch drawable for the entity.");
+		return TERMINATE_ERR_CODE;
+	}
+
+	drawable->transform.scale.x = scale_x;
+	drawable->transform.scale.y = scale_y;
+
+	if (NULL != dest->collision_box)
+	{
+		// TODO: Is it OK to auto resize collision box on drawable resize?
+		dest->collision_box->size.x = scale_x;
+		dest->collision_box->size.y = scale_y;
+
+		// TODO: Optimize
+		if (NULL != dest->collision_box->DEBUG_bounds_drawable)
+		{
+			dest->collision_box->DEBUG_bounds_drawable->transform.scale.x = scale_x;
+			dest->collision_box->DEBUG_bounds_drawable->transform.scale.y = scale_y;
+			drawable_transform_ts(dest->collision_box->DEBUG_bounds_drawable, COMMON_MODEL_UNIFORM_NAME);
+		}
+	}
+
+	// TODO: Optimize
+	drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
 
 	return 0;
 }
@@ -355,8 +480,18 @@ void entity_free_resources()
 			free(entity_def->path[j]);
 		}
 
-		free(entity_def->path);
-		free(entity_def->physics);
+		if (NULL != entity_def->path)
+		{
+			free(entity_def->path);
+		}
+		if (NULL != entity_def->physics)
+		{
+			free(entity_def->physics);
+		}
+		if (NULL != entity_def->collision_box)
+		{
+			free(entity_def->collision_box);
+		}
 	}
 
 	free(s_EntityDefs);

@@ -5,6 +5,17 @@
 
 typedef struct EntityDef EntityDef;
 
+typedef struct
+{
+	Vec3 position;
+	Vec3 size;
+#if DEBUG
+	int            DEBUG_draw_bounds;
+	DrawableDef*   DEBUG_bounds_drawable;
+#endif // DEBUG
+
+} CollisionBox2D;
+
 typedef void (*PhysicsEntitiesCollidedCb)(EntityDef* first, EntityDef* second);
 
 void physics_bind_entities_collided_cb(PhysicsEntitiesCollidedCb cb);
