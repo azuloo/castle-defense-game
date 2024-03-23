@@ -18,11 +18,15 @@ int drawable_transform_ts(DrawableDef* drawable, const char* uniform_name)
 	scale(&drawable->matrices.model, drawable->transform.scale.x, drawable->transform.scale.y, drawable->transform.scale.z);
 	add_uniform_mat4f(drawable->shader_prog, uniform_name, &drawable->matrices.model);
 
+	drawable->matrices.projection = COMMON_ORTHO_MAT;
+	add_uniform_mat4f(drawable->shader_prog, COMMON_PROJECTION_UNIFORM_NAME, &drawable->matrices.projection);
+
 	return 0;
 }
 
 int get_quad_draw_buffer_data(DrawBufferData** dest)
 {
+	// TODO: Remove z coord, useless
 	static float vertices[] = {
 		// Position           // Texture
 		-1.f, 1.f, 0.f,       0.f, 1.f,
@@ -39,15 +43,16 @@ int get_quad_draw_buffer_data(DrawBufferData** dest)
 	// TODO: Is it OK to have entities share the same static draw buf data? (causes no prolems for now)
 	static DrawBufferData draw_buf_data;
 	draw_buf_data.vertices = vertices;
-	draw_buf_data.vertices_len = SQUARE_VERTICES_LEN;
+	draw_buf_data.vertices_len = sizeof(vertices);
 	draw_buf_data.indices = indices;
-	draw_buf_data.indices_len = SQUARE_INDICES_LEN;
+	draw_buf_data.indices_len = sizeof(indices);
 
 	*dest = &draw_buf_data;
 
 	return 0;
 }
 
+// TODO: Remove required texture_path and texture_type and move it into separate func?
 int draw_quad(DrawableDef** dest, const char* texture_path, int texture_type, const Vec3* new_pos, const Vec3* new_scale, const Vec4* new_color)
 {
 	DrawableDef* drawable = create_drawable();
