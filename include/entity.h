@@ -40,7 +40,6 @@ typedef struct EntityDef
 	int               path_len;
 	enum EntityState  state;
 	int               drawable_handle;
-	int               collidable;
 	CollisionBox2D*   collision_box;
 } EntityDef;
 

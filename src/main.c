@@ -140,6 +140,8 @@ int main(int argc, int* argv[])
 	EntityDef* castle = NULL;
 	draw_castle_entity(&castle);
 
+	add_entity_collision_box(castle);
+
 	EntityDef* circle = NULL;
 	EntityDef* square = NULL;
 	EntityDef* triangle = NULL;
