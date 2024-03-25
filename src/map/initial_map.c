@@ -20,6 +20,7 @@ static PathSegment** s_Path = NULL;
 
 int initial_add_background()
 {
+	// TODO: Replace with quad_draw()
 	DrawBufferData* draw_buf_data = NULL;
 	get_quad_draw_buffer_data(&draw_buf_data);
 	if (NULL == draw_buf_data)
@@ -58,9 +59,7 @@ int initial_add_background()
 		return TERMINATE_ERR_CODE;
 	}
 
-	register_drawable_attribute(drawable, 3); // Pos
-	register_drawable_attribute(drawable, 2); // Texture
-
+	register_drawable_attribute(drawable, POS_TEXTURE_ATTRIBUTE_SIZE); // Position + texutre.
 	process_drawable_attributes(drawable);
 
 	Vec3 translation = { { wWidth / 2.f, wHeight / 2.f, Z_DEPTH_INITIAL_MAP_BACKGROUND } };
@@ -79,6 +78,7 @@ int initial_add_background()
 
 int initial_add_path()
 {
+	// TODO: Replace with quad_draw()?
 	static const char* vertex_shader_path = "/res/static/shaders/basic_vert.txt";
 	static const char* fragment_shader_path = "/res/static/shaders/basic_frag.txt";
 	static const char* texture_path = "/res/static/textures/road.jpg";
@@ -155,9 +155,7 @@ int initial_add_path()
 			return TERMINATE_ERR_CODE;
 		}
 
-		register_drawable_attribute(drawable, 3); // Pos
-		register_drawable_attribute(drawable, 2); // Texture
-
+		register_drawable_attribute(drawable, POS_TEXTURE_ATTRIBUTE_SIZE); // Position + texture.
 		process_drawable_attributes(drawable);
 
 		PathSegment* path_segment = s_Path[i];

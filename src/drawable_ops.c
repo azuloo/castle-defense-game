@@ -4,8 +4,6 @@
 #include "file_reader.h"
 #include "lin_alg.h"
 
-#define POS_ATTRIBUTE_SIZE 3
-#define TEXTURE_ATTRIBUTE_SIZE 2
 #define SHADER_COLOR_UNIFORM_NAME "UColor"
 
 static const char* s_quad_vertex_shader_path   = "/res/static/shaders/basic_vert.txt";
@@ -28,11 +26,11 @@ int get_quad_draw_buffer_data(DrawBufferData** dest)
 {
 	// TODO: Remove z coord, useless
 	static float vertices[] = {
-		// Position           // Texture
-		-1.f, 1.f, 0.f,       0.f, 1.f,
-		1.f, 1.f, 0.f,        1.f, 1.f,
-		1.f, -1.f, 0.0f,      1.f, 0.f,
-		-1.f, -1.f, 0.0f,     0.f, 0.f
+		// Position    // Texture
+		-1.f, 1.f,     0.f, 1.f,
+		1.f, 1.f,      1.f, 1.f,
+		1.f, -1.f,     1.f, 0.f,
+		-1.f, -1.f,    0.f, 0.f
 	};
 
 	static unsigned int indices[] = {
@@ -96,9 +94,7 @@ int draw_quad(DrawableDef** dest, const char* texture_path, int texture_type, co
 		return TERMINATE_ERR_CODE;
 	}
 
-	register_drawable_attribute(drawable, POS_ATTRIBUTE_SIZE);       // Pos
-	register_drawable_attribute(drawable, TEXTURE_ATTRIBUTE_SIZE);   // Texture
-
+	register_drawable_attribute(drawable, POS_TEXTURE_ATTRIBUTE_SIZE);       // Position + texture.
 	process_drawable_attributes(drawable);
 
 	drawable->transform.translation   = *new_pos;

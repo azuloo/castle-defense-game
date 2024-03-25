@@ -14,4 +14,6 @@
 #define Z_DEPTH_INITIAL_ENTITY            0.07f
 #define Z_DEPTH_DEBUG_QUAD                0.99f
 
+#define POS_TEXTURE_ATTRIBUTE_SIZE 4
+
 #endif // _GLOBAL_DEFS_H
