@@ -36,27 +36,31 @@ int physics_step()
     get_entities(&entities);
 
     int entities_num = get_entities_num();
-
     for (int i = 0; i < entities_num; i++)
     {
         // TODO: Check visibility
         EntityDef* first_entity = entities + i;
-        if (NULL == first_entity->collision_box)
+        if (NULL == first_entity->collision_box || first_entity->collision_box->collision_layer == CollistionLayer_None)
             continue;
 
-        for (int j = i + 1; j < entities_num; j++)
+        for (int j = 0; j < entities_num; j++)
         {
+            if (i == j) // Same entity - skip.
+                continue;
             // TODO: Check visibility
             EntityDef* second_entity = entities + j;
-            if (NULL == first_entity->collision_box)
+            if (NULL == second_entity->collision_box || second_entity->collision_box->collision_layer == CollistionLayer_None)
                 continue;
 
-            // TODO: Replace with mask check
-            if (first_entity->type == second_entity->type)
+            if (
+                (first_entity->collision_box->collision_mask & second_entity->collision_box->collision_layer) == 0 &&
+                (second_entity->collision_box->collision_mask & first_entity->collision_box->collision_layer) == 0
+            )
+            {
                 continue;
+            }
 
             int collides = is_collided_AABB(first_entity, second_entity);
-
             if (collides)
             {
                 if (NULL != s_entitiesCollidedCb)

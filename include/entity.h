@@ -8,8 +8,6 @@
 // TODO: Add to entity's state
 #define ENTITY_MOVEMENT_SPEED 250.f
 
-typedef struct PhysicsDef PhysicsDef;
-
 enum EntityType
 {
 	Entity_Square,
@@ -25,6 +23,14 @@ enum EntityState
 	Entity_Moving
 };
 
+enum PhysicsCollisionLayer
+{
+	CollistionLayer_None        = 0,
+	CollistionLayer_Player      = (1U << 1),
+	CollistionLayer_Enemy       = (1U << 2),
+	CollistionLayer_Castle      = (1U << 3),
+};
+
 typedef struct PathSegment
 {
 	Vec2 start;
@@ -34,7 +40,6 @@ typedef struct PathSegment
 typedef struct EntityDef
 {
 	enum EntityType   type;
-	PhysicsDef*       physics;
 	PathSegment**     path;
 	int               path_idx;
 	int               path_len;
@@ -46,6 +51,7 @@ typedef struct EntityDef
 int add_entity(enum EntityType type, EntityDef** dest, const Vec3* pos, const Vec3* scale, const Vec4* color);
 int add_entity_path(EntityDef* dest, const PathSegment** path, int path_len);
 int add_entity_collision_box(EntityDef* dest);
+int add_entity_collision_mask(EntityDef* dest, uint16_t mask);
 
 int move_entity(EntityDef* dest, float pos_x, float pos_y);
 int resize_entity(EntityDef* dest, float scale_x, float scale_y);

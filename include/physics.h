@@ -5,8 +5,10 @@ typedef struct EntityDef EntityDef;
 
 typedef struct
 {
-	Vec3 position;
-	Vec3 size;
+	Vec3        position;
+	Vec3        size;
+	uint16_t    collision_layer;
+	uint16_t    collision_mask;
 #if DEBUG
 	int            DEBUG_draw_bounds;
 	DrawableDef*   DEBUG_bounds_drawable;

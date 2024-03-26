@@ -141,6 +141,8 @@ int main(int argc, int* argv[])
 	draw_castle_entity(&castle);
 
 	add_entity_collision_box(castle);
+	castle->collision_box->collision_layer = CollistionLayer_Castle;
+	add_entity_collision_mask(castle, CollistionLayer_Enemy);
 
 	EntityDef* circle = NULL;
 	EntityDef* square = NULL;
@@ -177,6 +179,8 @@ int main(int argc, int* argv[])
 	get_drawable_def(&drawable, tower);
 
 	add_entity_collision_box(tower);
+	tower->collision_box->collision_layer = CollistionLayer_Enemy;
+	add_entity_collision_mask(tower, CollistionLayer_Castle);
 
 	// TODO: Handle Windows window drag (other events?)
 	while (!should_be_terminated())

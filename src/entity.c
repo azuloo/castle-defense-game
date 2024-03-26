@@ -59,7 +59,6 @@ static int create_entity_def(EntityDef** dest, enum EntityType type)
 
 	EntityDef* entity_def          = s_EntityDefs + s_EntitiesNum;
 	entity_def->type               = type;
-	entity_def->physics            = NULL;
 	entity_def->path               = NULL;
 	entity_def->path_idx           = -1;
 	entity_def->path_len           = 0;
@@ -235,6 +234,7 @@ int add_entity_collision_box(EntityDef* dest)
 	}
 
 	dest->collision_box = new_collision_box;
+	dest->collision_box->collision_mask = CollistionLayer_None;
 
 	// TODO: Calcualte offset here, if a collision box is bigger than the drawable
 	dest->collision_box->position.x = drawable->transform.translation.x;
@@ -263,6 +263,19 @@ int add_entity_collision_box(EntityDef* dest)
 
 	dest->collision_box->DEBUG_bounds_drawable = debug_drawable;
 #endif // DEBUG
+
+	return 0;
+}
+
+int add_entity_collision_mask(EntityDef* dest, uint16_t mask)
+{
+	if (NULL == dest || NULL == dest->collision_box)
+	{
+		PRINT_ERR("[entity] No entity or collision box for this entity is set.");
+		return TERMINATE_ERR_CODE;
+	}
+
+	dest->collision_box->collision_mask |= mask;
 
 	return 0;
 }
@@ -482,10 +495,6 @@ void entity_free_resources()
 		if (NULL != entity_def->path)
 		{
 			free(entity_def->path);
-		}
-		if (NULL != entity_def->physics)
-		{
-			free(entity_def->physics);
 		}
 		if (NULL != entity_def->collision_box)
 		{
