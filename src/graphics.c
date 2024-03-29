@@ -497,6 +497,29 @@ int add_uniform_vec3f(unsigned int shader_prog, const char* uniform_name, const 
 	return 0;
 }
 
+int add_texture_2D(DrawableDef* drawable, const char* texture_path, int texture_type)
+{
+	static char path_buf[256];
+	get_file_path(texture_path, &path_buf, 256);
+
+	unsigned char* img_data;
+	int width, height;
+	fr_read_image_data(path_buf, &img_data, &width, &height);
+
+	memset(path_buf, 0, sizeof *path_buf);
+
+	int create_texture_2D_res = create_texture_2D(img_data, width, height, &drawable->texture, texture_type);
+	fr_free_image_resources(img_data);
+
+	if (TERMINATE_ERR_CODE == create_texture_2D_res)
+	{
+		PRINT_ERR("[drawable_ops]: Failed to add env texute.");
+		return TERMINATE_ERR_CODE;
+	}
+
+	return 0;
+}
+
 int setup_drawable(DrawableDef* drawable, const DrawBufferData* buf_data, const char* vertex_shader_path, const char* fragment_shader_path)
 {
 	ASSERT_GRAPHICS_INITIALIZED

@@ -35,22 +35,7 @@ int initial_add_background()
 
 	DrawableDef* drawable = create_drawable();
 
-	// TODO: Common code - move to separate function
-	char path_buf[256];
-	get_file_path(texture_path, &path_buf, 256);
-
-	unsigned char* img_data;
-	int width, height;
-	fr_read_image_data(path_buf, &img_data, &width, &height);
-
-	int create_texture_2D_res = create_texture_2D(img_data, width, height, &drawable->texture, TexType_RGB);
-	fr_free_image_resources(img_data);
-
-	if (TERMINATE_ERR_CODE == create_texture_2D_res)
-	{
-		PRINT_ERR("[static_env]: Failed to add env texute.");
-		return TERMINATE_ERR_CODE;
-	}
+	add_texture_2D(drawable, texture_path, TexType_RGB);
 
 	int add_res = setup_drawable(drawable, draw_buf_data, vertex_shader_path, fragment_shader_path);
 	if (TERMINATE_ERR_CODE == add_res)
@@ -131,22 +116,7 @@ int initial_add_path()
 
 		DrawableDef* drawable = create_drawable();
 
-		// TODO: Common code - move to separate function
-		char path_buf[256];
-		get_file_path(texture_path, &path_buf, 256);
-
-		unsigned char* img_data;
-		int width, height;
-		fr_read_image_data(path_buf, &img_data, &width, &height);
-
-		int create_texture_2D_res = create_texture_2D(img_data, width, height, &drawable->texture, TexType_RGB);
-		fr_free_image_resources(img_data);
-
-		if (TERMINATE_ERR_CODE == create_texture_2D_res)
-		{
-			PRINT_ERR("[static_env]: Failed to add initial map level\'s texute.");
-			return TERMINATE_ERR_CODE;
-		}
+		add_texture_2D(drawable, texture_path, TexType_RGB);
 
 		int add_res = setup_drawable(drawable, draw_buf_data, vertex_shader_path, fragment_shader_path);
 		if (TERMINATE_ERR_CODE == add_res)

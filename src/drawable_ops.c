@@ -24,7 +24,6 @@ int drawable_transform_ts(DrawableDef* drawable, const char* uniform_name)
 
 int get_quad_draw_buffer_data(DrawBufferData** dest)
 {
-	// TODO: Remove z coord, useless
 	static float vertices[] = {
 		// Position    // Texture
 		-1.f, 1.f,     0.f, 1.f,
@@ -38,7 +37,6 @@ int get_quad_draw_buffer_data(DrawBufferData** dest)
 		2, 3, 1
 	};
 
-	// TODO: Is it OK to have entities share the same static draw buf data? (causes no prolems for now)
 	static DrawBufferData draw_buf_data;
 	draw_buf_data.vertices = vertices;
 	draw_buf_data.vertices_len = sizeof(vertices);
@@ -62,22 +60,7 @@ int draw_quad(DrawableDef** dest, const char* texture_path, int texture_type, co
 
 	*dest = drawable;
 
-	// TODO: Common code - move to separate function
-	char path_buf[256];
-	get_file_path(texture_path, &path_buf, 256);
-
-	unsigned char* img_data;
-	int width, height;
-	fr_read_image_data(path_buf, &img_data, &width, &height);
-
-	int create_texture_2D_res = create_texture_2D(img_data, width, height, &drawable->texture, texture_type);
-	fr_free_image_resources(img_data);
-
-	if (TERMINATE_ERR_CODE == create_texture_2D_res)
-	{
-		PRINT_ERR("[drawable_ops]: Failed to add env texute.");
-		return TERMINATE_ERR_CODE;
-	}
+	add_texture_2D(drawable, texture_path, texture_type);
 
 	DrawBufferData* draw_buf_data = NULL;
 	get_quad_draw_buffer_data(&draw_buf_data);
