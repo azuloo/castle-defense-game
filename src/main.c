@@ -87,6 +87,8 @@ int draw_triangle_entity(EntityDef** triangle)
 	Vec4 tri_color = { { 0.f, 1.f, 0.f, 1.f } };
 
 	add_entity(Entity_Triangle, triangle, &tri_pos, &tri_scale, &tri_color);
+
+	return 0;
 }
 
 int draw_square_entity(EntityDef** square)
@@ -96,6 +98,8 @@ int draw_square_entity(EntityDef** square)
 	Vec4 sq_color = { { 0.f, 1.f, 0.f, 1.f } };
 
 	add_entity(Entity_Square, square, &sq_pos, &sq_scale, &sq_color);
+
+	return 0;
 }
 
 int draw_circle_entity(EntityDef** circle)
@@ -105,6 +109,8 @@ int draw_circle_entity(EntityDef** circle)
 	Vec4 circle_color = { { 0.f, 1.f, 0.f, 1.f } };
 
 	add_entity(Entity_Circle, circle, &circle_pos, &circle_scale, &circle_color);
+
+	return 0;
 }
 
 int draw_castle_entity(EntityDef** castle)
@@ -114,6 +120,8 @@ int draw_castle_entity(EntityDef** castle)
 	Vec4 castle_color = { { 1.f, 1.f, 1.f, 1.f } };
 
 	add_entity(Entity_Castle, castle, &castle_pos, &castle_scale, &castle_color);
+
+	return 0;
 }
 
 int main(int argc, int* argv[])

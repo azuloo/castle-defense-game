@@ -10,6 +10,6 @@ extern int wHeight;
 #define WINDOW_DEFAULT_RES_H 920
 #define WINDOW_DEFUALT_NAME "Application"
 
-#define COMMON_ORTHO_MAT ortho(0.f, wWidth, 0.f, wHeight, -1.f, 1.f)
+#define COMMON_ORTHO_MAT ortho(0.f, (float)wWidth, 0.f, (float)wHeight, -1.f, 1.f)
 
 #endif // _GRAPHICS_DEFS_H

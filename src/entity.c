@@ -12,7 +12,7 @@
 
 #define ENTITY_SHADER_COLOR_UNIFORM_NAME "UColor"
 
-extern float wHeight;
+extern int wHeight;
 extern float dt;
 
 static int s_EntitiesCnfCapacity    = 32;

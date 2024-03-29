@@ -106,4 +106,5 @@ int fr_read_image_data(const char* path, unsigned char** data, int* width, int* 
 int fr_free_image_resources(unsigned char* img_data)
 {
     stbi_image_free(img_data);
+    return 0;
 }

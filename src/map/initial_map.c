@@ -69,9 +69,9 @@ int initial_add_path()
 	static const char* texture_path = "/res/static/textures/road.jpg";
 
 	// TODO: Clear up "magic"
-	float path_h = wHeight / 10;
+	float path_h = (float)wHeight / 10.f;
 	float half_path_h = path_h / 2.f;
-	float path_y_offset = wHeight / 6;
+	float path_y_offset = (float)wHeight / 6.f;
 
 	PathSegment predefined_path[INTIAL_MAP_PATH_LEN] = {
 		{ .start = { 0.f, (float)(wHeight - path_y_offset) }, .end = { 550.f, (float)(wHeight - path_y_offset) } },
