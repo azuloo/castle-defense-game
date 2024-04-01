@@ -382,9 +382,11 @@ void set_unpack_alignment(int align)
 	glPixelStorei(GL_UNPACK_ALIGNMENT, align);
 }
 
-DrawableDef* create_drawable()
+int create_drawable(DrawableDef** dest)
 {
 	ASSERT_GRAPHICS_INITIALIZED
+
+	CHECK_EXPR_FAIL_RET_TERMINATE(*dest == NULL, "[graphics]: Destination drawable must be empty.");
 
 	if (NULL == s_DrawableData)
 	{
@@ -392,9 +394,12 @@ DrawableDef* create_drawable()
 		CHECK_EXPR_FAIL_RET_NULL(TERMINATE_ERR_CODE != alloc_drawable_res, "[graphics]: Failed to create drawable.");
 	}
 
-	// TODO: Work through return type (DrawableDef* -> int)
 	DrawableDef* drawable = create_drawable_def();
-	return drawable;
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[graphics]: Failed to create drawable.");
+
+	*dest = drawable;
+
+	return 0;
 }
 
 int create_texture_2D(unsigned char* data, int width, int height, unsigned int* texture, enum TextureType type)

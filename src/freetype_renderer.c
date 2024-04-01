@@ -71,7 +71,10 @@ int render_text(const char* text, float x, float y, Vec3 color)
 	{
 		if (find_char_def(*glyph, &char_def))
 		{
-			DrawableDef* drawable = create_drawable();
+			DrawableDef* drawable = NULL;
+			create_drawable(&drawable);
+			CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[freetype_renderer]: Drawable is not defined.");
+
 			drawable->buffers.vao = s_FreetypeBuffers.vao;
 			drawable->buffers.vbo = s_FreetypeBuffers.vbo;
 

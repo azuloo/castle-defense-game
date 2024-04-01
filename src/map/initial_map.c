@@ -29,7 +29,9 @@ int initial_add_background()
 	static const char* fragment_shader_path = "/res/static/shaders/basic_frag.txt";
 	static const char* texture_path = "/res/static/textures/field.jpg";
 
-	DrawableDef* drawable = create_drawable();
+	DrawableDef* drawable = NULL;
+	create_drawable(&drawable);
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[initial_map]: Drawable is not defined.");
 
 	add_texture_2D(drawable, texture_path, TexType_RGB);
 
@@ -94,7 +96,9 @@ int initial_add_path()
 		get_quad_draw_buffer_data(&draw_buf_data);
 		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != draw_buf_data, "[initial_map]: Failed to retrieve square DrawBufferData.");
 
-		DrawableDef* drawable = create_drawable();
+		DrawableDef* drawable = NULL;
+		create_drawable(&drawable);
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[initial_map]: Drawable is not defined.");
 
 		add_texture_2D(drawable, texture_path, TexType_RGB);
 
