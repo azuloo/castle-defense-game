@@ -23,11 +23,7 @@ int initial_add_background()
 	// TODO: Replace with quad_draw()
 	DrawBufferData* draw_buf_data = NULL;
 	get_quad_draw_buffer_data(&draw_buf_data);
-	if (NULL == draw_buf_data)
-	{
-		PRINT_ERR("[entity]: Failed to retrieve square DrawBufferData.");
-		return TERMINATE_ERR_CODE;
-	}
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != draw_buf_data, "[initial_map]: Failed to retrieve square DrawBufferData.");
 
 	static const char* vertex_shader_path = "/res/static/shaders/basic_vert.txt";
 	static const char* fragment_shader_path = "/res/static/shaders/basic_frag.txt";
@@ -38,11 +34,7 @@ int initial_add_background()
 	add_texture_2D(drawable, texture_path, TexType_RGB);
 
 	int add_res = setup_drawable(drawable, draw_buf_data, vertex_shader_path, fragment_shader_path);
-	if (TERMINATE_ERR_CODE == add_res)
-	{
-		PRINT_ERR("[static_env]: Failed to add env element.");
-		return TERMINATE_ERR_CODE;
-	}
+	CHECK_EXPR_FAIL_RET_TERMINATE(TERMINATE_ERR_CODE != add_res, "[initial_map]: Failed to add env element.");
 
 	register_drawable_attribute(drawable, POS_TEXTURE_ATTRIBUTE_SIZE); // Position + texutre.
 	process_drawable_attributes(drawable);
@@ -82,21 +74,13 @@ int initial_add_path()
 	};
 
 	PathSegment** path = malloc(INTIAL_MAP_PATH_LEN * sizeof *s_Path);
-	if (NULL == path)
-	{
-		PRINT_ERR("[static_env]: Failed to create path ptr.");
-		return TERMINATE_ERR_CODE;
-	}
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != path, "[initial_map]: Failed to create path ptr.");
 
 	assert((sizeof(predefined_path) / sizeof(predefined_path[0])) == INTIAL_MAP_PATH_LEN);
 	for (int i = 0; i < INTIAL_MAP_PATH_LEN; i++)
 	{
 		PathSegment* path_seg = malloc(sizeof *path_seg);
-		if (NULL == path_seg)
-		{
-			PRINT_ERR("[static_env]: Failed to create path segment ptr.");
-			return TERMINATE_ERR_CODE;
-		}
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != path_seg, "[initial_map]: Failed to create path segment ptr.");
 
 		path[i] = path_seg;
 		*path[i] = predefined_path[i];
@@ -108,22 +92,14 @@ int initial_add_path()
 	{
 		DrawBufferData* draw_buf_data = NULL;
 		get_quad_draw_buffer_data(&draw_buf_data);
-		if (NULL == draw_buf_data)
-		{
-			PRINT_ERR("[entity]: Failed to retrieve square DrawBufferData.");
-			return TERMINATE_ERR_CODE;
-		}
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != draw_buf_data, "[initial_map]: Failed to retrieve square DrawBufferData.");
 
 		DrawableDef* drawable = create_drawable();
 
 		add_texture_2D(drawable, texture_path, TexType_RGB);
 
 		int add_res = setup_drawable(drawable, draw_buf_data, vertex_shader_path, fragment_shader_path);
-		if (TERMINATE_ERR_CODE == add_res)
-		{
-			PRINT_ERR("[static_env]: Failed to add initial map level\'s element.");
-			return TERMINATE_ERR_CODE;
-		}
+		CHECK_EXPR_FAIL_RET_TERMINATE(TERMINATE_ERR_CODE != add_res, "[initial_map]: Failed to add initial map level\'s element.");
 
 		register_drawable_attribute(drawable, POS_TEXTURE_ATTRIBUTE_SIZE); // Position + texture.
 		process_drawable_attributes(drawable);
@@ -207,11 +183,7 @@ int get_initial_path_len()
 int initial_map_init()
 {
 	MapFuncsDef* map_func_def = malloc(sizeof * map_func_def);
-	if (NULL == map_func_def)
-	{
-		PRINT_ERR("[initial_map]: Failed to allocate sufficient memory for MapFuncsDef.");
-		return TERMINATE_ERR_CODE;
-	}
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != map_func_def, "[initial_map]: Failed to allocate sufficient memory for MapFuncsDef.");
 
 	map_func_def->add_background    = initial_add_background;
 	map_func_def->add_path          = initial_add_path;

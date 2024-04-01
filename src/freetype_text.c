@@ -60,6 +60,7 @@ int load_ascii_chars()
 	{
 		if (FT_Load_Char(s_Face, c, FT_LOAD_RENDER))
 		{
+			// TODO: Free fr resources here?
 			PRINT_ERR("[freetype_text]: Failed to load char.");
 			return TERMINATE_ERR_CODE;
 		}

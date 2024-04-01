@@ -25,6 +25,17 @@ static char err_msg_buffer[1024];
 	PRINT_ERR(err_msg_buffer); \
 	memset(err_msg_buffer, 0, sizeof(err_msg_buffer));
 
+#define CHECK_EXPR_FAIL_RET_TERMINATE(expr, msg) \
+	if (!(expr)) { \
+		PRINT_ERR(msg); \
+		return TERMINATE_ERR_CODE; \
+	}
+#define CHECK_EXPR_FAIL_RET_NULL(expr, msg) \
+	if (!(expr)) { \
+		PRINT_ERR(msg); \
+		return NULL; \
+	}
+
 void str_concat(const char* s1, const char* s2, char** buf, size_t len);
 
 #endif // _UTILS_H

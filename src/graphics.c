@@ -103,11 +103,7 @@ static void set_context_current(GLFWwindow* window)
 static GLFWwindow* create_window()
 {
 	GLFWwindow* window = glfwCreateWindow(WINDOW_DEFAULT_RES_W, WINDOW_DEFAULT_RES_H, WINDOW_DEFUALT_NAME, NULL, NULL);
-	if (NULL == window)
-	{
-		PRINT_ERR("[graphics]: Failed to init window.");
-		return NULL;
-	}
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != window, "[graphics]: Failed to init window.");
 
 	set_context_current(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -193,11 +189,7 @@ int create_drawable_buffer_data(DrawableDef* drawable, DrawBufferData* src)
 	{
 		// TODO: Free memory
 		float* vertices = malloc(src->vertices_len * sizeof * vertices);
-		if (NULL == vertices)
-		{
-			PRINT_ERR("[graphics] Failed to allocate sufficient memory for buffer_data vertices.");
-			return TERMINATE_ERR_CODE;
-		}
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != vertices, "[graphics] Failed to allocate sufficient memory for buffer_data vertices.");
 
 		drawable->buffer_data.vertices = vertices;
 		drawable->buffer_data.vertices_len = src->vertices_len;
@@ -209,11 +201,7 @@ int create_drawable_buffer_data(DrawableDef* drawable, DrawBufferData* src)
 	{
 		// TODO: Free memory
 		int* indices = malloc(src->indices_len * sizeof * indices);
-		if (NULL == indices)
-		{
-			PRINT_ERR("[graphics] Failed to allocate sufficient memory for buffer_data indices.");
-			return TERMINATE_ERR_CODE;
-		}
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != indices, "[graphics] Failed to allocate sufficient memory for buffer_data indices.");
 
 		drawable->buffer_data.indices = indices;
 		drawable->buffer_data.indices_len = src->indices_len;
@@ -231,12 +219,7 @@ static int alloc_drawable_arr()
 {
 	s_DrawableDataCapacity *= 2;
 	DrawableDef* drawable_arr = realloc(s_DrawableData, s_DrawableDataCapacity * sizeof *drawable_arr);
-
-	if (NULL == drawable_arr)
-	{
-		PRINT_ERR("[graphics]: Failed to allocate sufficient memory chunk for DrawableDef arr.");
-		return TERMINATE_ERR_CODE;
-	}
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable_arr, "[graphics]: Failed to allocate sufficient memory chunk for DrawableDef arr.");
 
 	s_DrawableData = drawable_arr;
 
@@ -247,11 +230,7 @@ static int add_drawable_attributes(DrawableDef* drawable)
 {
 	drawable->attributes->capacity *= 2;
 	AttributeCnf* attr_cnf = realloc(drawable->attributes->elements, drawable->attributes->capacity * sizeof *attr_cnf);
-	if (NULL == attr_cnf)
-	{
-		PRINT_ERR("[graphics]: Failed to allocate sufficient memory chunk for AttributeCnf elements.");
-		return TERMINATE_ERR_CODE;
-	}
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != attr_cnf, "[graphics]: Failed to allocate sufficient memory chunk for AttributeCnf elements.");
 
 	drawable->attributes->elements = attr_cnf;
 	for (unsigned int i = drawable->attributes->count; i < drawable->attributes->capacity; i++)
@@ -267,11 +246,7 @@ static int add_drawable_attributes(DrawableDef* drawable)
 static int create_drawable_attributes(DrawableDef* drawable)
 {
 	drawable->attributes = malloc(sizeof *drawable->attributes);
-	if (NULL == drawable->attributes)
-	{
-		PRINT_ERR("[graphics]: Failed to allocate sufficient memory chunk for GAttributes elements.");
-		return TERMINATE_ERR_CODE;
-	}
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable->attributes, "[graphics]: Failed to allocate sufficient memory chunk for GAttributes elements.");
 
 	drawable->attributes->elements   = NULL;
 	drawable->attributes->type       = GL_FLOAT;
@@ -291,11 +266,7 @@ static DrawableDef* create_drawable_def()
 	if (s_DrawableNum >= s_DrawableDataCapacity)
 	{
 		int alloc_drawable_res = alloc_drawable_arr();
-		if (TERMINATE_ERR_CODE == alloc_drawable_res)
-		{
-			PRINT_ERR("[graphics]: Failed to create drawable def.");
-			return NULL;
-		}
+		CHECK_EXPR_FAIL_RET_NULL(TERMINATE_ERR_CODE != alloc_drawable_res, "[graphics]: Failed to create drawable def.");
 	}
 
 	DrawableDef* drawable             = s_DrawableData + s_DrawableNum;
@@ -315,11 +286,7 @@ static DrawableDef* create_drawable_def()
 	memset(&drawable->init_transform, 0, sizeof * &drawable->init_transform);
 
 	int create_drawable_attributes_res = create_drawable_attributes(drawable);
-	if (TERMINATE_ERR_CODE == create_drawable_attributes_res)
-	{
-		PRINT_ERR("[graphics]: Failed to create drawable attibutes.");
-		return NULL;
-	}
+	CHECK_EXPR_FAIL_RET_NULL(TERMINATE_ERR_CODE != create_drawable_attributes_res, "[graphics]: Failed to create drawable attibutes.");
 
 	REGISTER_OBJ(drawable, &drawable->handle);
 
@@ -422,11 +389,7 @@ DrawableDef* create_drawable()
 	if (NULL == s_DrawableData)
 	{
 		int alloc_drawable_res = alloc_drawable_arr();
-		if (TERMINATE_ERR_CODE == alloc_drawable_res)
-		{
-			PRINT_ERR("[graphics]: Failed to create drawable.");
-			return NULL;
-		}
+		CHECK_EXPR_FAIL_RET_NULL(TERMINATE_ERR_CODE != alloc_drawable_res, "[graphics]: Failed to create drawable.");
 	}
 
 	// TODO: Work through return type (DrawableDef* -> int)
@@ -474,6 +437,7 @@ int add_uniform_mat4f(unsigned int shader_prog, const char* uniform_name, const 
 	glUseProgram(shader_prog);
 	unsigned int transformLoc = glGetUniformLocation(shader_prog, uniform_name);
 	glUniformMatrix4fv(transformLoc, 1, GL_FALSE, &mat->m[0]);
+
 	return 0;
 }
 
@@ -484,6 +448,7 @@ int add_uniform_vec4f(unsigned int shader_prog, const char* uniform_name, const 
 	glUseProgram(shader_prog);
 	unsigned int transformLoc = glGetUniformLocation(shader_prog, uniform_name);
 	glUniform4f(transformLoc, vec->x, vec->y, vec->z, vec->w);
+
 	return 0;
 }
 
@@ -494,6 +459,7 @@ int add_uniform_vec3f(unsigned int shader_prog, const char* uniform_name, const 
 	glUseProgram(shader_prog);
 	unsigned int transformLoc = glGetUniformLocation(shader_prog, uniform_name);
 	glUniform3f(transformLoc, vec->x, vec->y, vec->z);
+
 	return 0;
 }
 
@@ -510,12 +476,7 @@ int add_texture_2D(DrawableDef* drawable, const char* texture_path, int texture_
 
 	int create_texture_2D_res = create_texture_2D(img_data, width, height, &drawable->texture, texture_type);
 	fr_free_image_resources(img_data);
-
-	if (TERMINATE_ERR_CODE == create_texture_2D_res)
-	{
-		PRINT_ERR("[drawable_ops]: Failed to add env texute.");
-		return TERMINATE_ERR_CODE;
-	}
+	CHECK_EXPR_FAIL_RET_TERMINATE(TERMINATE_ERR_CODE != create_texture_2D_res, "[graphics]: Failed to add env texute.");
 
 	return 0;
 }
@@ -526,11 +487,7 @@ int setup_drawable(DrawableDef* drawable, const DrawBufferData* buf_data, const 
 
 	char* vertex_shader_src = get_shader_source(vertex_shader_path);
 	char* fragment_shader_src = get_shader_source(fragment_shader_path);
-
-	if (NULL == vertex_shader_src || NULL == fragment_shader_src)
-	{
-		return TERMINATE_ERR_CODE;
-	}
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != vertex_shader_src && NULL != fragment_shader_src, "[graphics] Failed to get vertex and/or fragment source.");
 
 	compile_shaders(&drawable->shader_prog, vertex_shader_src, fragment_shader_src);
 
@@ -622,12 +579,7 @@ int init_graphics()
 {
 	init_glfw();
 	window = create_window();
-
-	if (NULL == window)
-	{
-		PRINT_ERR("[graphics]: Failed to create window.");
-		return TERMINATE_ERR_CODE;
-	}
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != window, "[graphics]: Failed to create window.");
 
 	init_glad();
 

@@ -50,11 +50,7 @@ static int create_entity_def(EntityDef** dest, enum EntityType type)
 	if (s_EntitiesNum >= s_EntitiesCnfCapacity)
 	{
 		int alloc_entities_arr_res = alloc_entities_arr();
-		if (TERMINATE_ERR_CODE == alloc_entities_arr_res)
-		{
-			PRINT_ERR("[entity]: Failed to create entities arr.");
-			return TERMINATE_ERR_CODE;
-		}
+		CHECK_EXPR_FAIL_RET_TERMINATE(TERMINATE_ERR_CODE != alloc_entities_arr_res, "[entity]: Failed to create entities arr.");
 	}
 
 	EntityDef* entity_def          = s_EntityDefs + s_EntitiesNum;
@@ -80,12 +76,7 @@ static int add_triangle(EntityDef** dest, const Vec3* pos, const Vec3* scale, co
 
 	DrawableDef* drawable = NULL;
 	draw_quad(&drawable, triangle_texture_path, TexType_RGBA, pos, scale, color);
-
-	if (NULL == drawable)
-	{
-		PRINT_ERR("[entity]: Failed to draw triangle entity (empty quad drawable).");
-		return TERMINATE_ERR_CODE;
-	}
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[entity]: Failed to draw triangle entity (empty quad drawable).");
 
 	(*dest)->drawable_handle = drawable->handle;
 
@@ -98,12 +89,7 @@ static int add_square(EntityDef** dest, const Vec3* pos, const Vec3* scale, cons
 
 	DrawableDef* drawable = NULL;
 	draw_quad(&drawable, square_texture_path, TexType_RGBA, pos, scale, color);
-
-	if (NULL == drawable)
-	{
-		PRINT_ERR("[entity]: Failed to draw square entity (empty quad drawable).");
-		return TERMINATE_ERR_CODE;
-	}
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[entity]: Failed to draw square entity (empty quad drawable).");
 
 	(*dest)->drawable_handle = drawable->handle;
 
@@ -116,12 +102,7 @@ static int add_circle(EntityDef** dest, const Vec3* pos, const Vec3* scale, cons
 
 	DrawableDef* drawable = NULL;
 	draw_quad(&drawable, circle_texture_path, TexType_RGBA, pos, scale, color);
-
-	if (NULL == drawable)
-	{
-		PRINT_ERR("[entity]: Failed to draw circle entity (empty quad drawable).");
-		return TERMINATE_ERR_CODE;
-	}
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[entity]: Failed to draw circle entity (empty quad drawable).");
 
 	(*dest)->drawable_handle = drawable->handle;
 
@@ -134,12 +115,7 @@ static int add_castle(EntityDef** dest, const Vec3* pos, const Vec3* scale, cons
 
 	DrawableDef* drawable = NULL;
 	draw_quad(&drawable, castle_texture_path, TexType_RGBA, pos, scale, color);
-
-	if (NULL == drawable)
-	{
-		PRINT_ERR("[entity]: Failed to draw castle entity (empty quad drawable).");
-		return TERMINATE_ERR_CODE;
-	}
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[entity]: Failed to draw castle entity (empty quad drawable).");
 
 	(*dest)->drawable_handle = drawable->handle;
 
@@ -153,11 +129,7 @@ int add_entity(enum EntityType type, EntityDef** dest, const Vec3* pos, const Ve
 	if (NULL == s_EntityDefs)
 	{
 		int alloc_entities_arr_res = alloc_entities_arr();
-		if (TERMINATE_ERR_CODE == alloc_entities_arr_res)
-		{
-			PRINT_ERR("[entity]: Failed to create entities arr.");
-			return TERMINATE_ERR_CODE;
-		}
+		CHECK_EXPR_FAIL_RET_TERMINATE(TERMINATE_ERR_CODE != alloc_entities_arr_res, "[entity]: Failed to create entities arr.");
 	}
 
 	switch (type)
@@ -186,22 +158,14 @@ int add_entity(enum EntityType type, EntityDef** dest, const Vec3* pos, const Ve
 int add_entity_path(EntityDef* dest, const PathSegment** path, int path_len)
 {
 	PathSegment** path_ptr = malloc(path_len * sizeof *path_ptr);
-	if (NULL == path_ptr)
-	{
-		PRINT_ERR("[entity]: Failed to allocate sufficient memory chunk for PathSegment ptr.");
-		return TERMINATE_ERR_CODE;
-	}
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != path_ptr, "[entity]: Failed to allocate sufficient memory chunk for PathSegment ptr.");
 
 	dest->path = path_ptr;
 	
 	for (int i = 0; i < path_len; i++)
 	{
 		PathSegment* path_seg = malloc(sizeof *path_seg);
-		if (NULL == path_seg)
-		{
-			PRINT_ERR("[entity]: Failed to allocate sufficient memory chunk for PathSegment element.");
-			return TERMINATE_ERR_CODE;
-		}
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != path_seg, "[entity]: Failed to allocate sufficient memory chunk for PathSegment element.");
 
 		dest->path[i]         = path_seg;
 		dest->path[i]->start  = path[i]->start;
@@ -218,20 +182,11 @@ int add_entity_path(EntityDef* dest, const PathSegment** path, int path_len)
 int add_entity_collision_box(EntityDef* dest)
 {
 	CollisionBox2D* new_collision_box = malloc(sizeof *new_collision_box);
-	if (NULL == new_collision_box)
-	{
-		PRINT_ERR("[entity]: Failed to allocate sufficient memory chunk for CollisionBox2D.");
-		return TERMINATE_ERR_CODE;
-	}
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != new_collision_box, "[entity]: Failed to allocate sufficient memory chunk for CollisionBox2D.");
 
 	DrawableDef* drawable = NULL;
 	get_drawable_def(&drawable, dest);
-
-	if (NULL == drawable)
-	{
-		PRINT_ERR("[entity] Failed to fetch drawable for the entity.");
-		return TERMINATE_ERR_CODE;
-	}
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[entity] Failed to fetch drawable for the entity.");
 
 	dest->collision_box = new_collision_box;
 	dest->collision_box->collision_mask = CollistionLayer_None;
@@ -254,12 +209,7 @@ int add_entity_collision_box(EntityDef* dest)
 
 	Vec4 debug_color = { { 1.f, 0.f, 0.f, 1.f } };
 	draw_quad(&debug_drawable, debug_quad_texture_path, TexType_RGBA, &dest->collision_box->position, &dest->collision_box->size, &debug_color);
-
-	if (NULL == debug_drawable)
-	{
-		PRINT_ERR("[entity] Failed to create drawable for debug quad.");
-		return TERMINATE_ERR_CODE;
-	}
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != debug_drawable, "[entity] Failed to create drawable for debug quad.");
 
 	dest->collision_box->DEBUG_bounds_drawable = debug_drawable;
 #endif // DEBUG
@@ -269,11 +219,7 @@ int add_entity_collision_box(EntityDef* dest)
 
 int add_entity_collision_mask(EntityDef* dest, uint16_t mask)
 {
-	if (NULL == dest || NULL == dest->collision_box)
-	{
-		PRINT_ERR("[entity] No entity or collision box for this entity is set.");
-		return TERMINATE_ERR_CODE;
-	}
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != dest && NULL != dest->collision_box, "[entity] No entity or collision box for this entity is set.");
 
 	dest->collision_box->collision_mask |= mask;
 
@@ -284,12 +230,7 @@ int move_entity(EntityDef* dest, float pos_x, float pos_y)
 {
 	DrawableDef* drawable = NULL;
 	get_drawable_def(&drawable, dest);
-
-	if (NULL == drawable)
-	{
-		PRINT_ERR("[entity] Failed to fetch drawable for the entity.");
-		return TERMINATE_ERR_CODE;
-	}
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[entity] Failed to fetch drawable for the entity.");
 
 	drawable->transform.translation.x = pos_x;
 	drawable->transform.translation.y = pos_y;
@@ -319,12 +260,7 @@ int resize_entity(EntityDef* dest, float scale_x, float scale_y)
 {
 	DrawableDef* drawable = NULL;
 	get_drawable_def(&drawable, dest);
-
-	if (NULL == drawable)
-	{
-		PRINT_ERR("[entity] Failed to fetch drawable for the entity.");
-		return TERMINATE_ERR_CODE;
-	}
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[entity] Failed to fetch drawable for the entity.");
 
 	drawable->transform.scale.x = scale_x;
 	drawable->transform.scale.y = scale_y;
@@ -353,11 +289,7 @@ int resize_entity(EntityDef* dest, float scale_x, float scale_y)
 int get_drawable_def(DrawableDef** dest, EntityDef* src)
 {
 	DrawableDef* drawable = (DrawableDef*) GET_FROM_REGISTRY(&src->drawable_handle);
-	if (NULL == drawable)
-	{
-		PRINT_ERR("[entity]: Failed to fetch DrawableDef from registry.");
-		return TERMINATE_ERR_CODE;
-	}
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[entity]: Failed to fetch DrawableDef from registry.");
 
 	*dest = drawable;
 
@@ -373,12 +305,7 @@ int entity_follow_path(EntityDef* entity)
 
 	DrawableDef* drawable = NULL;
 	get_drawable_def(&drawable, entity);
-
-	if (NULL == drawable)
-	{
-		PRINT_ERR("[entity]: DrawableDef was not found in Registry.");
-		return TERMINATE_ERR_CODE;
-	}
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[entity]: DrawableDef was not found in Registry.");
 
 	// TODO: If we later need to separate 'visible' (graphics) from 'active' (physics) - switch it here
 	if (!drawable->visible)

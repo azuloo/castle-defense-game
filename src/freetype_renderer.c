@@ -2,12 +2,13 @@
 #include "graphics.h"
 #include "graphics_defs.h"
 #include "freetype_text.h"
+#include "utils.h"
 
 static int s_FtBuffersCreated = 0;
 static GBuffers s_FreetypeBuffers;
 
-#define TEXT_QUAD_VERTICES_COUNT 24
-#define TEXT_DEFUALT_SCALE       1.f
+#define TEXT_QUAD_VERTICES_COUNT   24
+#define TEXT_DEFUALT_SCALE         1.f
 
 static int create_freetype_buffers()
 {
@@ -29,11 +30,7 @@ static int build_ft_shaders(char** vertex_shader_dest, char** frag_shader_dest)
 
 	char* vertex_shader_src = get_shader_source(vertex_shader_path);
 	char* fragment_shader_src = get_shader_source(frag_shader_path);
-
-	if (NULL == vertex_shader_src || NULL == fragment_shader_src)
-	{
-		return TERMINATE_ERR_CODE;
-	}
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != vertex_shader_src && NULL != fragment_shader_src, "[freetype_renderer]: Failed to get vertex and/or fragment shader(s) sources.");
 
 	*vertex_shader_dest   = vertex_shader_src;
 	*frag_shader_dest     = fragment_shader_src;

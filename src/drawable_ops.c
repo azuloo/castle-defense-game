@@ -52,11 +52,7 @@ int get_quad_draw_buffer_data(DrawBufferData** dest)
 int draw_quad(DrawableDef** dest, const char* texture_path, int texture_type, const Vec3* new_pos, const Vec3* new_scale, const Vec4* new_color)
 {
 	DrawableDef* drawable = create_drawable();
-	if (NULL == drawable)
-	{
-		PRINT_ERR("[drawable_ops]: Failed to create drawable.");
-		return TERMINATE_ERR_CODE;
-	}
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[drawable_ops]: Failed to create drawable.");
 
 	*dest = drawable;
 
@@ -64,18 +60,10 @@ int draw_quad(DrawableDef** dest, const char* texture_path, int texture_type, co
 
 	DrawBufferData* draw_buf_data = NULL;
 	get_quad_draw_buffer_data(&draw_buf_data);
-	if (NULL == draw_buf_data)
-	{
-		PRINT_ERR("[drawable_ops]: Failed to retrieve square DrawBufferData.");
-		return TERMINATE_ERR_CODE;
-	}
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != draw_buf_data, "[drawable_ops]: Failed to retrieve square DrawBufferData.");
 
 	int add_res = setup_drawable(drawable, draw_buf_data, s_quad_vertex_shader_path, s_quad_frag_shader_path);
-	if (TERMINATE_ERR_CODE == add_res)
-	{
-		PRINT_ERR("[drawable_ops]: Failed to add env element.");
-		return TERMINATE_ERR_CODE;
-	}
+	CHECK_EXPR_FAIL_RET_TERMINATE(TERMINATE_ERR_CODE != add_res, "[drawable_ops]: Failed to add env element.");
 
 	register_drawable_attribute(drawable, POS_TEXTURE_ATTRIBUTE_SIZE);       // Position + texture.
 	process_drawable_attributes(drawable);

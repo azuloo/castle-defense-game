@@ -1,4 +1,5 @@
 #include "obj_registry.h"
+#include "utils.h"
 
 static void**   s_Registry = NULL;
 static int      s_RegistryCapacity = 32;
@@ -9,11 +10,7 @@ static int alloc_registry()
 {
 	s_RegistryCapacity *= 2;
 	void** reg = realloc(s_Registry, s_RegistryCapacity * sizeof *reg);
-	if (NULL == reg)
-	{
-		PRINT_ERR("[obj_registry]: Failed to allocate sufficient memory for Registry ptr.");
-		return TERMINATE_ERR_CODE;
-	}
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != reg, "[obj_registry]: Failed to allocate sufficient memory for Registry ptr.");
 
 	s_Registry = reg;
 	
@@ -37,10 +34,7 @@ int register_obj(void* obj, int* handle)
 	if (NULL == s_Registry || s_RegistryObjCount == s_RegistryCapacity)
 	{
 		int alloc_registry_res = alloc_registry();
-		if (TERMINATE_ERR_CODE == alloc_registry_res)
-		{
-			return TERMINATE_ERR_CODE;
-		}
+		CHECK_EXPR_FAIL_RET_TERMINATE(TERMINATE_ERR_CODE != alloc_registry_res, "[obj_registry]: Failed to create registry container.");
 	}
 
 	s_Registry[s_RegistryObjCount] = obj;
@@ -52,16 +46,8 @@ int register_obj(void* obj, int* handle)
 
 void* get_obj_from_registry(const int* handle)
 {
-	if (NULL == s_Registry)
-	{
-		PRINT_ERR("[obj_registry]: Registry was not initialized.");
-		return NULL;
-	}
-	if (*handle >= s_RegistryObjCount)
-	{
-		PRINT_ERR("[obj_registry]: Handle value is greater than registry entries count.");
-		return NULL;
-	}
+	CHECK_EXPR_FAIL_RET_NULL(NULL != s_Registry, "[obj_registry]: Registry was not initialized.");
+	CHECK_EXPR_FAIL_RET_NULL(*handle < s_RegistryObjCount, "[obj_registry]: Handle value is greater than registry entries count.");
 
 	return s_Registry[*handle];
 }
