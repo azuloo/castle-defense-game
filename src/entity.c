@@ -19,9 +19,6 @@ static int s_EntitiesCnfCapacity    = 32;
 static int s_EntitiesNum            = 0;
 static EntityDef* s_EntityDefs      = NULL;
 
-static const char* entity_vertex_shader_path     = "/res/static/shaders/basic_vert.txt";
-static const char* entity_fragment_shader_path   = "/res/static/shaders/entity_frag.txt";
-
 static const char* triangle_texture_path   = "/res/static/textures/triangle.png";
 static const char* square_texture_path     = "/res/static/textures/square.png";
 static const char* circle_texture_path     = "/res/static/textures/circle.png";
