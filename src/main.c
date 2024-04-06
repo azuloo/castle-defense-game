@@ -34,17 +34,16 @@ static void entities_collided_hook(EntityDef* first, EntityDef* second)
 
 	if (NULL == first_drawable || NULL == second_drawable)
 	{
-		// TODO: Report error
+		PRINT_ERR("[game]: Failed to find one or both drawables for provided entities.");
 		return;
 	}
 
-	// TODO: Move this out of here
 	if (NULL != first_drawable && first->type == Entity_Castle)
 	{
 		Vec4 color_vec = { { 1.f, 0.f, 0.f, 1.f } };
 		add_uniform_vec4f(second_drawable->shader_prog, "UColor", &color_vec);
 	}
-	// TODO: Move this out of here
+
 	if (NULL != second_drawable && second->type == Entity_Castle)
 	{
 		Vec4 color_vec = { { 1.f, 0.f, 0.f, 1.f } };
@@ -224,7 +223,7 @@ int main(int argc, int* argv[])
 
 			float tower_scale_x = drawable->init_transform.scale.x * wWidth / WINDOW_DEFAULT_RES_W;
 			float tower_scale_y = drawable->init_transform.scale.y * wHeight / WINDOW_DEFAULT_RES_H;
-
+			// TODO: Resize all entities
 			resize_entity(tower, tower_scale_x, tower_scale_y);
 			move_entity(tower, cursor_xpos, wHeight - cursor_ypos);
 		}

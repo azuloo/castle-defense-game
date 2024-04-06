@@ -187,7 +187,6 @@ int create_drawable_buffer_data(DrawableDef* drawable, DrawBufferData* src)
 {
 	if (NULL != src->vertices && src->vertices_len != 0)
 	{
-		// TODO: Free memory
 		float* vertices = malloc(src->vertices_len * sizeof * vertices);
 		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != vertices, "[graphics] Failed to allocate sufficient memory for buffer_data vertices.");
 
@@ -199,7 +198,6 @@ int create_drawable_buffer_data(DrawableDef* drawable, DrawBufferData* src)
 
 	if (NULL != src->indices && src->indices_len != 0)
 	{
-		// TODO: Free memory
 		int* indices = malloc(src->indices_len * sizeof * indices);
 		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != indices, "[graphics] Failed to allocate sufficient memory for buffer_data indices.");
 
