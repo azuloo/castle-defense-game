@@ -22,7 +22,7 @@ int wHeight    = WINDOW_DEFAULT_RES_H;
 float dt       = 0.0f;  // delta time
 float lft      = 0.0f;  // last frame time
 
-int s_trackCursorPos = 0;
+int s_buildingModeEnabled = 0;
 
 static void entities_collided_hook(EntityDef* first, EntityDef* second)
 {
@@ -55,7 +55,15 @@ static void process_key_hook(GWindow* window, int key, int scancode, int action,
 {
 	if (key == K_F && action == KEY_PRESS)
 	{
-		s_trackCursorPos = !s_trackCursorPos;
+		s_buildingModeEnabled = !s_buildingModeEnabled;
+	}
+}
+
+static void process_mouse_button_hook(GWindow* window, int button, int action, int mods)
+{
+	if (button == MOUSE_BUTTON_LEFT && action == KEY_PRESS && s_buildingModeEnabled)
+	{
+		s_buildingModeEnabled = !s_buildingModeEnabled;
 	}
 }
 
@@ -134,6 +142,7 @@ int main(int argc, int* argv[])
 	bind_input_fn(&process_input);
 	bind_window_resize_fn(&window_resize_hook);
 	bind_key_pressed_cb(&process_key_hook);
+	bind_mouse_button_cb(&process_mouse_button_hook);
 	physics_bind_entities_collided_cb(&entities_collided_hook);
 
 	map_mgr_init();
@@ -217,7 +226,7 @@ int main(int argc, int* argv[])
 			entity_follow_path(circle);
 		}
 
-		if (s_trackCursorPos)
+		if (s_buildingModeEnabled)
 		{
 			graphics_get_cursor_pos(&cursor_xpos, &cursor_ypos);
 

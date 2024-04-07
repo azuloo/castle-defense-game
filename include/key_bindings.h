@@ -9,6 +9,9 @@
 #define KEY_PRESSED(_window, _key) glfwGetKey(_window, _key) == KEY_PRESS
 #define KEY_RELEASED(_window, _key) glfwGetKey(_window, _key) == KEY_RELEASE
 
+#define MOUSE_BUTTON_LEFT     GLFW_MOUSE_BUTTON_LEFT
+#define MOUSE_BUTTON_RIGHT    GLFW_MOUSE_BUTTON_RIGHT
+
 #define K_ENTER           GLFW_KEY_ENTER
 #define K_ESCAPE          GLFW_KEY_ESCAPE
 #define K_SPACE           GLFW_KEY_SPACE

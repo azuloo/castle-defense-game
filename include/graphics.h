@@ -98,6 +98,7 @@ typedef struct GLFWwindow GWindow;
 typedef void (*InputFnPtr)(GWindow* window);
 typedef void (*WindowResizeFnPtr)(GWindow* window, int width, int height);
 typedef void (*KeyCbPtr)(GWindow* window, int key, int scancode, int action, int mods);
+typedef void (*MouseButtonCbPtr)(GWindow* window, int button, int action, int mods);
 
 // Graphics sub-module functions
 
@@ -116,6 +117,7 @@ void close_window(GWindow* window);
 void bind_input_fn(InputFnPtr ptr);
 void bind_window_resize_fn(WindowResizeFnPtr ptr);
 void bind_key_pressed_cb(KeyCbPtr ptr);
+void bind_mouse_button_cb(MouseButtonCbPtr ptr);
 int graphics_get_cursor_pos(double* xpos, double* ypos);
 
 int init_graphics();

@@ -578,6 +578,13 @@ void bind_key_pressed_cb(KeyCbPtr ptr)
 	glfwSetKeyCallback(window, ptr);
 }
 
+void bind_mouse_button_cb(MouseButtonCbPtr ptr)
+{
+	ASSERT_GRAPHICS_INITIALIZED
+
+	glfwSetMouseButtonCallback(window, ptr);
+}
+
 int init_graphics()
 {
 	init_glfw();
