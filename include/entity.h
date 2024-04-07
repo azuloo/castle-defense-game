@@ -8,13 +8,14 @@
 // TODO: Add to entity's state
 #define ENTITY_MOVEMENT_SPEED 250.f
 
-enum EntityType
+typedef enum EntityType
 {
+	Entity_None,
 	Entity_Square,
 	Entity_Circle,
 	Entity_Triangle,
 	Entity_Castle
-};
+} EntityType;
 
 enum EntityState
 {

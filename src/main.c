@@ -23,8 +23,12 @@ int wHeight    = WINDOW_DEFAULT_RES_H;
 float dt       = 0.0f;  // delta time
 float lft      = 0.0f;  // last frame time
 
+double cursor_xpos = 0.f;
+double cursor_ypos = 0.f;
+
 int s_buildingModeEnabled = 0;
 int s_currentTowerIdx = 0;
+EntityType s_currentTowerType = Entity_None;
 
 #define TOWERS_AMOUNT 3
 // TODO: Use map here
@@ -65,16 +69,19 @@ static void process_key_hook(GWindow* window, int key, int scancode, int action,
 	{
 		key_pressed = true;
 		s_currentTowerIdx = 0;
+		s_currentTowerType = Entity_Square;
 	}
 	if (key == K_2 && action == KEY_PRESS)
 	{
 		key_pressed = true;
 		s_currentTowerIdx = 1;
+		s_currentTowerType = Entity_Circle;
 	}
 	if (key == K_3 && action == KEY_PRESS)
 	{
 		key_pressed = true;
 		s_currentTowerIdx = 2;
+		s_currentTowerType = Entity_Triangle;
 	}
 
 	if (key_pressed)
@@ -92,6 +99,39 @@ static void process_mouse_button_hook(GWindow* window, int button, int action, i
 {
 	if (button == MOUSE_BUTTON_LEFT && action == KEY_PRESS && s_buildingModeEnabled)
 	{
+		EntityDef* entity = NULL;
+
+		// TODO: Common data; move
+		Vec3 sq_pos = { { cursor_xpos, wHeight - cursor_ypos, Z_DEPTH_INITIAL_ENTITY } };
+		Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
+		Vec4 sq_color = { { 0.f, 1.f, 0.f, 1.f } };
+
+		switch (s_currentTowerType)
+		{
+		case Entity_Square:
+		{
+			add_entity(Entity_Square, &entity, &sq_pos, &sq_scale, &sq_color);
+		}
+		break;
+
+		case Entity_Circle:
+		{
+			add_entity(Entity_Circle, &entity, &sq_pos, &sq_scale, &sq_color);
+		}
+		break;
+
+		case Entity_Triangle:
+		{
+			add_entity(Entity_Triangle, &entity, &sq_pos, &sq_scale, &sq_color);
+		}
+		break;
+		default:
+		{
+			PRINT_ERR("[game]: Unknown entity type.");
+		}
+		break;
+		}
+
 		s_buildingModeEnabled = !s_buildingModeEnabled;
 	}
 }
@@ -244,9 +284,6 @@ int main(int argc, int* argv[])
 	ft_renderer_init();
 	Vec3 color = { 1.f, 1.f, 1.f };
 	render_text("Sample text", wWidth - 300.f, wHeight - 50.f, color);
-
-	double cursor_xpos = 0;
-	double cursor_ypos = 0;
 
 	// TODO: Handle Windows window drag (other events?)
 	while (!should_be_terminated())
