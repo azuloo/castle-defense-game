@@ -15,6 +15,7 @@
 #include "entity.h"
 
 #include <string.h>
+#include <stdbool.h>
 
 int wWidth     = WINDOW_DEFAULT_RES_W;
 int wHeight    = WINDOW_DEFAULT_RES_H;
@@ -23,6 +24,11 @@ float dt       = 0.0f;  // delta time
 float lft      = 0.0f;  // last frame time
 
 int s_buildingModeEnabled = 0;
+int s_currentTowerIdx = 0;
+
+#define TOWERS_AMOUNT 3
+// TODO: Use map here
+EntityDef* towers[TOWERS_AMOUNT];
 
 static void entities_collided_hook(EntityDef* first, EntityDef* second)
 {
@@ -53,9 +59,32 @@ static void entities_collided_hook(EntityDef* first, EntityDef* second)
 
 static void process_key_hook(GWindow* window, int key, int scancode, int action, int mods)
 {
-	if (key == K_F && action == KEY_PRESS)
+	bool key_pressed = false;
+
+	if (key == K_1 && action == KEY_PRESS)
 	{
-		s_buildingModeEnabled = !s_buildingModeEnabled;
+		key_pressed = true;
+		s_currentTowerIdx = 0;
+	}
+	if (key == K_2 && action == KEY_PRESS)
+	{
+		key_pressed = true;
+		s_currentTowerIdx = 1;
+	}
+	if (key == K_3 && action == KEY_PRESS)
+	{
+		key_pressed = true;
+		s_currentTowerIdx = 2;
+	}
+
+	if (key_pressed)
+	{
+		s_buildingModeEnabled = 1;
+
+		DrawableDef* tower_drawable = NULL;
+
+		get_drawable_def(&tower_drawable, towers[s_currentTowerIdx]);
+		tower_drawable->visible = 1;
 	}
 }
 
@@ -131,6 +160,34 @@ int draw_castle_entity(EntityDef** castle)
 	return 0;
 }
 
+int create_tower_entities()
+{
+	// TODO: Add error checks
+	EntityDef* tower_entity = NULL;
+	DrawableDef* tower_drawable = NULL;
+
+	// TODO: General code; use loop
+	draw_square_entity(&tower_entity);
+	towers[0] = tower_entity;
+
+	get_drawable_def(&tower_drawable, tower_entity);
+	tower_drawable->visible = 0;
+
+	draw_circle_entity(&tower_entity);
+	towers[1] = tower_entity;
+
+	get_drawable_def(&tower_drawable, tower_entity);
+	tower_drawable->visible = 0;
+
+	draw_triangle_entity(&tower_entity);
+	towers[2] = tower_entity;
+
+	get_drawable_def(&tower_drawable, tower_entity);
+	tower_drawable->visible = 0;
+
+	return 0;
+}
+
 int main(int argc, int* argv[])
 {
 	int init_graphics_res = init_graphics();
@@ -153,6 +210,8 @@ int main(int argc, int* argv[])
 		APP_EXIT(TERMINATE_ERR_CODE);
 	}
 
+	create_tower_entities();
+
 	EntityDef* castle = NULL;
 	draw_castle_entity(&castle);
 
@@ -163,12 +222,10 @@ int main(int argc, int* argv[])
 	EntityDef* circle = NULL;
 	EntityDef* square = NULL;
 	EntityDef* triangle = NULL;
-	EntityDef* tower = NULL;
 
 	draw_triangle_entity(&triangle);
 	draw_square_entity(&square);
 	draw_circle_entity(&circle);
-	draw_square_entity(&tower);
 
 	const PathSegment** path = map_mgr_get_path();
 	int path_len = map_mgr_get_path_len();
@@ -190,13 +247,6 @@ int main(int argc, int* argv[])
 
 	double cursor_xpos = 0;
 	double cursor_ypos = 0;
-
-	DrawableDef* drawable = NULL;
-	get_drawable_def(&drawable, tower);
-
-	add_entity_collision_box(tower);
-	tower->collision_box->collision_layer = CollistionLayer_Enemy;
-	add_entity_collision_mask(tower, CollistionLayer_Castle);
 
 	// TODO: Handle Windows window drag (other events?)
 	while (!should_be_terminated())
@@ -230,11 +280,21 @@ int main(int argc, int* argv[])
 		{
 			graphics_get_cursor_pos(&cursor_xpos, &cursor_ypos);
 
-			float tower_scale_x = drawable->init_transform.scale.x * wWidth / WINDOW_DEFAULT_RES_W;
-			float tower_scale_y = drawable->init_transform.scale.y * wHeight / WINDOW_DEFAULT_RES_H;
-			// TODO: Resize all entities
-			resize_entity(tower, tower_scale_x, tower_scale_y);
-			move_entity(tower, cursor_xpos, wHeight - cursor_ypos);
+			CHECK_EXPR_FAIL_RET_TERMINATE(s_currentTowerIdx < TOWERS_AMOUNT, "[game]: currentTowerIdx is greater than towers amount.");
+
+			EntityDef* tower_entity = towers[s_currentTowerIdx];
+			DrawableDef* tower_drawable = NULL;
+
+			get_drawable_def(&tower_drawable, tower_entity);
+
+			if (NULL != tower_drawable)
+			{
+				float tower_scale_x = tower_drawable->init_transform.scale.x * wWidth / WINDOW_DEFAULT_RES_W;
+				float tower_scale_y = tower_drawable->init_transform.scale.y * wHeight / WINDOW_DEFAULT_RES_H;
+				// TODO: Resize all entities
+				resize_entity(tower_entity, tower_scale_x, tower_scale_y);
+				move_entity(tower_entity, cursor_xpos, wHeight - cursor_ypos);
+			}
 		}
 
 		physics_step();

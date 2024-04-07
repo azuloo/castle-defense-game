@@ -57,4 +57,15 @@
 #define K_N               GLFW_KEY_N
 #define K_M               GLFW_KEY_M
 
+#define K_0               GLFW_KEY_0
+#define K_1               GLFW_KEY_1
+#define K_2               GLFW_KEY_2
+#define K_3               GLFW_KEY_3
+#define K_4               GLFW_KEY_4
+#define K_5               GLFW_KEY_5
+#define K_6               GLFW_KEY_6
+#define K_7               GLFW_KEY_7
+#define K_8               GLFW_KEY_8
+#define K_9               GLFW_KEY_9
+
 #endif // _KEY_BINDINGS_H
