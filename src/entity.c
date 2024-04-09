@@ -57,8 +57,7 @@ static int create_entity_def(EntityDef** dest, enum EntityType type)
 	entity_def->path_len           = 0;
 	entity_def->state              = Entity_Setup;
 	entity_def->drawable_handle    = -1;
-
-	memset(&entity_def->collision_box, 0, sizeof * &entity_def->collision_box);
+	entity_def->collision_box      = NULL;
 
 	*dest = entity_def;
 
