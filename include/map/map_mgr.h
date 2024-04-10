@@ -1,7 +1,19 @@
 #ifndef _MAP_MGR_H
 #define _MAP_MGR_H
 
-#include "entity.h"
+#include "lin_alg.h"
+#include "global_decl.h"
+
+typedef struct PathSegment
+{
+	Vec2 start;
+	Vec2 end;
+} PathSegment;
+
+typedef struct PathDef
+{
+	CollisionBox2D* collision_box;
+} PathDef;
 
 typedef struct MapFuncsDef
 {

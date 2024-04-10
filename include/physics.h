@@ -1,9 +1,10 @@
 #ifndef _PHYSICS_H
 #define _PHYSICS_H
 
-typedef struct EntityDef EntityDef;
+#include "lin_alg.h"
+#include "global_decl.h"
 
-typedef struct
+typedef struct CollisionBox2D
 {
 	Vec3        position;
 	Vec3        size;

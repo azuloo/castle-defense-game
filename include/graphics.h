@@ -4,7 +4,7 @@
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 #include "lin_alg.h"
-#include "utils.h"
+#include "global_decl.h"
 
 #define CLOSE_GLFW_WINDOW 1
 #define LIB_MAJOR_VER 3
@@ -78,7 +78,7 @@ typedef struct
 	int             indices_len;
 } DrawBufferData;
 
-typedef struct
+typedef struct DrawableDef
 {
 	GBuffers          buffers;
 	DrawBufferData    buffer_data;

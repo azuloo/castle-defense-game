@@ -3,6 +3,7 @@
 #include "graphics_defs.h"
 #include "file_reader.h"
 #include "lin_alg.h"
+#include "utils.h"
 
 #define SHADER_COLOR_UNIFORM_NAME "UColor"
 

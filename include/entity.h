@@ -2,11 +2,17 @@
 #define _ENTITY_H
 
 #include "lin_alg.h"
-#include "graphics.h"
-#include "physics.h"
+#include "global_decl.h"
 
 // TODO: Add to entity's state
 #define ENTITY_MOVEMENT_SPEED 250.f
+
+enum EntityState
+{
+	Entity_Setup,
+	Entity_Idle,
+	Entity_Moving
+};
 
 typedef enum EntityType
 {
@@ -16,19 +22,6 @@ typedef enum EntityType
 	Entity_Triangle,
 	Entity_Castle
 } EntityType;
-
-enum EntityState
-{
-	Entity_Setup,
-	Entity_Idle,
-	Entity_Moving
-};
-
-typedef struct PathSegment
-{
-	Vec2 start;
-	Vec2 end;
-} PathSegment;
 
 typedef struct EntityDef
 {
@@ -49,7 +42,7 @@ int resize_entity(EntityDef* dest, float scale_x, float scale_y);
 
 int get_drawable_def(DrawableDef** dest, EntityDef* src);
 int entity_follow_path(EntityDef* entity);
-int get_entities(EntityDef** dest);
+void get_entities(EntityDef** dest);
 int get_entities_num();
 
 void entity_free_resources();

@@ -1,6 +1,7 @@
 #ifndef _LIN_ALG_H
 #define _LIN_ALG_H
 
+#include <stdint.h>
 #include <math.h>
 
 /* row-major ordering */
