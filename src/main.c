@@ -255,9 +255,13 @@ int main(int argc, int* argv[])
 	EntityDef* castle = NULL;
 	draw_castle_entity(&castle);
 
-	add_entity_collision_box(castle);
-	castle->collision_box->collision_layer = CollistionLayer_Castle;
-	add_entity_collision_mask(castle, CollistionLayer_Enemy);
+	DrawableDef* castle_drawable = NULL;
+	get_drawable_def(&castle_drawable, castle);
+	CHECK_EXPR_FAIL_RET_TERMINATE(castle_drawable != NULL, "[game]: Failed to fetch castle drawable.");
+
+	add_collision_box2D(&castle->collision_box, &castle_drawable->transform.translation, &castle_drawable->transform.scale);
+	add_collision_layer2D(castle->collision_box, CollistionLayer_Castle);
+	add_collision_mask2D(castle->collision_box, CollistionLayer_Enemy);
 
 	EntityDef* circle = NULL;
 	EntityDef* square = NULL;
@@ -266,6 +270,12 @@ int main(int argc, int* argv[])
 	draw_triangle_entity(&triangle);
 	draw_square_entity(&square);
 	draw_circle_entity(&circle);
+
+	DrawableDef* tri_drawable = NULL;
+	get_drawable_def(&tri_drawable, triangle);
+	CHECK_EXPR_FAIL_RET_TERMINATE(tri_drawable != NULL, "[game]: Failed to fetch triangle drawable.");
+	add_collision_box2D(&triangle->collision_box, &tri_drawable->transform.translation, &tri_drawable->transform.scale);
+	add_collision_layer2D(triangle->collision_box, CollistionLayer_Enemy);
 
 	const PathSegment** path = map_mgr_get_path();
 	int path_len = map_mgr_get_path_len();

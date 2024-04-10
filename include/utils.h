@@ -35,6 +35,11 @@ static char err_msg_buffer[1024];
 		PRINT_ERR(msg); \
 		return NULL; \
 	}
+#define CHECK_EXPR_FAIL_RET(expr, msg) \
+	if (!(expr)) { \
+		PRINT_ERR(msg); \
+		return; \
+	}
 
 void str_concat(const char* s1, const char* s2, char** buf, size_t len);
 
