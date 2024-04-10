@@ -87,8 +87,13 @@ static void process_key_hook(GWindow* window, int key, int scancode, int action,
 	if (key_pressed)
 	{
 		s_buildingModeEnabled = 1;
-
 		DrawableDef* tower_drawable = NULL;
+
+		for (int i = 0; i < TOWERS_AMOUNT; i++)
+		{
+			get_drawable_def(&tower_drawable, towers[i]);
+			tower_drawable->visible = 0;
+		}
 
 		get_drawable_def(&tower_drawable, towers[s_currentTowerIdx]);
 		tower_drawable->visible = 1;
