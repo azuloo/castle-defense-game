@@ -610,6 +610,16 @@ void drawable_set_visible(DrawableDef* drawable, int visible)
 	drawable->visible = visible;
 }
 
+int get_drawable_def(DrawableDef** dest, int handle)
+{
+	DrawableDef* drawable = (DrawableDef*) GET_FROM_REGISTRY(handle);
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[graphics]: Failed to fetch DrawableDef from registry.");
+
+	*dest = drawable;
+
+	return 0;
+}
+
 int graphics_draw()
 {
 	ASSERT_GRAPHICS_INITIALIZED

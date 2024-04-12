@@ -6,6 +6,7 @@
 #include "graphics_defs.h"
 #include "drawable_ops.h"
 #include "file_reader.h"
+#include "map/map_mgr.h"
 
 #include <stdlib.h>
 #include <stdbool.h>
@@ -57,7 +58,7 @@ static int create_entity_def(EntityDef** dest, enum EntityType type)
 	entity_def->path_len           = 0;
 	entity_def->state              = Entity_Setup;
 	entity_def->drawable_handle    = -1;
-	entity_def->collision_box      = NULL;
+	entity_def->collidable2D       = NULL;
 
 	*dest = entity_def;
 
@@ -151,7 +152,7 @@ int add_entity(enum EntityType type, EntityDef** dest, const Vec3* pos, const Ve
 }
 
 // ! Allocates memory on heap !
-int add_entity_path(EntityDef* dest, const PathSegment** path, int path_len)
+int add_entity_path(EntityDef* dest, const PathDef* path, int path_len)
 {
 	PathSegment** path_ptr = malloc(path_len * sizeof *path_ptr);
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != path_ptr, "[entity]: Failed to allocate sufficient memory chunk for PathSegment ptr.");
@@ -164,8 +165,10 @@ int add_entity_path(EntityDef* dest, const PathSegment** path, int path_len)
 		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != path_seg, "[entity]: Failed to allocate sufficient memory chunk for PathSegment element.");
 
 		dest->path[i]         = path_seg;
-		dest->path[i]->start  = path[i]->start;
-		dest->path[i]->end    = path[i]->end;
+		dest->path[i]->start  = path->path_segment.start;
+		dest->path[i]->end    = path->path_segment.end;
+
+		path++;
 	}
 
 	dest->path_len = path_len;
@@ -177,18 +180,17 @@ int add_entity_path(EntityDef* dest, const PathSegment** path, int path_len)
 int move_entity(EntityDef* dest, float pos_x, float pos_y)
 {
 	DrawableDef* drawable = NULL;
-	get_drawable_def(&drawable, dest);
+	get_drawable_def(&drawable, dest->drawable_handle);
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[entity] Failed to fetch drawable for the entity.");
 
 	drawable->transform.translation.x = pos_x;
 	drawable->transform.translation.y = pos_y;
 
-	if (NULL != dest->collision_box)
+	if (NULL != dest->collidable2D && NULL != NULL != dest->collidable2D->collision_box)
 	{
-		move_collision_box2D(dest->collision_box, pos_x, pos_y);
+		move_collision_box2D(dest->collidable2D->collision_box, pos_x, pos_y);
 	}
 
-	// TODO: Optimize
 	drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
 
 	return 0;
@@ -197,29 +199,29 @@ int move_entity(EntityDef* dest, float pos_x, float pos_y)
 int resize_entity(EntityDef* dest, float scale_x, float scale_y)
 {
 	DrawableDef* drawable = NULL;
-	get_drawable_def(&drawable, dest);
+	get_drawable_def(&drawable, dest->drawable_handle);
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[entity] Failed to fetch drawable for the entity.");
 
 	drawable->transform.scale.x = scale_x;
 	drawable->transform.scale.y = scale_y;
 
-	if (NULL != dest->collision_box)
+	if (NULL != dest->collidable2D && NULL != dest->collidable2D->collision_box)
 	{
-		resize_collision_box2D(dest->collision_box, scale_x, scale_y);
+		resize_collision_box2D(dest->collidable2D->collision_box, scale_x, scale_y);
 	}
 
-	// TODO: Optimize
 	drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
 
 	return 0;
 }
 
-int get_drawable_def(DrawableDef** dest, EntityDef* src)
+int find_entity_by_collidable2d(EntityDef** dest, const Collidable2D* collidable2D)
 {
-	DrawableDef* drawable = (DrawableDef*) GET_FROM_REGISTRY(&src->drawable_handle);
-	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[entity]: Failed to fetch DrawableDef from registry.");
+	EntityDef* entity = NULL;
+	for (int i = 0; i < s_EntitiesNum; i++)
+	{
 
-	*dest = drawable;
+	}
 
 	return 0;
 }
@@ -232,7 +234,7 @@ int entity_follow_path(EntityDef* entity)
 	}
 
 	DrawableDef* drawable = NULL;
-	get_drawable_def(&drawable, entity);
+	get_drawable_def(&drawable, entity->drawable_handle);
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[entity]: DrawableDef was not found in Registry.");
 
 	// TODO: If we later need to separate 'visible' (graphics) from 'active' (physics) - switch it here
@@ -321,19 +323,18 @@ int entity_follow_path(EntityDef* entity)
 
 		drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
 
-		if (NULL != entity->collision_box)
+		if (NULL != entity->collidable2D && NULL != entity->collidable2D->collision_box)
 		{
-			move_collision_box2D(entity->collision_box, new_pos_x, new_pos_y);
+			move_collision_box2D(entity->collidable2D->collision_box, new_pos_x, new_pos_y);
 		}
 	}
 
 	return 0;
 }
 
-int get_entities(EntityDef** dest)
+void get_entities(EntityDef** dest)
 {
 	*dest = s_EntityDefs;
-	return 0;
 }
 
 int get_entities_num()
@@ -356,9 +357,14 @@ void entity_free_resources()
 		{
 			free(entity_def->path);
 		}
-		if (NULL != entity_def->collision_box)
+		if (NULL != entity_def->collidable2D)
 		{
-			free(entity_def->collision_box);
+			if (NULL != entity_def->collidable2D->collision_box)
+			{
+				free(entity_def->collidable2D->collision_box);
+			}
+
+			free(entity_def->collidable2D);
 		}
 	}
 

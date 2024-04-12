@@ -11,8 +11,10 @@ typedef struct PathSegment
 } PathSegment;
 
 typedef struct PathDef
-{
-	CollisionBox2D* collision_box;
+{                
+	PathSegment        path_segment;
+	Collidable2D*      collidable2D;
+	int                drawable_handle;
 } PathDef;
 
 typedef struct MapFuncsDef
@@ -21,7 +23,7 @@ typedef struct MapFuncsDef
 	int                    (*add_path)();
 	void                   (*free_resources)();
 
-	const PathSegment**    (*get_path)();
+	const PathDef*         (*get_path)();
 	int                    (*get_path_len)();
 } MapFuncsDef;
 
@@ -29,7 +31,7 @@ int map_mgr_register_map(const MapFuncsDef* map_funcs_def);
 int map_mgr_load_map();
 int map_mgr_advance_to_next_map();
 
-const PathSegment**   map_mgr_get_path();
+const PathDef*        map_mgr_get_path();
 int                   map_mgr_get_path_len();
 
 int map_mgr_init();

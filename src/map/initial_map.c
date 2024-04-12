@@ -7,14 +7,15 @@
 #include "global_defs.h"
 #include "graphics_defs.h"
 #include "drawable_ops.h"
+#include "physics.h"
+#include "obj_registry.h"
 
 #define INTIAL_MAP_PATH_LEN 5
 
 extern int wWidth;
 extern int wHeight;
 
-static PathSegment** s_Path = NULL;
-
+static PathDef s_PathDef[INTIAL_MAP_PATH_LEN];
 
 // ----------------------- PUBLIC FUNCTIONS ----------------------- //
 
@@ -50,26 +51,16 @@ int initial_add_path()
 		{ .start = { 1050.f, (float)wHeight / 2.f }, .end = { 1600.f, (float)wHeight / 2.f } }
 	};
 
-	PathSegment** path = malloc(INTIAL_MAP_PATH_LEN * sizeof *s_Path);
-	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != path, "[initial_map]: Failed to create path ptr.");
-
 	assert((sizeof(predefined_path) / sizeof(predefined_path[0])) == INTIAL_MAP_PATH_LEN);
-	for (int i = 0; i < INTIAL_MAP_PATH_LEN; i++)
-	{
-		PathSegment* path_seg = malloc(sizeof *path_seg);
-		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != path_seg, "[initial_map]: Failed to create path segment ptr.");
-
-		path[i] = path_seg;
-		*path[i] = predefined_path[i];
-	}
-
-	s_Path = path;
 
 	Vec4 color = { { 1.f, 1.f, 1.f, 1.f } };
 
 	for (int i = 0; i < INTIAL_MAP_PATH_LEN; i++)
 	{
-		PathSegment* path_segment = s_Path[i];
+		s_PathDef[i].path_segment    = predefined_path[i];
+		s_PathDef[i].collidable2D    = NULL;
+
+		PathSegment* path_segment    = &s_PathDef[i].path_segment;
 
 		float pos_x_diff = path_segment->end.x - path_segment->start.x;
 		float pos_y_diff = path_segment->end.y - path_segment->start.y;
@@ -108,11 +99,17 @@ int initial_add_path()
 		float pos_y = (path_segment->start.y + path_segment->end.y) / 2.f;
 
 		Vec3 translation = { { pos_x, pos_y, Z_DEPTH_INITIAL_MAP_PATH } };
-		Vec3 scale = { { scale_x, scale_y, 1.f } };
+		Vec3 scale = { { fabsf(scale_x), fabsf(scale_y), 1.f } };
 
 		DrawableDef* drawable = NULL;
 		draw_quad(&drawable, texture_path, TexType_RGB, &translation, &scale, &color);
 		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[entity]: Failed to draw triangle entity (empty quad drawable).");
+
+		s_PathDef[i].drawable_handle = drawable->handle;
+
+		// TODO: Add NULL check
+		add_collidable2D(&s_PathDef[i].collidable2D, &drawable->transform.translation, &drawable->transform.scale);
+		add_collision_layer2D(s_PathDef[i].collidable2D->collision_box, CollisionLayer_Road);
 	}
 
 	return 0;
@@ -120,20 +117,23 @@ int initial_add_path()
 
 void initial_free_resources()
 {
-	if (NULL != s_Path)
+	for (int i = 0; i < INTIAL_MAP_PATH_LEN; i++)
 	{
-		for (int i = 0; i < INTIAL_MAP_PATH_LEN; i++)
+		if (NULL != s_PathDef[i].collidable2D)
 		{
-			free(s_Path[i]);
-		}
+			if (NULL != s_PathDef[i].collidable2D->collision_box)
+			{
+				free(s_PathDef[i].collidable2D->collision_box);
+			}
 
-		free(s_Path);
+			free(s_PathDef[i].collidable2D);
+		}
 	}
 }
 
-const PathSegment** get_initial_path()
+const PathDef* get_initial_path()
 {
-	return s_Path;
+	return s_PathDef;
 }
 
 int get_initial_path_len()

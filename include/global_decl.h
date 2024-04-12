@@ -12,6 +12,7 @@ typedef struct EntityDef EntityDef;
 
 // Physics
 typedef struct CollisionBox2D CollisionBox2D;
+typedef struct Collidable2D Collidable2D;
 
 // Map manager
 typedef struct PathSegment PathSegment;

@@ -75,7 +75,7 @@ int map_mgr_advance_to_next_map()
 	return 0;
 }
 
-const PathSegment** map_mgr_get_path()
+const PathDef* map_mgr_get_path()
 {
 	const MapFuncsDef* map_def = get_curr_map();
 	CHECK_EXPR_FAIL_RET_NULL(NULL != map_def, "[map_mgr]: Failed to get current map ptr.");

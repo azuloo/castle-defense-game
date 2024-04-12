@@ -31,16 +31,53 @@ int s_currentTowerIdx = 0;
 EntityType s_currentTowerType = Entity_None;
 
 #define TOWERS_AMOUNT 3
+#define ENEMIES_AMOUNT 3
 // TODO: Use map here
 EntityDef* towers[TOWERS_AMOUNT];
+EntityDef* enemies[ENEMIES_AMOUNT];
+EntityDef* castle = NULL;
 
-static void entities_collided_hook(EntityDef* first, EntityDef* second)
+// TODO: Need HEAVY optimization
+static int find_enemy_with_collidable(EntityDef** dest, const Collidable2D* collidable)
+{
+	for (int i = 0; i < ENEMIES_AMOUNT; i++)
+	{
+		if (NULL == enemies[i]->collidable2D || NULL == enemies[i]->collidable2D->collision_box || enemies[i]->collidable2D->handle != collidable->handle)
+		{
+			continue;
+		}
+
+		*dest = enemies[i];
+		break;
+	}
+
+	return 0;
+}
+
+// TODO: Need HEAVY optimization
+static int find_tower_with_collidable(EntityDef** dest, const Collidable2D* collidable)
+{
+	for (int i = 0; i < ENEMIES_AMOUNT; i++)
+	{
+		if (NULL == towers[i]->collidable2D || NULL == towers[i]->collidable2D->collision_box || towers[i]->collidable2D->handle != collidable->handle)
+		{
+			continue;
+		}
+
+		*dest = towers[i];
+		break;
+	}
+
+	return 0;
+}
+
+static void resolve_entities_collision(EntityDef* first, EntityDef* second)
 {
 	DrawableDef* first_drawable = NULL;
-	get_drawable_def(&first_drawable, first);
+	get_drawable_def(&first_drawable, first->drawable_handle);
 
 	DrawableDef* second_drawable = NULL;
-	get_drawable_def(&second_drawable, second);
+	get_drawable_def(&second_drawable, second->drawable_handle);
 
 	if (NULL == first_drawable || NULL == second_drawable)
 	{
@@ -59,6 +96,72 @@ static void entities_collided_hook(EntityDef* first, EntityDef* second)
 		Vec4 color_vec = { { 1.f, 0.f, 0.f, 1.f } };
 		add_uniform_vec4f(first_drawable->shader_prog, "UColor", &color_vec);
 	}
+}
+
+static void resolve_entity_road_collision(EntityDef* first, EntityDef* second)
+{
+	DrawableDef* first_drawable = NULL;
+	get_drawable_def(&first_drawable, first);
+
+	DrawableDef* second_drawable = NULL;
+	get_drawable_def(&second_drawable, second->drawable_handle);
+
+	if (NULL != first_drawable && first->collidable2D->collision_box->collision_layer & CollisionLayer_Tower)
+	{
+		if (NULL != second_drawable && second->collidable2D->collision_box->collision_layer & CollisionLayer_Road)
+		{
+			Vec4 color_vec = { { 1.f, 0.f, 0.f, 1.f } };
+			add_uniform_vec4f(first_drawable->shader_prog, "UColor", &color_vec);
+		}
+	}
+
+	if (NULL != first_drawable && first->collidable2D->collision_box->collision_layer & CollisionLayer_Road)
+	{
+		if (NULL != second_drawable && second->collidable2D->collision_box->collision_layer & CollisionLayer_Tower)
+		{
+			Vec4 color_vec = { { 1.f, 0.f, 0.f, 1.f } };
+			add_uniform_vec4f(second_drawable->shader_prog, "UColor", &color_vec);
+		}
+	}
+}
+
+static void entities_collided_hook(Collidable2D* first, Collidable2D* second)
+{
+	EntityDef* first_entity    = NULL;
+	EntityDef* second_entity   = NULL;
+	if (first->collision_box->collision_layer & CollisionLayer_Enemy)
+	{
+		find_enemy_with_collidable(&first_entity, first);
+	}
+	else if (first->collision_box->collision_layer & CollisionLayer_Tower)
+	{
+		find_tower_with_collidable(&first_entity, first);
+	}
+	else if (first->collision_box->collision_layer & CollisionLayer_Castle)
+	{
+		first_entity = castle;
+	}
+
+	if (second->collision_box->collision_layer & CollisionLayer_Enemy)
+	{
+		find_enemy_with_collidable(&second_entity, second);
+	}
+	else if (second->collision_box->collision_layer & CollisionLayer_Tower)
+	{
+		find_tower_with_collidable(&second_entity, second);
+	}
+	else if (second->collision_box->collision_layer & CollisionLayer_Castle)
+	{
+		second_entity = castle;
+	}
+
+	if (NULL != first_entity && NULL != second_entity)
+	{
+		resolve_entities_collision(first_entity, second_entity);
+		return;
+	}
+
+
 }
 
 static void process_key_hook(GWindow* window, int key, int scancode, int action, int mods)
@@ -91,11 +194,11 @@ static void process_key_hook(GWindow* window, int key, int scancode, int action,
 
 		for (int i = 0; i < TOWERS_AMOUNT; i++)
 		{
-			get_drawable_def(&tower_drawable, towers[i]);
+			get_drawable_def(&tower_drawable, towers[i]->drawable_handle);
 			tower_drawable->visible = 0;
 		}
 
-		get_drawable_def(&tower_drawable, towers[s_currentTowerIdx]);
+		get_drawable_def(&tower_drawable, towers[s_currentTowerIdx]->drawable_handle);
 		tower_drawable->visible = 1;
 	}
 }
@@ -137,6 +240,16 @@ static void process_mouse_button_hook(GWindow* window, int button, int action, i
 		break;
 		}
 
+		if (NULL != entity)
+		{
+			DrawableDef* drawable = NULL;
+			get_drawable_def(&drawable, entity->drawable_handle);
+			CHECK_EXPR_FAIL_RET(drawable != NULL, "[game]: Failed to fetch tower drawable.");
+			add_collidable2D(&entity->collidable2D, &drawable->transform.translation, &drawable->transform.scale);
+			CHECK_EXPR_FAIL_RET(entity->collidable2D != NULL && entity->collidable2D->collision_box, "[game]: Failed to attach Collidable2D.");
+			add_collision_layer2D(entity->collidable2D->collision_box, CollisionLayer_Tower);
+		}
+
 		s_buildingModeEnabled = !s_buildingModeEnabled;
 	}
 }
@@ -163,7 +276,7 @@ void process_input(GWindow* window)
 
 int draw_triangle_entity(EntityDef** triangle)
 {
-	Vec3 tri_pos = { { 600.f, wHeight / 2.f, Z_DEPTH_INITIAL_ENTITY } };
+	Vec3 tri_pos = { { 700.f, wHeight / 2.f + 200.f, Z_DEPTH_INITIAL_ENTITY } };
 	Vec3 tri_scale = { { 35.f, 35.f, 1.f } };
 	Vec4 tri_color = { { 0.f, 1.f, 0.f, 1.f } };
 
@@ -174,7 +287,7 @@ int draw_triangle_entity(EntityDef** triangle)
 
 int draw_square_entity(EntityDef** square)
 {
-	Vec3 sq_pos = { { 400.f, wHeight / 2.f, Z_DEPTH_INITIAL_ENTITY } };
+	Vec3 sq_pos = { { 900.f, wHeight / 2.f + 200.f, Z_DEPTH_INITIAL_ENTITY } };
 	Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
 	Vec4 sq_color = { { 0.f, 1.f, 0.f, 1.f } };
 
@@ -185,7 +298,7 @@ int draw_square_entity(EntityDef** square)
 
 int draw_circle_entity(EntityDef** circle)
 {
-	Vec3 circle_pos = { { 500.f, wHeight / 2.f, Z_DEPTH_INITIAL_ENTITY } };
+	Vec3 circle_pos = { { 1100.f, wHeight / 2.f + 200.f, Z_DEPTH_INITIAL_ENTITY } };
 	Vec3 circle_scale = { { 35.f, 35.f, 1.f } };
 	Vec4 circle_color = { { 0.f, 1.f, 0.f, 1.f } };
 
@@ -215,20 +328,66 @@ int create_tower_entities()
 	draw_square_entity(&tower_entity);
 	towers[0] = tower_entity;
 
-	get_drawable_def(&tower_drawable, tower_entity);
+	get_drawable_def(&tower_drawable, tower_entity->drawable_handle);
 	tower_drawable->visible = 0;
+
+	// TODO: Add error checks
+	add_collidable2D(&tower_entity->collidable2D, &tower_drawable->transform.translation, &tower_drawable->transform.scale);
+	add_collision_layer2D(tower_entity->collidable2D->collision_box, CollisionLayer_Tower);
+	add_collision_mask2D(tower_entity->collidable2D->collision_box, CollisionLayer_Road);
 
 	draw_circle_entity(&tower_entity);
 	towers[1] = tower_entity;
 
-	get_drawable_def(&tower_drawable, tower_entity);
+	get_drawable_def(&tower_drawable, tower_entity->drawable_handle);
 	tower_drawable->visible = 0;
+
+	// TODO: Add error checks
+	add_collidable2D(&tower_entity->collidable2D, &tower_drawable->transform.translation, &tower_drawable->transform.scale);
+	add_collision_layer2D(tower_entity->collidable2D->collision_box, CollisionLayer_Tower);
+	add_collision_mask2D(tower_entity->collidable2D->collision_box, CollisionLayer_Road);
 
 	draw_triangle_entity(&tower_entity);
 	towers[2] = tower_entity;
 
-	get_drawable_def(&tower_drawable, tower_entity);
+	get_drawable_def(&tower_drawable, tower_entity->drawable_handle);
 	tower_drawable->visible = 0;
+
+	// TODO: Add error checks
+	add_collidable2D(&tower_entity->collidable2D, &tower_drawable->transform.translation, &tower_drawable->transform.scale);
+	add_collision_layer2D(tower_entity->collidable2D->collision_box, CollisionLayer_Tower);
+	add_collision_mask2D(tower_entity->collidable2D->collision_box, CollisionLayer_Road);
+
+	return 0;
+}
+
+// TODO: This should be provided by the current map
+int create_enemies()
+{
+	EntityDef* circle = NULL;
+	EntityDef* square = NULL;
+	EntityDef* triangle = NULL;
+
+	draw_triangle_entity(&triangle);
+	draw_square_entity(&square);
+	draw_circle_entity(&circle);
+
+	DrawableDef* tri_drawable = NULL;
+	get_drawable_def(&tri_drawable, triangle->drawable_handle);
+	CHECK_EXPR_FAIL_RET_TERMINATE(tri_drawable != NULL, "[game]: Failed to fetch triangle drawable.");
+	add_collidable2D(&triangle->collidable2D, &tri_drawable->transform.translation, &tri_drawable->transform.scale);
+	add_collision_layer2D(triangle->collidable2D->collision_box, CollisionLayer_Enemy);
+
+	const PathDef* path = map_mgr_get_path();
+	int path_len = map_mgr_get_path_len();
+
+	add_entity_path(triangle, path, path_len);
+	add_entity_path(square, path, path_len);
+	add_entity_path(circle, path, path_len);
+
+	enemies[0] = circle;
+	enemies[1] = square;
+	enemies[2] = triangle;
 
 	return 0;
 }
@@ -256,38 +415,18 @@ int main(int argc, int* argv[])
 	}
 
 	create_tower_entities();
+	create_enemies();
 
-	EntityDef* castle = NULL;
 	draw_castle_entity(&castle);
 
 	DrawableDef* castle_drawable = NULL;
-	get_drawable_def(&castle_drawable, castle);
+	get_drawable_def(&castle_drawable, castle->drawable_handle);
 	CHECK_EXPR_FAIL_RET_TERMINATE(castle_drawable != NULL, "[game]: Failed to fetch castle drawable.");
 
-	add_collision_box2D(&castle->collision_box, &castle_drawable->transform.translation, &castle_drawable->transform.scale);
-	add_collision_layer2D(castle->collision_box, CollistionLayer_Castle);
-	add_collision_mask2D(castle->collision_box, CollistionLayer_Enemy);
-
-	EntityDef* circle = NULL;
-	EntityDef* square = NULL;
-	EntityDef* triangle = NULL;
-
-	draw_triangle_entity(&triangle);
-	draw_square_entity(&square);
-	draw_circle_entity(&circle);
-
-	DrawableDef* tri_drawable = NULL;
-	get_drawable_def(&tri_drawable, triangle);
-	CHECK_EXPR_FAIL_RET_TERMINATE(tri_drawable != NULL, "[game]: Failed to fetch triangle drawable.");
-	add_collision_box2D(&triangle->collision_box, &tri_drawable->transform.translation, &tri_drawable->transform.scale);
-	add_collision_layer2D(triangle->collision_box, CollistionLayer_Enemy);
-
-	const PathSegment** path = map_mgr_get_path();
-	int path_len = map_mgr_get_path_len();
-
-	add_entity_path(triangle, path, path_len);
-	add_entity_path(square, path, path_len);
-	add_entity_path(circle, path, path_len);
+	// TODO: Add error checks
+	add_collidable2D(&castle->collidable2D, &castle_drawable->transform.translation, &castle_drawable->transform.scale);
+	add_collision_layer2D(castle->collidable2D->collision_box, CollisionLayer_Castle);
+	add_collision_mask2D(castle->collidable2D->collision_box, CollisionLayer_Enemy);
 
 	const float time_step = 250;
 	float path_delay_sq = 250;
@@ -298,7 +437,7 @@ int main(int argc, int* argv[])
 
 	ft_renderer_init();
 	Vec3 color = { 1.f, 1.f, 1.f };
-	render_text("Sample text", wWidth - 300.f, wHeight - 50.f, color);
+	render_text("Press 1, 2 or 3 to select Towers", wWidth - 400.f, wHeight - 50.f, color);
 
 	// TODO: Handle Windows window drag (other events?)
 	while (!should_be_terminated())
@@ -309,24 +448,29 @@ int main(int argc, int* argv[])
 
 		dt = math_clamp(dt, 0.f, MAX_FRAME_TIME);
 
-		entity_follow_path(triangle);
-		if (path_delay_sq > 0)
+		for (int i = 0; i < ENEMIES_AMOUNT; i++)
 		{
-			path_delay_sq -= time_step * dt;
-		}
-		else
-		{
-			entity_follow_path(square);
+			entity_follow_path(enemies[i]);
 		}
 
-		if (path_delay_cir > 0)
-		{
-			path_delay_cir -= time_step * dt;
-		}
-		else
-		{
-			entity_follow_path(circle);
-		}
+		//entity_follow_path(triangle);
+		//if (path_delay_sq > 0)
+		//{
+		//	path_delay_sq -= time_step * dt;
+		//}
+		//else
+		//{
+		//	entity_follow_path(square);
+		//}
+
+		//if (path_delay_cir > 0)
+		//{
+		//	path_delay_cir -= time_step * dt;
+		//}
+		//else
+		//{
+		//	entity_follow_path(circle);
+		//}
 
 		if (s_buildingModeEnabled)
 		{
@@ -337,7 +481,7 @@ int main(int argc, int* argv[])
 			EntityDef* tower_entity = towers[s_currentTowerIdx];
 			DrawableDef* tower_drawable = NULL;
 
-			get_drawable_def(&tower_drawable, tower_entity);
+			get_drawable_def(&tower_drawable, tower_entity->drawable_handle);
 
 			if (NULL != tower_drawable)
 			{
@@ -346,6 +490,8 @@ int main(int argc, int* argv[])
 				// TODO: Resize all entities
 				resize_entity(tower_entity, tower_scale_x, tower_scale_y);
 				move_entity(tower_entity, cursor_xpos, wHeight - cursor_ypos);
+				// TODO: Add error checking
+				move_collision_box2D(tower_entity->collidable2D->collision_box, cursor_xpos, wHeight - cursor_ypos);
 			}
 		}
 

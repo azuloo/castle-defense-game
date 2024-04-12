@@ -7,6 +7,7 @@
 // TODO: Add to entity's state
 #define ENTITY_MOVEMENT_SPEED 250.f
 
+// TODO: Enemy related, move out
 enum EntityState
 {
 	Entity_Setup,
@@ -14,6 +15,7 @@ enum EntityState
 	Entity_Moving
 };
 
+// TODO: EnemyType; move out of here
 typedef enum EntityType
 {
 	Entity_None,
@@ -31,16 +33,17 @@ typedef struct EntityDef
 	int               path_len;
 	enum EntityState  state;
 	int               drawable_handle;
-	CollisionBox2D*   collision_box;
+	Collidable2D*     collidable2D;
 } EntityDef;
 
 int add_entity(enum EntityType type, EntityDef** dest, const Vec3* pos, const Vec3* scale, const Vec4* color);
-int add_entity_path(EntityDef* dest, const PathSegment** path, int path_len);
+int add_entity_path(EntityDef* dest, const PathDef* path, int path_len);
 
 int move_entity(EntityDef* dest, float pos_x, float pos_y);
 int resize_entity(EntityDef* dest, float scale_x, float scale_y);
 
-int get_drawable_def(DrawableDef** dest, EntityDef* src);
+int find_entity_by_collidable2d(EntityDef** dest, const Collidable2D* collidable2D);
+
 int entity_follow_path(EntityDef* entity);
 void get_entities(EntityDef** dest);
 int get_entities_num();

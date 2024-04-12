@@ -10,7 +10,7 @@ static FT_Library      s_FTLib;
 static FT_Face         s_Face; // TODO: Different faces for different fonts
 static CharacterDef    s_Chars[128]; // TODO: Use c map impl here
 
-#define FT_DEFAULT_FONT_SIZE 48
+#define FT_DEFAULT_FONT_SIZE 26
 
 int init_ft()
 {
@@ -55,7 +55,7 @@ int ft_free_resources()
 int load_ascii_chars()
 {
 	set_unpack_alignment(1);
-
+	// TODO: Take into account window resizing
 	for (unsigned char c = 0; c < 128; c++)
 	{
 		if (FT_Load_Char(s_Face, c, FT_LOAD_RENDER))

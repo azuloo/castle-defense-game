@@ -123,6 +123,7 @@ int graphics_get_cursor_pos(double* xpos, double* ypos);
 int init_graphics();
 void set_background_color(BackgroundColor b_color);
 void drawable_set_visible(DrawableDef* drawable, int visible);
+int get_drawable_def(DrawableDef** dest, int handle);
 int graphics_should_be_terminated();
 void graphics_free_resources();
 void set_unpack_alignment(int align);
