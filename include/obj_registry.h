@@ -8,6 +8,6 @@
 
 void registry_free();
 int register_obj(void* obj, int* handle);
-void* get_obj_from_registry(const int* handle);
+void* get_obj_from_registry(int handle);
 
 #endif // _OBJ_REGISTRY_H

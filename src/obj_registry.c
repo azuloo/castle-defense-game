@@ -44,12 +44,12 @@ int register_obj(void* obj, int* handle)
 	return 0;
 }
 
-void* get_obj_from_registry(const int* handle)
+void* get_obj_from_registry(int handle)
 {
 	CHECK_EXPR_FAIL_RET_NULL(NULL != s_Registry, "[obj_registry]: Registry was not initialized.");
-	CHECK_EXPR_FAIL_RET_NULL(*handle < s_RegistryObjCount, "[obj_registry]: Handle value is greater than registry entries count.");
+	CHECK_EXPR_FAIL_RET_NULL(handle < s_RegistryObjCount, "[obj_registry]: Handle value is greater than registry entries count.");
 
-	return s_Registry[*handle];
+	return s_Registry[handle];
 }
 
 // ----------------------- PUBLIC FUNCTIONS END ----------------------- //
