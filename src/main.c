@@ -106,23 +106,7 @@ static void resolve_entity_road_collision(EntityDef* first, EntityDef* second)
 	DrawableDef* second_drawable = NULL;
 	get_drawable_def(&second_drawable, second->drawable_handle);
 
-	if (NULL != first_drawable && first->collidable2D->collision_box->collision_layer & CollisionLayer_Tower)
-	{
-		if (NULL != second_drawable && second->collidable2D->collision_box->collision_layer & CollisionLayer_Road)
-		{
-			Vec4 color_vec = { { 1.f, 0.f, 0.f, 1.f } };
-			add_uniform_vec4f(first_drawable->shader_prog, "UColor", &color_vec);
-		}
-	}
 
-	if (NULL != first_drawable && first->collidable2D->collision_box->collision_layer & CollisionLayer_Road)
-	{
-		if (NULL != second_drawable && second->collidable2D->collision_box->collision_layer & CollisionLayer_Tower)
-		{
-			Vec4 color_vec = { { 1.f, 0.f, 0.f, 1.f } };
-			add_uniform_vec4f(second_drawable->shader_prog, "UColor", &color_vec);
-		}
-	}
 }
 
 static void entities_collided_hook(Collidable2D* first, Collidable2D* second)
@@ -161,7 +145,30 @@ static void entities_collided_hook(Collidable2D* first, Collidable2D* second)
 		return;
 	}
 
+	// Tower - Road collision
+	if (NULL != first_entity && first->collision_box->collision_layer & CollisionLayer_Tower)
+	{
+		if (second->collision_box->collision_layer & CollisionLayer_Road)
+		{
+			DrawableDef* first_drawable = NULL;
+			get_drawable_def(&first_drawable, first_entity->drawable_handle);
 
+			Vec4 color_vec = { { 1.f, 0.f, 0.f, 1.f } };
+			add_uniform_vec4f(first_drawable->shader_prog, "UColor", &color_vec);
+		}
+	}
+
+	if (NULL != second_entity && second->collision_box->collision_layer & CollisionLayer_Tower)
+	{
+		if (first->collision_box->collision_layer & CollisionLayer_Road)
+		{
+			DrawableDef* second_drawable = NULL;
+			get_drawable_def(&second_drawable, second_entity->drawable_handle);
+
+			Vec4 color_vec = { { 1.f, 0.f, 0.f, 1.f } };
+			add_uniform_vec4f(second_drawable->shader_prog, "UColor", &color_vec);
+		}
+	}
 }
 
 static void process_key_hook(GWindow* window, int key, int scancode, int action, int mods)
