@@ -5,8 +5,6 @@
 #include "lin_alg.h"
 #include "utils.h"
 
-#define SHADER_COLOR_UNIFORM_NAME "UColor"
-
 static const char* s_quad_vertex_shader_path   = "/res/static/shaders/basic_vert.txt";
 static const char* s_quad_frag_shader_path     = "/res/static/shaders/quad_frag.txt";
 
@@ -81,7 +79,7 @@ int draw_quad(DrawableDef** dest, const char* texture_path, int texture_type, co
 	drawable->matrices.projection = COMMON_ORTHO_MAT;
 	add_uniform_mat4f(drawable->shader_prog, COMMON_PROJECTION_UNIFORM_NAME, &drawable->matrices.projection);
 
-	add_uniform_vec4f(drawable->shader_prog, SHADER_COLOR_UNIFORM_NAME, new_color);
+	add_uniform_vec4f(drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, new_color);
 
 	return 0;
 }

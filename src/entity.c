@@ -11,8 +11,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#define ENTITY_SHADER_COLOR_UNIFORM_NAME "UColor"
-
 extern int wHeight;
 extern float dt;
 

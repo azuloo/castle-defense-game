@@ -6,6 +6,7 @@
 // Literals
 #define COMMON_MODEL_UNIFORM_NAME         "model"
 #define COMMON_PROJECTION_UNIFORM_NAME    "projection"
+#define COMMON_COLOR_UNIFORM_NAME         "UColor"
 
 // Depths
 #define Z_DEPTH_INITIAL_MAP_BACKGROUND    0.001f

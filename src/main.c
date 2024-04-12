@@ -88,13 +88,13 @@ static void resolve_entities_collision(EntityDef* first, EntityDef* second)
 	if (NULL != first_drawable && first->type == Entity_Castle)
 	{
 		Vec4 color_vec = { { 1.f, 0.f, 0.f, 1.f } };
-		add_uniform_vec4f(second_drawable->shader_prog, "UColor", &color_vec);
+		add_uniform_vec4f(second_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
 	}
 
 	if (NULL != second_drawable && second->type == Entity_Castle)
 	{
 		Vec4 color_vec = { { 1.f, 0.f, 0.f, 1.f } };
-		add_uniform_vec4f(first_drawable->shader_prog, "UColor", &color_vec);
+		add_uniform_vec4f(first_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
 	}
 }
 
@@ -166,7 +166,7 @@ static void entities_collided_hook(Collidable2D* first, Collidable2D* second)
 			get_drawable_def(&second_drawable, second_entity->drawable_handle);
 
 			Vec4 color_vec = { { 1.f, 0.f, 0.f, 1.f } };
-			add_uniform_vec4f(second_drawable->shader_prog, "UColor", &color_vec);
+			add_uniform_vec4f(second_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
 		}
 	}
 }
