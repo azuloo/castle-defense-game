@@ -4,7 +4,7 @@
 #include "drawable_ops.h"
 #include "obj_registry.h"
 
-static PhysicsEntitiesCollidedCb s_entitiesCollidedCb = NULL;
+static PhysicsCollisionEventCbPtr s_CollisionEventCbPtr = NULL;
 
 static int* s_Collidable2DHandels    = NULL;
 static int s_2DHandlesCapacity       = 16;
@@ -79,9 +79,9 @@ int is_collided_AABB(const CollisionBox2D* first, const CollisionBox2D* second)
     return x_collided && y_collided;
 }
 
-void physics_bind_entities_collided_cb(PhysicsEntitiesCollidedCb cb)
+void physics_bind_collision_event_cb(PhysicsCollisionEventCbPtr cb)
 {
-    s_entitiesCollidedCb = cb;
+    s_CollisionEventCbPtr = cb;
 }
 
 int add_collidable2D(Collidable2D** dest, const Vec3* initial_pos, const Vec3* initial_size)
@@ -113,7 +113,10 @@ int add_collidable2D(Collidable2D** dest, const Vec3* initial_pos, const Vec3* i
     collision_box2D->DEBUG_bounds_drawable = debug_drawable;
 #endif // DEBUG
 
-    collidable2D->collision_box = collision_box2D;
+    collidable2D->handle            = -1;
+    collidable2D->collision_box     = collision_box2D;
+    collidable2D->collision_state   = CollisionState_Uncollided;
+
    *dest = collidable2D;
 
    register_collidable2D(collidable2D);
@@ -207,11 +210,22 @@ int physics_step()
             }
 
             int collides = is_collided_AABB(first_collidable->collision_box, second_collidable->collision_box);
-            if (collides)
+            if (collides && ((first_collidable->collision_state & CollisionState_Uncollided) && (second_collidable->collision_state & CollisionState_Uncollided)))
             {
-                if (NULL != s_entitiesCollidedCb)
+                if (NULL != s_CollisionEventCbPtr)
                 {
-                    (*s_entitiesCollidedCb)(first_collidable, second_collidable);
+                    first_collidable->collision_state  = CollisionState_Collided;
+                    second_collidable->collision_state = CollisionState_Collided;
+                    (*s_CollisionEventCbPtr)(first_collidable, second_collidable);
+                }
+            }
+            else if (!collides && ((first_collidable->collision_state & CollisionState_Collided) && (second_collidable->collision_state & CollisionState_Collided)))
+            {
+                if (NULL != s_CollisionEventCbPtr)
+                {
+                    first_collidable->collision_state  = CollisionState_Uncollided;
+                    second_collidable->collision_state = CollisionState_Uncollided;
+                    (*s_CollisionEventCbPtr)(first_collidable, second_collidable);
                 }
             }
         }

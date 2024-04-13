@@ -4,12 +4,30 @@
 #include "lin_alg.h"
 #include "global_decl.h"
 
+enum PhysicsCollisionLayer
+{
+	CollisionLayer_None       = 0,
+	CollisionLayer_Player     = (1U << 1),
+	CollisionLayer_Enemy      = (1U << 2),
+	CollisionLayer_Castle     = (1U << 3),
+	CollisionLayer_Road       = (1U << 4),
+	CollisionLayer_Tower      = (1U << 5),
+
+	CollisionLayer_MAX        = (1U << 16)
+};
+
+enum CollisionState
+{
+	CollisionState_Collided     = (1U << 1),
+	CollisionState_Uncollided   = (1U << 2),
+};
+
 typedef struct CollisionBox2D
 {
-	Vec3        position;
-	Vec3        size;
-	uint16_t    collision_layer;
-	uint16_t    collision_mask;
+	Vec3           position;
+	Vec3           size;
+	uint16_t       collision_layer;
+	uint16_t       collision_mask;
 #if DEBUG
 	int            DEBUG_draw_bounds;
 	DrawableDef*   DEBUG_bounds_drawable;
@@ -21,23 +39,12 @@ typedef struct Collidable2D
 {
 	int               handle;
 	CollisionBox2D*   collision_box;
+	uint8_t           collision_state;
 };
 
-enum PhysicsCollisionLayer
-{
-	CollisionLayer_None          = 0,
-	CollisionLayer_Player        = (1U << 1),
-	CollisionLayer_Enemy         = (1U << 2),
-	CollisionLayer_Castle        = (1U << 3),
-	CollisionLayer_Road          = (1U << 4),
-	CollisionLayer_Tower         = (1U << 5),
+typedef void (*PhysicsCollisionEventCbPtr)(Collidable2D* first, Collidable2D* second);
 
-	CollisionLayer_MAX           = (1U << 16)
-};
-
-typedef void (*PhysicsEntitiesCollidedCb)(Collidable2D* first, Collidable2D* second);
-
-void physics_bind_entities_collided_cb(PhysicsEntitiesCollidedCb cb);
+void physics_bind_collision_event_cb(PhysicsCollisionEventCbPtr cb);
 // ! Allocates memory on heap !
 int add_collidable2D(Collidable2D** dest, const Vec3* initial_pos, const Vec3* initial_size);
 void add_collision_layer2D(CollisionBox2D* collision_box, uint16_t layer);
