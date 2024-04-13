@@ -25,7 +25,7 @@ int initial_add_background()
 
 	Vec3 translation = { { wWidth / 2.f, wHeight / 2.f, Z_DEPTH_INITIAL_MAP_BACKGROUND } };
 	Vec3 scale = { { wWidth / 2.f, wHeight / 2.f, 1.f } };
-	Vec4 color = { { 1.f, 1.f, 1.f, 1.f } };
+	Vec4 color = COLOR_VEC_WHITE;
 
 	DrawableDef* drawable = NULL;
 	draw_quad(&drawable, texture_path, TexType_RGB, &translation, &scale, &color);
@@ -53,7 +53,7 @@ int initial_add_path()
 
 	assert((sizeof(predefined_path) / sizeof(predefined_path[0])) == INTIAL_MAP_PATH_LEN);
 
-	Vec4 color = { { 1.f, 1.f, 1.f, 1.f } };
+	Vec4 color = COLOR_VEC_WHITE;
 
 	for (int i = 0; i < INTIAL_MAP_PATH_LEN; i++)
 	{

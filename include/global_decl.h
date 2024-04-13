@@ -5,6 +5,7 @@
 typedef struct TransformDef TransformDef;
 typedef struct DrawableDef DrawableDef;
 typedef struct GLFWwindow GLFWwindow;
+typedef struct DrawBufferData DrawBufferData;
 
 // Entity
 typedef enum EntityType EntityType;

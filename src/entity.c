@@ -1,4 +1,5 @@
 #include "entity.h"
+#include "physics.h"
 #include "file_reader.h"
 #include "utils.h"
 #include "obj_registry.h"

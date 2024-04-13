@@ -1,8 +1,15 @@
 #ifndef _DRAWABLE_OPS_H
 #define _DRAWABLE_OPS_H
 
+#include "global_decl.h"
 #include "graphics.h"
-#include "physics.h"
+#include "lin_alg.h"
+
+#define COLOR_VEC_WHITE    (Vec4){ { 1.f, 1.f, 1.f, 1.f } }
+#define COLOR_VEC_BLACK    (Vec4){ { 0.f, 0.f, 0.f, 1.f } }
+#define COLOR_VEC_RED      (Vec4){ { 1.f, 0.f, 0.f, 1.f } }
+#define COLOR_VEC_GREEN    (Vec4){ { 0.f, 1.f, 0.f, 1.f } }
+#define COLOR_VEC_BLUE     (Vec4){ { 0.f, 0.f, 1.f, 1.f } }
 
 // Translate - Scale
 int drawable_transform_ts(DrawableDef* drawable, const char* uniform_name);

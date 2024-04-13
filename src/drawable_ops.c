@@ -1,4 +1,5 @@
 #include "drawable_ops.h"
+#include "physics.h"
 #include "global_defs.h"
 #include "graphics_defs.h"
 #include "file_reader.h"

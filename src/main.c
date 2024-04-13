@@ -79,6 +79,8 @@ static void resolve_entities_collision(EntityDef* first, EntityDef* second)
 	DrawableDef* second_drawable = NULL;
 	get_drawable_def(&second_drawable, second->drawable_handle);
 
+	Vec4 color_vec = COLOR_VEC_RED;
+
 	if (NULL == first_drawable || NULL == second_drawable)
 	{
 		PRINT_ERR("[game]: Failed to find one or both drawables for provided entities.");
@@ -87,13 +89,11 @@ static void resolve_entities_collision(EntityDef* first, EntityDef* second)
 
 	if (NULL != first_drawable && first->type == Entity_Castle)
 	{
-		Vec4 color_vec = { { 1.f, 0.f, 0.f, 1.f } };
 		add_uniform_vec4f(second_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
 	}
 
 	if (NULL != second_drawable && second->type == Entity_Castle)
 	{
-		Vec4 color_vec = { { 1.f, 0.f, 0.f, 1.f } };
 		add_uniform_vec4f(first_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
 	}
 }
@@ -109,10 +109,11 @@ static void resolve_entity_road_collision(EntityDef* first, EntityDef* second)
 
 }
 
-static void entities_collided_hook(Collidable2D* first, Collidable2D* second)
+static void process_collision_event_hook(Collidable2D* first, Collidable2D* second)
 {
 	EntityDef* first_entity    = NULL;
 	EntityDef* second_entity   = NULL;
+
 	if (first->collision_box->collision_layer & CollisionLayer_Enemy)
 	{
 		find_enemy_with_collidable(&first_entity, first);
@@ -153,8 +154,14 @@ static void entities_collided_hook(Collidable2D* first, Collidable2D* second)
 			DrawableDef* first_drawable = NULL;
 			get_drawable_def(&first_drawable, first_entity->drawable_handle);
 
-			Vec4 color_vec = { { 1.f, 0.f, 0.f, 1.f } };
-			add_uniform_vec4f(first_drawable->shader_prog, "UColor", &color_vec);
+			Vec4 color_vec = COLOR_VEC_GREEN;
+
+			if (first->collision_state & CollisionState_Collided)
+			{
+				color_vec = COLOR_VEC_RED;
+			}
+
+			add_uniform_vec4f(first_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
 		}
 	}
 
@@ -165,7 +172,13 @@ static void entities_collided_hook(Collidable2D* first, Collidable2D* second)
 			DrawableDef* second_drawable = NULL;
 			get_drawable_def(&second_drawable, second_entity->drawable_handle);
 
-			Vec4 color_vec = { { 1.f, 0.f, 0.f, 1.f } };
+			Vec4 color_vec = COLOR_VEC_GREEN;
+
+			if (second->collision_state & CollisionState_Collided)
+			{
+				color_vec = COLOR_VEC_RED;
+			}
+
 			add_uniform_vec4f(second_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
 		}
 	}
@@ -219,7 +232,7 @@ static void process_mouse_button_hook(GWindow* window, int button, int action, i
 		// TODO: Common data; move
 		Vec3 sq_pos = { { cursor_xpos, wHeight - cursor_ypos, Z_DEPTH_INITIAL_ENTITY } };
 		Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
-		Vec4 sq_color = { { 0.f, 1.f, 0.f, 1.f } };
+		Vec4 sq_color = COLOR_VEC_GREEN;
 
 		switch (s_currentTowerType)
 		{
@@ -285,7 +298,7 @@ int draw_triangle_entity(EntityDef** triangle)
 {
 	Vec3 tri_pos = { { 700.f, wHeight / 2.f + 200.f, Z_DEPTH_INITIAL_ENTITY } };
 	Vec3 tri_scale = { { 35.f, 35.f, 1.f } };
-	Vec4 tri_color = { { 0.f, 1.f, 0.f, 1.f } };
+	Vec4 tri_color = COLOR_VEC_GREEN;
 
 	add_entity(Entity_Triangle, triangle, &tri_pos, &tri_scale, &tri_color);
 
@@ -296,7 +309,7 @@ int draw_square_entity(EntityDef** square)
 {
 	Vec3 sq_pos = { { 900.f, wHeight / 2.f + 200.f, Z_DEPTH_INITIAL_ENTITY } };
 	Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
-	Vec4 sq_color = { { 0.f, 1.f, 0.f, 1.f } };
+	Vec4 sq_color = COLOR_VEC_GREEN;
 
 	add_entity(Entity_Square, square, &sq_pos, &sq_scale, &sq_color);
 
@@ -307,7 +320,7 @@ int draw_circle_entity(EntityDef** circle)
 {
 	Vec3 circle_pos = { { 1100.f, wHeight / 2.f + 200.f, Z_DEPTH_INITIAL_ENTITY } };
 	Vec3 circle_scale = { { 35.f, 35.f, 1.f } };
-	Vec4 circle_color = { { 0.f, 1.f, 0.f, 1.f } };
+	Vec4 circle_color = COLOR_VEC_GREEN;
 
 	add_entity(Entity_Circle, circle, &circle_pos, &circle_scale, &circle_color);
 
@@ -318,7 +331,7 @@ int draw_castle_entity(EntityDef** castle)
 {
 	Vec3 castle_pos = { { 1600.f, wHeight / 2.f, Z_DEPTH_INITIAL_CASTLE } };
 	Vec3 castle_scale = { { 125.f, 125.f, 1.f } };
-	Vec4 castle_color = { { 1.f, 1.f, 1.f, 1.f } };
+	Vec4 castle_color = COLOR_VEC_WHITE;
 
 	add_entity(Entity_Castle, castle, &castle_pos, &castle_scale, &castle_color);
 
@@ -411,7 +424,7 @@ int main(int argc, int* argv[])
 	bind_window_resize_fn(&window_resize_hook);
 	bind_key_pressed_cb(&process_key_hook);
 	bind_mouse_button_cb(&process_mouse_button_hook);
-	physics_bind_entities_collided_cb(&entities_collided_hook);
+	physics_bind_collision_event_cb(&process_collision_event_hook);
 
 	map_mgr_init();
 

@@ -70,7 +70,7 @@ typedef struct TransformDef
 	Vec3 scale;
 } TransformDef;
 
-typedef struct
+typedef struct DrawBufferData
 {
 	float*          vertices;
 	int             vertices_len;
