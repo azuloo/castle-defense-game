@@ -42,8 +42,6 @@ int add_entity_path(EntityDef* dest, const PathDef* path, int path_len);
 int move_entity(EntityDef* dest, float pos_x, float pos_y);
 int resize_entity(EntityDef* dest, float scale_x, float scale_y);
 
-int find_entity_by_collidable2d(EntityDef** dest, const Collidable2D* collidable2D);
-
 int entity_follow_path(EntityDef* entity);
 void get_entities(EntityDef** dest);
 int get_entities_num();

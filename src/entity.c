@@ -214,17 +214,6 @@ int resize_entity(EntityDef* dest, float scale_x, float scale_y)
 	return 0;
 }
 
-int find_entity_by_collidable2d(EntityDef** dest, const Collidable2D* collidable2D)
-{
-	EntityDef* entity = NULL;
-	for (int i = 0; i < s_EntitiesNum; i++)
-	{
-
-	}
-
-	return 0;
-}
-
 int entity_follow_path(EntityDef* entity)
 {
 	if (NULL == entity->path || 0 == entity->path_len)
