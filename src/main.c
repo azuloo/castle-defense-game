@@ -227,50 +227,54 @@ static void process_mouse_button_hook(GWindow* window, int button, int action, i
 {
 	if (button == MOUSE_BUTTON_LEFT && action == KEY_PRESS && s_buildingModeEnabled)
 	{
-		EntityDef* entity = NULL;
-
-		// TODO: Common data; move
-		Vec3 sq_pos = { { cursor_xpos, wHeight - cursor_ypos, Z_DEPTH_INITIAL_ENTITY } };
-		Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
-		Vec4 sq_color = COLOR_VEC_GREEN;
-
-		switch (s_currentTowerType)
+		// Spawn a tower only if it's not colliding with anything.
+		if (NULL != towers[s_currentTowerIdx]->collidable2D && towers[s_currentTowerIdx]->collidable2D->collision_state & CollisionState_Uncollided)
 		{
-		case Entity_Square:
-		{
-			add_entity(Entity_Square, &entity, &sq_pos, &sq_scale, &sq_color);
-		}
-		break;
+			EntityDef* entity = NULL;
 
-		case Entity_Circle:
-		{
-			add_entity(Entity_Circle, &entity, &sq_pos, &sq_scale, &sq_color);
-		}
-		break;
+			// TODO: Common data; move
+			Vec3 sq_pos = { { cursor_xpos, wHeight - cursor_ypos, Z_DEPTH_INITIAL_ENTITY } };
+			Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
+			Vec4 sq_color = COLOR_VEC_GREEN;
 
-		case Entity_Triangle:
-		{
-			add_entity(Entity_Triangle, &entity, &sq_pos, &sq_scale, &sq_color);
-		}
-		break;
-		default:
-		{
-			PRINT_ERR("[game]: Unknown entity type.");
-		}
-		break;
-		}
+			switch (s_currentTowerType)
+			{
+			case Entity_Square:
+			{
+				add_entity(Entity_Square, &entity, &sq_pos, &sq_scale, &sq_color);
+			}
+			break;
 
-		if (NULL != entity)
-		{
-			DrawableDef* drawable = NULL;
-			get_drawable_def(&drawable, entity->drawable_handle);
-			CHECK_EXPR_FAIL_RET(drawable != NULL, "[game]: Failed to fetch tower drawable.");
-			add_collidable2D(&entity->collidable2D, &drawable->transform.translation, &drawable->transform.scale);
-			CHECK_EXPR_FAIL_RET(entity->collidable2D != NULL && entity->collidable2D->collision_box, "[game]: Failed to attach Collidable2D.");
-			add_collision_layer2D(entity->collidable2D->collision_box, CollisionLayer_Tower);
-		}
+			case Entity_Circle:
+			{
+				add_entity(Entity_Circle, &entity, &sq_pos, &sq_scale, &sq_color);
+			}
+			break;
 
-		s_buildingModeEnabled = !s_buildingModeEnabled;
+			case Entity_Triangle:
+			{
+				add_entity(Entity_Triangle, &entity, &sq_pos, &sq_scale, &sq_color);
+			}
+			break;
+			default:
+			{
+				PRINT_ERR("[game]: Unknown entity type.");
+			}
+			break;
+			}
+
+			if (NULL != entity)
+			{
+				DrawableDef* drawable = NULL;
+				get_drawable_def(&drawable, entity->drawable_handle);
+				CHECK_EXPR_FAIL_RET(drawable != NULL, "[game]: Failed to fetch tower drawable.");
+				add_collidable2D(&entity->collidable2D, &drawable->transform.translation, &drawable->transform.scale);
+				CHECK_EXPR_FAIL_RET(entity->collidable2D != NULL && entity->collidable2D->collision_box, "[game]: Failed to attach Collidable2D.");
+				add_collision_layer2D(entity->collidable2D->collision_box, CollisionLayer_Tower);
+			}
+
+			s_buildingModeEnabled = !s_buildingModeEnabled;
+		}
 	}
 }
 
