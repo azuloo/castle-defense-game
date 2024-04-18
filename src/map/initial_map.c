@@ -19,7 +19,7 @@ static PathDef s_PathDef[INTIAL_MAP_PATH_LEN];
 
 // ----------------------- PUBLIC FUNCTIONS ----------------------- //
 
-int initial_add_background()
+static int initial_add_background()
 {
 	static const char* texture_path = "/res/static/textures/field.jpg";
 
@@ -34,7 +34,7 @@ int initial_add_background()
 	return 0;
 }
 
-int initial_add_path()
+static int initial_add_path()
 {
 	static const char* texture_path = "/res/static/textures/road.jpg";
 
@@ -115,7 +115,7 @@ int initial_add_path()
 	return 0;
 }
 
-void initial_free_resources()
+static void initial_free_resources()
 {
 	for (int i = 0; i < INTIAL_MAP_PATH_LEN; i++)
 	{
@@ -131,12 +131,12 @@ void initial_free_resources()
 	}
 }
 
-const PathDef* get_initial_path()
+static const PathDef* initial_get_path()
 {
 	return s_PathDef;
 }
 
-int get_initial_path_len()
+static int initial_get_path_len()
 {
 	return INTIAL_MAP_PATH_LEN;
 }
@@ -150,8 +150,8 @@ int initial_map_init()
 	map_func_def->add_path          = initial_add_path;
 	map_func_def->free_resources    = initial_free_resources;
 
-	map_func_def->get_path          = get_initial_path;
-	map_func_def->get_path_len      = get_initial_path_len;
+	map_func_def->get_path          = initial_get_path;
+	map_func_def->get_path_len      = initial_get_path_len;
 
 	map_mgr_register_map(map_func_def);
 
