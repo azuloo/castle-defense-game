@@ -7,22 +7,20 @@
 // TODO: Add to entity's state
 #define ENTITY_MOVEMENT_SPEED 250.f
 
-// TODO: Enemy related, move out
 enum EntityState
 {
-	Entity_Setup,
-	Entity_Idle,
-	Entity_Moving
+	EntityState_Setup,
+	EntityState_Idle,
+	EntityState_Moving
 };
 
-// TODO: EnemyType; move out of here
 typedef enum EntityType
 {
-	Entity_None,
-	Entity_Square,
-	Entity_Circle,
-	Entity_Triangle,
-	Entity_Castle
+	EntityType_None,
+	EntityType_Square,
+	EntityType_Circle,
+	EntityType_Triangle,
+	EntityType_Castle
 } EntityType;
 
 typedef struct EntityDef

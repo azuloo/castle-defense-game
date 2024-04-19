@@ -55,7 +55,7 @@ static int create_entity_def(EntityDef** dest, enum EntityType type)
 	entity_def->path               = NULL;
 	entity_def->path_idx           = -1;
 	entity_def->path_len           = 0;
-	entity_def->state              = Entity_Setup;
+	entity_def->state              = EntityState_Setup;
 	entity_def->drawable_handle    = -1;
 	entity_def->collidable2D       = NULL;
 
@@ -68,7 +68,7 @@ static int create_entity_def(EntityDef** dest, enum EntityType type)
 
 static int add_triangle(EntityDef** dest, const Vec3* pos, const Vec3* scale, const Vec4* color)
 {
-	create_entity_def(dest, Entity_Triangle);
+	create_entity_def(dest, EntityType_Triangle);
 
 	DrawableDef* drawable = NULL;
 	draw_quad(&drawable, triangle_texture_path, TexType_RGBA, pos, scale, color);
@@ -81,7 +81,7 @@ static int add_triangle(EntityDef** dest, const Vec3* pos, const Vec3* scale, co
 
 static int add_square(EntityDef** dest, const Vec3* pos, const Vec3* scale, const Vec4* color)
 {
-	create_entity_def(dest, Entity_Square);
+	create_entity_def(dest, EntityType_Square);
 
 	DrawableDef* drawable = NULL;
 	draw_quad(&drawable, square_texture_path, TexType_RGBA, pos, scale, color);
@@ -94,7 +94,7 @@ static int add_square(EntityDef** dest, const Vec3* pos, const Vec3* scale, cons
 
 static int add_circle(EntityDef** dest, const Vec3* pos, const Vec3* scale, const Vec4* color)
 {
-	create_entity_def(dest, Entity_Circle);
+	create_entity_def(dest, EntityType_Circle);
 
 	DrawableDef* drawable = NULL;
 	draw_quad(&drawable, circle_texture_path, TexType_RGBA, pos, scale, color);
@@ -107,7 +107,7 @@ static int add_circle(EntityDef** dest, const Vec3* pos, const Vec3* scale, cons
 
 static int add_castle(EntityDef** dest, const Vec3* pos, const Vec3* scale, const Vec4* color)
 {
-	create_entity_def(dest, Entity_Castle);
+	create_entity_def(dest, EntityType_Castle);
 
 	DrawableDef* drawable = NULL;
 	draw_quad(&drawable, castle_texture_path, TexType_RGBA, pos, scale, color);
@@ -130,16 +130,16 @@ int add_entity(enum EntityType type, EntityDef** dest, const Vec3* pos, const Ve
 
 	switch (type)
 	{
-	case Entity_Triangle:
+	case EntityType_Triangle:
 		add_triangle(dest, pos, scale, color);
 		break;
-	case Entity_Square:
+	case EntityType_Square:
 		add_square(dest, pos, scale, color);
 		break;
-	case Entity_Circle:
+	case EntityType_Circle:
 		add_circle(dest, pos, scale, color);
 		break;
-	case Entity_Castle:
+	case EntityType_Castle:
 		add_castle(dest, pos, scale, color);
 		break;
 	default:
@@ -230,9 +230,9 @@ int entity_follow_path(EntityDef* entity)
 		return 0;
 
 	// Place at the start of the path
-	if (entity->state == Entity_Setup && entity->path_len != 0)
+	if (entity->state == EntityState_Setup && entity->path_len != 0)
 	{
-		entity->state = Entity_Moving;
+		entity->state = EntityState_Moving;
 
 		Vec3 starting_pos = { { entity->path[0]->start.x, entity->path[0]->start.y, drawable->transform.translation.z } };
 		drawable->transform.translation = starting_pos;
@@ -240,7 +240,7 @@ int entity_follow_path(EntityDef* entity)
 		drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
 	}
 
-	if (entity->state == Entity_Moving && entity->path_len != 0)
+	if (entity->state == EntityState_Moving && entity->path_len != 0)
 	{
 		int path_idx = entity->path_idx;
 
@@ -300,7 +300,7 @@ int entity_follow_path(EntityDef* entity)
 			if (entity->path_idx >= entity->path_len)
 			{
 				// Stop at the end of the path
-				entity->state = Entity_Idle;
+				entity->state = EntityState_Idle;
 			}
 
 			return 0;

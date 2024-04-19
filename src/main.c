@@ -28,7 +28,7 @@ double cursor_ypos = 0.f;
 
 int s_buildingModeEnabled = 0;
 int s_currentTowerIdx = 0;
-EntityType s_currentTowerType = Entity_None;
+EntityType s_currentTowerType = EntityType_None;
 
 #define TOWERS_AMOUNT 3
 #define ENEMIES_AMOUNT 3
@@ -87,12 +87,12 @@ static void resolve_entities_collision(EntityDef* first, EntityDef* second)
 		return;
 	}
 
-	if (NULL != first_drawable && first->type == Entity_Castle)
+	if (NULL != first_drawable && first->type == EntityType_Castle)
 	{
 		add_uniform_vec4f(second_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
 	}
 
-	if (NULL != second_drawable && second->type == Entity_Castle)
+	if (NULL != second_drawable && second->type == EntityType_Castle)
 	{
 		add_uniform_vec4f(first_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
 	}
@@ -192,19 +192,19 @@ static void process_key_hook(GWindow* window, int key, int scancode, int action,
 	{
 		key_pressed = true;
 		s_currentTowerIdx = 0;
-		s_currentTowerType = Entity_Square;
+		s_currentTowerType = EntityType_Square;
 	}
 	if (key == K_2 && action == KEY_PRESS)
 	{
 		key_pressed = true;
 		s_currentTowerIdx = 1;
-		s_currentTowerType = Entity_Circle;
+		s_currentTowerType = EntityType_Circle;
 	}
 	if (key == K_3 && action == KEY_PRESS)
 	{
 		key_pressed = true;
 		s_currentTowerIdx = 2;
-		s_currentTowerType = Entity_Triangle;
+		s_currentTowerType = EntityType_Triangle;
 	}
 
 	if (key_pressed)
@@ -239,21 +239,21 @@ static void process_mouse_button_hook(GWindow* window, int button, int action, i
 
 			switch (s_currentTowerType)
 			{
-			case Entity_Square:
+			case EntityType_Square:
 			{
-				add_entity(Entity_Square, &entity, &sq_pos, &sq_scale, &sq_color);
+				add_entity(EntityType_Square, &entity, &sq_pos, &sq_scale, &sq_color);
 			}
 			break;
 
-			case Entity_Circle:
+			case EntityType_Circle:
 			{
-				add_entity(Entity_Circle, &entity, &sq_pos, &sq_scale, &sq_color);
+				add_entity(EntityType_Circle, &entity, &sq_pos, &sq_scale, &sq_color);
 			}
 			break;
 
-			case Entity_Triangle:
+			case EntityType_Triangle:
 			{
-				add_entity(Entity_Triangle, &entity, &sq_pos, &sq_scale, &sq_color);
+				add_entity(EntityType_Triangle, &entity, &sq_pos, &sq_scale, &sq_color);
 			}
 			break;
 			default:
@@ -304,7 +304,7 @@ int draw_triangle_entity(EntityDef** triangle)
 	Vec3 tri_scale = { { 35.f, 35.f, 1.f } };
 	Vec4 tri_color = COLOR_VEC_GREEN;
 
-	add_entity(Entity_Triangle, triangle, &tri_pos, &tri_scale, &tri_color);
+	add_entity(EntityType_Triangle, triangle, &tri_pos, &tri_scale, &tri_color);
 
 	return 0;
 }
@@ -315,7 +315,7 @@ int draw_square_entity(EntityDef** square)
 	Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
 	Vec4 sq_color = COLOR_VEC_GREEN;
 
-	add_entity(Entity_Square, square, &sq_pos, &sq_scale, &sq_color);
+	add_entity(EntityType_Square, square, &sq_pos, &sq_scale, &sq_color);
 
 	return 0;
 }
@@ -326,7 +326,7 @@ int draw_circle_entity(EntityDef** circle)
 	Vec3 circle_scale = { { 35.f, 35.f, 1.f } };
 	Vec4 circle_color = COLOR_VEC_GREEN;
 
-	add_entity(Entity_Circle, circle, &circle_pos, &circle_scale, &circle_color);
+	add_entity(EntityType_Circle, circle, &circle_pos, &circle_scale, &circle_color);
 
 	return 0;
 }
@@ -337,7 +337,7 @@ int draw_castle_entity(EntityDef** castle)
 	Vec3 castle_scale = { { 125.f, 125.f, 1.f } };
 	Vec4 castle_color = COLOR_VEC_WHITE;
 
-	add_entity(Entity_Castle, castle, &castle_pos, &castle_scale, &castle_color);
+	add_entity(EntityType_Castle, castle, &castle_pos, &castle_scale, &castle_color);
 
 	return 0;
 }
