@@ -13,6 +13,7 @@
 
 #include "map/map_mgr.h"
 #include "entity.h"
+#include "enemy_wave.h"
 
 #include <string.h>
 #include <stdbool.h>
@@ -472,29 +473,7 @@ int main(int argc, int* argv[])
 
 		dt = math_clamp(dt, 0.f, MAX_FRAME_TIME);
 
-		for (int i = 0; i < ENEMIES_AMOUNT; i++)
-		{
-			entity_follow_path(enemies[i]);
-		}
-
-		//entity_follow_path(triangle);
-		//if (path_delay_sq > 0)
-		//{
-		//	path_delay_sq -= time_step * dt;
-		//}
-		//else
-		//{
-		//	entity_follow_path(square);
-		//}
-
-		//if (path_delay_cir > 0)
-		//{
-		//	path_delay_cir -= time_step * dt;
-		//}
-		//else
-		//{
-		//	entity_follow_path(circle);
-		//}
+		enemy_waves_spawn(dt);
 
 		if (s_buildingModeEnabled)
 		{

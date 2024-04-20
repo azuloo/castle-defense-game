@@ -10,6 +10,8 @@ typedef struct DrawBufferData DrawBufferData;
 // Entity
 typedef enum EntityType EntityType;
 typedef struct EntityDef EntityDef;
+typedef struct EnemyWaveDef EnemyWaveDef;
+typedef struct EnemyWaveCnf EnemyWaveCnf;
 
 // Physics
 typedef struct CollisionBox2D CollisionBox2D;

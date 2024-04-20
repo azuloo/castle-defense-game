@@ -1,6 +1,7 @@
 #include "map/map_mgr.h"
 #include "map/initial_map.h"
 #include "utils.h"
+#include "enemy_wave.h"
 
 static int              s_CurrMapIdx = 0;
 static int              s_NextAvailableIdx = 0;
@@ -26,8 +27,6 @@ static const MapFuncsDef* get_curr_map()
 
 	return map_def;
 }
-
-// ----------------------- PUBLIC FUNCTIONS ----------------------- //
 
 int map_mgr_init()
 {
@@ -61,6 +60,7 @@ int map_mgr_load_map()
 	const MapFuncsDef* map_def = get_curr_map();
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != map_def, "[map_mgr]: Failed to get current map ptr.");
 
+	map_def->map_init();
 	map_def->add_background();
 	map_def->add_path();
 
@@ -81,6 +81,18 @@ const PathDef* map_mgr_get_path()
 	CHECK_EXPR_FAIL_RET_NULL(NULL != map_def, "[map_mgr]: Failed to get current map ptr.");
 
 	return map_def->get_path();
+}
+
+Vec2 map_mgr_get_path_start()
+{
+	Vec2 path_start = { 0.f, 0.f };
+	const MapFuncsDef* map_def = get_curr_map();
+	if (NULL != map_def)
+	{
+		path_start = map_def->get_path_start();
+	}
+
+	return path_start;
 }
 
 int map_mgr_get_path_len()
@@ -107,5 +119,3 @@ int map_mgr_free_resources()
 
 	return 0;
 }
-
-// ----------------------- PUBLIC FUNCTIONS END ----------------------- //

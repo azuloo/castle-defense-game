@@ -19,8 +19,10 @@ typedef struct PathDef
 
 typedef struct MapFuncsDef
 {
+	int                    (*map_init)();
 	int                    (*add_background)();
 	int                    (*add_path)();
+	Vec2                   (*get_path_start)();
 	void                   (*free_resources)();
 
 	const PathDef*         (*get_path)();
@@ -32,6 +34,7 @@ int map_mgr_load_map();
 int map_mgr_advance_to_next_map();
 
 const PathDef*        map_mgr_get_path();
+Vec2                  map_mgr_get_path_start();
 int                   map_mgr_get_path_len();
 
 int map_mgr_init();

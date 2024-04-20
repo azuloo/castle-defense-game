@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <stdbool.h>
 
 #define SOURCE_ROOT _SOURCE_ROOT
 

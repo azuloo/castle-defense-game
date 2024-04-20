@@ -1,23 +1,44 @@
 #include "map/initial_map.h"
-#include "graphics.h"
+#include "map/map_mgr.h"
 #include "file_reader.h"
 #include "utils.h"
 #include "lin_alg.h"
-#include "map/map_mgr.h"
 #include "global_defs.h"
 #include "graphics_defs.h"
 #include "drawable_ops.h"
 #include "physics.h"
-#include "obj_registry.h"
+#include "enemy_wave.h"
 
 #define INTIAL_MAP_PATH_LEN 5
+#define INITIAL_ENEMY_WAVES 5
 
 extern int wWidth;
 extern int wHeight;
 
 static PathDef s_PathDef[INTIAL_MAP_PATH_LEN];
+static const EnemyWaveCnf s_EnemyWaveCnf[INITIAL_ENEMY_WAVES] = {
+	{ EnemyWaveType_Random, 5, 3.f, 1.f },
+	{ EnemyWaveType_Random, 6, 3.f, 1.f },
+	{ EnemyWaveType_Random, 7, 3.f, 1.f },
+	{ EnemyWaveType_Random, 5, 3.f, 1.f },
+	{ EnemyWaveType_Random, 5, 3.f, 1.f },
+};
 
-// ----------------------- PUBLIC FUNCTIONS ----------------------- //
+static int map_init()
+{
+	int res = init_enemy_waves(INITIAL_ENEMY_WAVES);
+	CHECK_EXPR_FAIL_RET_TERMINATE(res != TERMINATE_ERR_CODE, "[initial_map]: Failed to init emeny waves.");
+
+	set_enemy_waves_cnf(s_EnemyWaveCnf, INITIAL_ENEMY_WAVES);
+
+	return 0;
+}
+
+static int initial_config_enemy_waves()
+{
+	
+	return 0;
+}
 
 static int initial_add_background()
 {
@@ -29,7 +50,7 @@ static int initial_add_background()
 
 	DrawableDef* drawable = NULL;
 	draw_quad(&drawable, texture_path, TexType_RGB, &translation, &scale, &color);
-	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[entity]: Failed to draw triangle entity (empty quad drawable).");
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[initial_map]: Failed to draw triangle entity (empty quad drawable).");
 
 	return 0;
 }
@@ -103,7 +124,7 @@ static int initial_add_path()
 
 		DrawableDef* drawable = NULL;
 		draw_quad(&drawable, texture_path, TexType_RGB, &translation, &scale, &color);
-		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[entity]: Failed to draw triangle entity (empty quad drawable).");
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[initial_map]: Failed to draw triangle entity (empty quad drawable).");
 
 		s_PathDef[i].drawable_handle = drawable->handle;
 
@@ -113,6 +134,11 @@ static int initial_add_path()
 	}
 
 	return 0;
+}
+
+static Vec2 get_path_start()
+{
+	return s_PathDef[0].path_segment.start;
 }
 
 static void initial_free_resources()
@@ -146,8 +172,10 @@ int initial_map_init()
 	MapFuncsDef* map_func_def = malloc(sizeof * map_func_def);
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != map_func_def, "[initial_map]: Failed to allocate sufficient memory for MapFuncsDef.");
 
+	map_func_def->map_init          = map_init;
 	map_func_def->add_background    = initial_add_background;
 	map_func_def->add_path          = initial_add_path;
+	map_func_def->get_path_start    = get_path_start;
 	map_func_def->free_resources    = initial_free_resources;
 
 	map_func_def->get_path          = initial_get_path;
@@ -157,5 +185,3 @@ int initial_map_init()
 
 	return 0;
 }
-
-// ----------------------- PUBLIC FUNCTIONS END ----------------------- //
