@@ -148,11 +148,10 @@ int set_enemy_waves_cnf(EnemyWaveCnf* cnf, int amount)
 	CHECK_EXPR_FAIL_RET_TERMINATE(amount == s_EnemyWavesAmount, "[enemy_wave]: Enemy waves cnf amount should be less than enemy waves amount.");
 	for (int i = 0; i < amount; i++)
 	{
-		// TODO: Check NULL
 		EnemyWaveDef* enemy_wave = s_EnemyWaves + i;
 		EnemyWaveCnf* enemy_wave_cnf_src = cnf + i;
-
-		// TODO: Check failed op?
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemy_wave && NULL != enemy_wave_cnf_src, "[enemy_wave]: Enemy wave dest or enemy wave src are empty.");
+		
 		memcpy(&enemy_wave->cnf, enemy_wave_cnf_src, sizeof(EnemyWaveCnf));
 		enemy_wave->state = EnemyWaveState_Init;
 	}

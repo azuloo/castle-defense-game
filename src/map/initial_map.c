@@ -34,12 +34,6 @@ static int map_init()
 	return 0;
 }
 
-static int initial_config_enemy_waves()
-{
-	
-	return 0;
-}
-
 static int initial_add_background()
 {
 	static const char* texture_path = "/res/static/textures/field.jpg";

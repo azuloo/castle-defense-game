@@ -502,10 +502,11 @@ int main(int argc, int* argv[])
 		graphics_draw();
 	}
 
-	registry_free();
+	enemy_waves_free_resources();
 	map_mgr_free_resources();
 	entity_free_resources();
 	graphics_free_resources();
+	registry_free();
 
 	return 0;
 }
