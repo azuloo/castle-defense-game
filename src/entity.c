@@ -118,8 +118,6 @@ static int add_castle(EntityDef** dest, const Vec3* pos, const Vec3* scale, cons
 	return 0;
 }
 
-// ----------------------- PUBLIC FUNCTIONS ----------------------- //
-
 int add_entity(enum EntityType type, EntityDef** dest, const Vec3* pos, const Vec3* scale, const Vec4* color)
 {
 	if (NULL == s_EntityDefs)
@@ -153,21 +151,17 @@ int add_entity(enum EntityType type, EntityDef** dest, const Vec3* pos, const Ve
 // ! Allocates memory on heap !
 int add_entity_path(EntityDef* dest, const PathDef* path, int path_len)
 {
-	PathSegment** path_ptr = malloc(path_len * sizeof *path_ptr);
+	PathSegment* path_ptr = malloc(path_len * sizeof *path_ptr);
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != path_ptr, "[entity]: Failed to allocate sufficient memory chunk for PathSegment ptr.");
 
 	dest->path = path_ptr;
 	
 	for (int i = 0; i < path_len; i++)
 	{
-		PathSegment* path_seg = malloc(sizeof *path_seg);
-		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != path_seg, "[entity]: Failed to allocate sufficient memory chunk for PathSegment element.");
+		PathSegment* path_seg_dest = dest->path + i;
+		PathDef* path_def_src = path + i;
 
-		dest->path[i]         = path_seg;
-		dest->path[i]->start  = path->path_segment.start;
-		dest->path[i]->end    = path->path_segment.end;
-
-		path++;
+		memcpy(path_seg_dest, &path_def_src->path_segment, sizeof(PathSegment));
 	}
 
 	dest->path_len = path_len;
@@ -234,7 +228,7 @@ int entity_follow_path(EntityDef* entity)
 	{
 		entity->state = EntityState_Moving;
 
-		Vec3 starting_pos = { { entity->path[0]->start.x, entity->path[0]->start.y, drawable->transform.translation.z } };
+		Vec3 starting_pos = { { entity->path->start.x, entity->path->start.y, drawable->transform.translation.z } };
 		drawable->transform.translation = starting_pos;
 
 		drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
@@ -244,8 +238,10 @@ int entity_follow_path(EntityDef* entity)
 	{
 		int path_idx = entity->path_idx;
 
-		const Vec2* pos_start = &entity->path[path_idx]->start;
-		const Vec2* pos_end = &entity->path[path_idx]->end;
+		const PathSegment* path_seg = entity->path + path_idx;
+
+		const Vec2* pos_start = &path_seg->start;
+		const Vec2* pos_end = &path_seg->end;
 	
 		float pos_x_step = 0.f;
 		float pos_y_step = 0.f;
@@ -336,15 +332,11 @@ void entity_free_resources()
 	{
 		EntityDef* entity_def = s_EntityDefs + i;
 
-		for (int j = 0; j < entity_def->path_len; j++)
-		{
-			free(entity_def->path[j]);
-		}
-
 		if (NULL != entity_def->path)
 		{
 			free(entity_def->path);
 		}
+
 		if (NULL != entity_def->collidable2D)
 		{
 			if (NULL != entity_def->collidable2D->collision_box)
@@ -358,5 +350,3 @@ void entity_free_resources()
 
 	free(s_EntityDefs);
 }
-
-// ----------------------- PUBLIC FUNCTIONS END ----------------------- //

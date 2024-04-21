@@ -26,7 +26,7 @@ typedef enum EntityType
 typedef struct EntityDef
 {
 	enum EntityType   type;
-	PathSegment**     path;
+	PathSegment*      path;
 	int               path_idx;
 	int               path_len;
 	enum EntityState  state;
