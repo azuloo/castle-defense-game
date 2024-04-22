@@ -41,6 +41,7 @@ typedef struct EnemyWaveDef
 	EntityDef*      enemies;
 } EnemyWaveDef;
 
+int get_enemy_wave(EnemyWaveDef** dest);
 void advance_enemy_wave();
 int init_enemy_waves(int amount);
 int set_enemy_waves_cnf(EnemyWaveCnf* cnf, int amount);

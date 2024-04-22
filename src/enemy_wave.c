@@ -1,5 +1,6 @@
 #include "enemy_wave.h"
 #include "entity.h"
+#include "physics.h"
 #include "utils.h"
 #include "map/map_mgr.h"
 #include "global_defs.h"
@@ -18,17 +19,6 @@ static EntityType s_EnemyTypes[]       = {
 	EntityType_Square,
 	EntityType_Triangle,
 };
-
-static int get_enemy_wave(EnemyWaveDef** dest)
-{
-	CHECK_EXPR_FAIL_RET_TERMINATE(s_CurrentWaveIdx < s_EnemyWavesAmount, "[enemy_wave]: Maximum wave capacity is reached.");
-	EnemyWaveDef* enemy_wave = s_EnemyWaves + s_CurrentWaveIdx;
-	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemy_wave, "[enemy_wave]: Enemy wave is not allocated.");
-
-	*dest = enemy_wave;
-
-	return 0;
-}
 
 static int reset_data()
 {
@@ -57,21 +47,21 @@ static int fill_enemies_data()
 	EntityDef* enemies = malloc(enemy_wave->cnf.enemies_amount * sizeof *enemies);
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemies, "[enemy_wave]: Failed to allocate sufficient chunk of memory for enemies.");
 
-	enemy_wave->enemies_left    = enemy_wave->cnf.enemies_amount;
-	enemy_wave->enemies         = enemies;
+	enemy_wave->enemies_left = enemy_wave->cnf.enemies_amount;
+	enemy_wave->enemies = enemies;
 
-	// TODO: Check for errors
-	const PathDef* path    = map_mgr_get_path();
-	int path_len           = map_mgr_get_path_len();
-	Vec2 path_start        = map_mgr_get_path_start();
+	const PathDef* path = map_mgr_get_path();
+	int path_len = map_mgr_get_path_len();
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != path && 0 != path_len, "[enemy_wave]: Path has not been determined for the current map.");
+	Vec2 path_start = map_mgr_get_path_start();
 
-	Vec3 enemy_pos     = { { path_start.x, path_start.y, Z_DEPTH_INITIAL_ENTITY } };
-	Vec3 enemy_scale   = { { 35.f, 35.f, 1.f } };
-	Vec4 enemy_color   = COLOR_VEC_GREEN;
+	Vec3 enemy_pos = { { path_start.x, path_start.y, Z_DEPTH_INITIAL_ENTITY } };
+	Vec3 enemy_scale = { { 35.f, 35.f, 1.f } };
+	Vec4 enemy_color = COLOR_VEC_GREEN;
 
-	EnemyWaveCnf* wave_cnf         = &enemy_wave->cnf;
-	EntityDef* enemy               = NULL;
-	DrawableDef* enemy_drawable    = NULL;
+	EnemyWaveCnf* wave_cnf = &enemy_wave->cnf;
+	EntityDef* enemy = NULL;
+	DrawableDef* enemy_drawable = NULL;
 
 	for (int i = 0; i < wave_cnf->enemies_amount; i++)
 	{
@@ -89,10 +79,14 @@ static int fill_enemies_data()
 			get_drawable_def(&enemy_drawable, enemy->drawable_handle);
 			CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemy_drawable, "[enemy_wave]: Failed to get drawable for this enemy.");
 			enemy_drawable->visible = 0;
-			// TODO: Add collision layer etc.
+			
+			add_collidable2D(&enemy->collidable2D, &enemy_drawable->transform.translation, &enemy_drawable->transform.scale);
+			CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemy->collidable2D, "[enemy_wave]: Failed to add Collidable2D to the enemy obj.");
+			add_collision_layer2D(enemy->collidable2D->collision_box, CollisionLayer_Enemy);
+			add_collision_mask2D(enemy->collidable2D->collision_box, CollisionLayer_Castle);
 
-			EntityDef* enemy_slot = enemy_wave->enemies + i;
-			memcpy(enemy_slot, enemy, sizeof(EntityDef));
+			EntityDef* enemy_dest = enemy_wave->enemies + i;
+			memcpy(enemy_dest, enemy, sizeof(EntityDef));
 		}
 		break;
 
@@ -155,6 +149,17 @@ int set_enemy_waves_cnf(EnemyWaveCnf* cnf, int amount)
 		memcpy(&enemy_wave->cnf, enemy_wave_cnf_src, sizeof(EnemyWaveCnf));
 		enemy_wave->state = EnemyWaveState_Init;
 	}
+
+	return 0;
+}
+
+int get_enemy_wave(EnemyWaveDef** dest)
+{
+	CHECK_EXPR_FAIL_RET_TERMINATE(s_CurrentWaveIdx < s_EnemyWavesAmount, "[enemy_wave]: Maximum wave capacity is reached.");
+	EnemyWaveDef* enemy_wave = s_EnemyWaves + s_CurrentWaveIdx;
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemy_wave, "[enemy_wave]: Enemy wave is not allocated.");
+
+	*dest = enemy_wave;
 
 	return 0;
 }
@@ -226,16 +231,16 @@ int enemy_waves_spawn(float frameTime)
 
 	default:
 	{
-		CHECK_EXPR_FAIL_RET_TERMINATE(false, "[enemy_wave]: Unrecognized state.");
+		CHECK_EXPR_FAIL_RET_TERMINATE(false, "[enemy_wave]: Unrecognized state: %d", enemy_wave->state);
 	}
 	break;
 	}
 
+	// Move enemies along the path.
 	for (int i = 0; i < enemy_wave->spawned_count; i++)
 	{
 		EntityDef* enemy = enemy_wave->enemies + i;
-		// TODO: List idx in error message?
-		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemy, "[enemy_wave]: No enemy found with this idx.");
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemy, "[enemy_wave]: No enemy found with idx: %d", i);
 		entity_follow_path(enemy);
 	}
 }

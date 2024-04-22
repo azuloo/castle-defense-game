@@ -18,6 +18,8 @@
 #include <string.h>
 #include <stdbool.h>
 
+#define DRAW_COLLISION_BOX_BOUNDS 0
+
 int wWidth     = WINDOW_DEFAULT_RES_W;
 int wHeight    = WINDOW_DEFAULT_RES_H;
 
@@ -32,23 +34,31 @@ int s_currentTowerIdx = 0;
 EntityType s_currentTowerType = EntityType_None;
 
 #define TOWERS_AMOUNT 3
-#define ENEMIES_AMOUNT 3
 // TODO: Use map here
 EntityDef* towers[TOWERS_AMOUNT];
-EntityDef* enemies[ENEMIES_AMOUNT];
 EntityDef* castle = NULL;
 
-// TODO: Need HEAVY optimization
 static int find_enemy_with_collidable(EntityDef** dest, const Collidable2D* collidable)
 {
-	for (int i = 0; i < ENEMIES_AMOUNT; i++)
+	const EnemyWaveDef* enemy_wave = NULL;
+	get_enemy_wave(&enemy_wave);
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemy_wave, "[game]: Failed to get current enemy wave.");
+
+	EntityDef* enemies = enemy_wave->enemies;
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemies, "[game]: Enemies array is empty.");
+	int enemies_amount = enemy_wave->spawned_count;
+
+	EntityDef* enemy = NULL;
+	for (int i = 0; i < enemies_amount; i++)
 	{
-		if (NULL == enemies[i]->collidable2D || NULL == enemies[i]->collidable2D->collision_box || enemies[i]->collidable2D->handle != collidable->handle)
+		enemy = enemies + i;
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemies, "[game]: Failed to retrieve an ememy from the enemies array.");
+		if (NULL == enemy->collidable2D || NULL == enemy->collidable2D->collision_box || enemy->collidable2D->handle != collidable->handle)
 		{
 			continue;
 		}
 
-		*dest = enemies[i];
+		*dest = enemy;
 		break;
 	}
 
@@ -58,7 +68,7 @@ static int find_enemy_with_collidable(EntityDef** dest, const Collidable2D* coll
 // TODO: Need HEAVY optimization
 static int find_tower_with_collidable(EntityDef** dest, const Collidable2D* collidable)
 {
-	for (int i = 0; i < ENEMIES_AMOUNT; i++)
+	for (int i = 0; i < TOWERS_AMOUNT; i++)
 	{
 		if (NULL == towers[i]->collidable2D || NULL == towers[i]->collidable2D->collision_box || towers[i]->collidable2D->handle != collidable->handle)
 		{
@@ -99,22 +109,12 @@ static void resolve_entities_collision(EntityDef* first, EntityDef* second)
 	}
 }
 
-static void resolve_entity_road_collision(EntityDef* first, EntityDef* second)
-{
-	DrawableDef* first_drawable = NULL;
-	get_drawable_def(&first_drawable, first);
-
-	DrawableDef* second_drawable = NULL;
-	get_drawable_def(&second_drawable, second->drawable_handle);
-
-
-}
-
 static void process_collision_event_hook(Collidable2D* first, Collidable2D* second)
 {
 	EntityDef* first_entity    = NULL;
 	EntityDef* second_entity   = NULL;
 
+	// Enemy - Tower collision
 	if (first->collision_box->collision_layer & CollisionLayer_Enemy)
 	{
 		find_enemy_with_collidable(&first_entity, first);
@@ -386,37 +386,6 @@ int create_tower_entities()
 	return 0;
 }
 
-// TODO: This should be provided by the current map
-int create_enemies()
-{
-	EntityDef* circle = NULL;
-	EntityDef* square = NULL;
-	EntityDef* triangle = NULL;
-
-	draw_triangle_entity(&triangle);
-	draw_square_entity(&square);
-	draw_circle_entity(&circle);
-
-	DrawableDef* tri_drawable = NULL;
-	get_drawable_def(&tri_drawable, triangle->drawable_handle);
-	CHECK_EXPR_FAIL_RET_TERMINATE(tri_drawable != NULL, "[game]: Failed to fetch triangle drawable.");
-	add_collidable2D(&triangle->collidable2D, &tri_drawable->transform.translation, &tri_drawable->transform.scale);
-	add_collision_layer2D(triangle->collidable2D->collision_box, CollisionLayer_Enemy);
-
-	const PathDef* path = map_mgr_get_path();
-	int path_len = map_mgr_get_path_len();
-
-	add_entity_path(triangle, path, path_len);
-	add_entity_path(square, path, path_len);
-	add_entity_path(circle, path, path_len);
-
-	enemies[0] = circle;
-	enemies[1] = square;
-	enemies[2] = triangle;
-
-	return 0;
-}
-
 int main(int argc, int* argv[])
 {
 	int init_graphics_res = init_graphics();
@@ -440,8 +409,6 @@ int main(int argc, int* argv[])
 	}
 
 	create_tower_entities();
-	create_enemies();
-
 	draw_castle_entity(&castle);
 
 	DrawableDef* castle_drawable = NULL;
