@@ -1,6 +1,8 @@
 #ifndef _GLOBAL_DEFS_H
 #define _GLOBAL_DEFS_H
 
+#pragma warning(disable: 6001)
+
 #define MAX_FRAME_TIME 0.1f
 
 // Literals

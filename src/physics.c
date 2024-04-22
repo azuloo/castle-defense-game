@@ -100,7 +100,7 @@ int add_collidable2D(Collidable2D** dest, const Vec3* initial_pos, const Vec3* i
     memcpy(&collision_box2D->size, initial_size, sizeof(Vec3));
 
     // TODO: Should be configurated by client.
-#if DEBUG
+#if DRAW_COLLISION_BOX_BOUNDS
     collision_box2D->DEBUG_draw_bounds = 1;
     static const char* debug_quad_texture_path = "/res/static/textures/debug_quad.png";
 
@@ -111,7 +111,7 @@ int add_collidable2D(Collidable2D** dest, const Vec3* initial_pos, const Vec3* i
     CHECK_EXPR_FAIL_RET_TERMINATE(NULL != debug_drawable, "[entity] Failed to create drawable for debug quad.");
 
     collision_box2D->DEBUG_bounds_drawable = debug_drawable;
-#endif // DEBUG
+#endif // DRAW_COLLISION_BOX_BOUNDS
 
     collidable2D->handle            = -1;
     collidable2D->collision_box     = collision_box2D;
@@ -146,12 +146,14 @@ int move_collision_box2D(CollisionBox2D* collision_box, float pos_x, float pos_y
     collision_box->position.x = pos_x;
     collision_box->position.y = pos_y;
 
+#if DRAW_COLLISION_BOX_BOUNDS
     if (NULL != collision_box->DEBUG_bounds_drawable)
     {
         collision_box->DEBUG_bounds_drawable->transform.translation.x = pos_x;
         collision_box->DEBUG_bounds_drawable->transform.translation.y = pos_y;
         drawable_transform_ts(collision_box->DEBUG_bounds_drawable, COMMON_MODEL_UNIFORM_NAME);
     }
+#endif // DRAW_COLLISION_BOX_BOUNDS
 
     return 0;
 }
@@ -164,12 +166,14 @@ int resize_collision_box2D(CollisionBox2D* collision_box, float size_x, float si
     collision_box->size.x = size_x;
     collision_box->size.y = size_y;
 
+#if DRAW_COLLISION_BOX_BOUNDS
     if (NULL != collision_box->DEBUG_bounds_drawable)
     {
         collision_box->DEBUG_bounds_drawable->transform.scale.x = size_x;
         collision_box->DEBUG_bounds_drawable->transform.scale.y = size_y;
         drawable_transform_ts(collision_box->DEBUG_bounds_drawable, COMMON_MODEL_UNIFORM_NAME);
     }
+#endif // DRAW_COLLISION_BOX_BOUNDS
 
     return 0;
 }

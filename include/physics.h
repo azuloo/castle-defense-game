@@ -28,10 +28,10 @@ typedef struct CollisionBox2D
 	Vec3           size;
 	uint16_t       collision_layer;
 	uint16_t       collision_mask;
-#if DEBUG
+#if DRAW_COLLISION_BOX_BOUNDS
 	int            DEBUG_draw_bounds;
 	DrawableDef*   DEBUG_bounds_drawable;
-#endif // DEBUG
+#endif // DRAW_COLLISION_BOX_BOUNDS
 
 } CollisionBox2D;
 
