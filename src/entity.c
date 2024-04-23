@@ -305,12 +305,7 @@ int entity_follow_path(EntityDef* entity)
 		drawable->transform.translation.x = new_pos_x;
 		drawable->transform.translation.y = new_pos_y;
 
-		drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
-
-		if (NULL != entity->collidable2D && NULL != entity->collidable2D->collision_box)
-		{
-			move_collision_box2D(entity->collidable2D->collision_box, new_pos_x, new_pos_y);
-		}
+		move_entity(entity, new_pos_x, new_pos_y);
 	}
 
 	return 0;
