@@ -4,7 +4,8 @@
 #include "drawable_ops.h"
 #include "obj_registry.h"
 
-static PhysicsCollisionEventCbPtr s_CollisionEventCbPtr = NULL;
+static PhysicsCollisionEventCbPtr s_CollisionBeginCbPtr = NULL;
+static PhysicsCollisionEventCbPtr s_CollisionEndCbPtr = NULL;
 
 static int* s_Collidable2DHandels    = NULL;
 static int s_2DHandlesCapacity       = 16;
@@ -79,9 +80,14 @@ int is_collided_AABB(const CollisionBox2D* first, const CollisionBox2D* second)
     return x_collided && y_collided;
 }
 
-void physics_bind_collision_event_cb(PhysicsCollisionEventCbPtr cb)
+void physics_bind_collision_begind_cb(PhysicsCollisionEventCbPtr cb)
 {
-    s_CollisionEventCbPtr = cb;
+    s_CollisionBeginCbPtr = cb;
+}
+
+void physics_bind_collision_end_cb(PhysicsCollisionEventCbPtr cb)
+{
+    s_CollisionEndCbPtr = cb;
 }
 
 int add_collidable2D(Collidable2D** dest, const Vec3* initial_pos, const Vec3* initial_size)
@@ -113,9 +119,12 @@ int add_collidable2D(Collidable2D** dest, const Vec3* initial_pos, const Vec3* i
     collision_box2D->DEBUG_bounds_drawable = debug_drawable;
 #endif // DRAW_COLLISION_BOX_BOUNDS
 
-    collidable2D->handle            = -1;
-    collidable2D->collision_box     = collision_box2D;
-    collidable2D->collision_state   = CollisionState_Uncollided;
+    collidable2D->handle                 = -1;
+    collidable2D->collision_box          = collision_box2D;
+    collidable2D->collision_state        = CollisionState_Uncollided;
+    collidable2D->collisions_detected    = 0;
+
+    memset(collidable2D->collision_handles, -1, MAX_COLLISION_HANDLES * sizeof(int));
 
    *dest = collidable2D;
 
@@ -214,22 +223,79 @@ int physics_step()
             }
 
             int collides = is_collided_AABB(first_collidable->collision_box, second_collidable->collision_box);
-            if (collides && ((first_collidable->collision_state & CollisionState_Uncollided) && (second_collidable->collision_state & CollisionState_Uncollided)))
+            if (collides)
             {
-                if (NULL != s_CollisionEventCbPtr)
+                if (first_collidable->collisions_detected < MAX_COLLISION_HANDLES && second_collidable->collisions_detected < MAX_COLLISION_HANDLES)
                 {
-                    first_collidable->collision_state  = CollisionState_Collided;
-                    second_collidable->collision_state = CollisionState_Collided;
-                    (*s_CollisionEventCbPtr)(first_collidable, second_collidable);
+                    bool already_collides = false;
+                    for (int i = 0; i < first_collidable->collisions_detected; i++)
+                    {
+                        int collidable_handle = first_collidable->collision_handles[i];
+                        if (second_collidable->handle == collidable_handle)
+                        {
+                            already_collides = true;
+                            break;
+                        }
+                    }
+
+                    if (!already_collides)
+                    {
+                        first_collidable->collision_handles[first_collidable->collisions_detected] = second_collidable->handle;
+                        first_collidable->collisions_detected += 1;
+
+                        second_collidable->collision_handles[second_collidable->collisions_detected] = first_collidable->handle;
+                        second_collidable->collisions_detected += 1;
+                        
+                        if (NULL != s_CollisionBeginCbPtr)
+                        {
+                            (*s_CollisionBeginCbPtr)(first_collidable, second_collidable);
+                        }
+                    }
                 }
             }
-            else if (!collides && ((first_collidable->collision_state & CollisionState_Collided) && (second_collidable->collision_state & CollisionState_Collided)))
+            else
             {
-                if (NULL != s_CollisionEventCbPtr)
+                if (first_collidable->collisions_detected == 0 || second_collidable->collisions_detected == 0)
                 {
-                    first_collidable->collision_state  = CollisionState_Uncollided;
-                    second_collidable->collision_state = CollisionState_Uncollided;
-                    (*s_CollisionEventCbPtr)(first_collidable, second_collidable);
+                    continue;
+                }
+
+                bool trigger_uncollided_first = false;
+                for (int i = 0; i < first_collidable->collisions_detected; i++)
+                {
+                    int collidable_handle = first_collidable->collision_handles[i];
+                    if (second_collidable->handle == collidable_handle)
+                    {
+                        trigger_uncollided_first = true;
+
+                        first_collidable->collision_handles[i] = -1;
+                        first_collidable->collisions_detected -= 1;
+
+                        break;
+                    }
+                }
+
+                bool trigger_uncollided_second = false;
+                for (int i = 0; i < second_collidable->collisions_detected; i++)
+                {
+                    int collidable_handle = second_collidable->collision_handles[i];
+                    if (first_collidable->handle == collidable_handle)
+                    {
+                        trigger_uncollided_second = true;
+
+                        second_collidable->collision_handles[i] = -1;
+                        second_collidable->collisions_detected -= 1;
+
+                        break;
+                    }
+                }
+
+                if (trigger_uncollided_first && trigger_uncollided_second)
+                {
+                    if (NULL != s_CollisionEndCbPtr)
+                    {
+                        (*s_CollisionEndCbPtr)(first_collidable, second_collidable);
+                    }
                 }
             }
         }

@@ -33,9 +33,9 @@ int s_buildingModeEnabled = 0;
 int s_currentTowerIdx = 0;
 EntityType s_currentTowerType = EntityType_None;
 
-#define TOWERS_AMOUNT 3
+#define TOWER_TYPES_AMOUNT 3
 // TODO: Use map here
-EntityDef* towers[TOWERS_AMOUNT];
+EntityDef* towers[TOWER_TYPES_AMOUNT];
 EntityDef* castle = NULL;
 
 static int find_enemy_with_collidable(EntityDef** dest, const Collidable2D* collidable)
@@ -68,7 +68,7 @@ static int find_enemy_with_collidable(EntityDef** dest, const Collidable2D* coll
 // TODO: Need HEAVY optimization
 static int find_tower_with_collidable(EntityDef** dest, const Collidable2D* collidable)
 {
-	for (int i = 0; i < TOWERS_AMOUNT; i++)
+	for (int i = 0; i < TOWER_TYPES_AMOUNT; i++)
 	{
 		if (NULL == towers[i]->collidable2D || NULL == towers[i]->collidable2D->collision_box || towers[i]->collidable2D->handle != collidable->handle)
 		{
@@ -109,12 +109,13 @@ static void resolve_entities_collision(EntityDef* first, EntityDef* second)
 	}
 }
 
-static void process_collision_event_hook(Collidable2D* first, Collidable2D* second)
+// TODO: Code duplication (function - process_collision_end_hook())
+static void process_collision_begin_hook(Collidable2D* first, Collidable2D* second)
 {
 	EntityDef* first_entity    = NULL;
 	EntityDef* second_entity   = NULL;
 
-	// Enemy - Tower collision
+	// Enemy - Tower collision.
 	if (first->collision_box->collision_layer & CollisionLayer_Enemy)
 	{
 		find_enemy_with_collidable(&first_entity, first);
@@ -147,7 +148,74 @@ static void process_collision_event_hook(Collidable2D* first, Collidable2D* seco
 		return;
 	}
 
-	// Tower - Road collision
+	// Tower - Road collision.
+	if (NULL != first_entity && first->collision_box->collision_layer & CollisionLayer_Tower)
+	{
+		if (second->collision_box->collision_layer & CollisionLayer_Road)
+		{
+			DrawableDef* first_drawable = NULL;
+			get_drawable_def(&first_drawable, first_entity->drawable_handle);
+
+			Vec4 color_vec = COLOR_VEC_RED;
+
+			add_uniform_vec4f(first_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
+		}
+	}
+
+	if (NULL != second_entity && second->collision_box->collision_layer & CollisionLayer_Tower)
+	{
+		if (first->collision_box->collision_layer & CollisionLayer_Road)
+		{
+			DrawableDef* second_drawable = NULL;
+			get_drawable_def(&second_drawable, second_entity->drawable_handle);
+
+			Vec4 color_vec = COLOR_VEC_RED;
+
+			add_uniform_vec4f(second_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
+		}
+	}
+}
+
+// TODO: Code duplication (function - process_collision_begin_hook())
+static void process_collision_end_hook(Collidable2D* first, Collidable2D* second)
+{
+	EntityDef* first_entity = NULL;
+	EntityDef* second_entity = NULL;
+
+	// Enemy - Tower collision.
+	if (first->collision_box->collision_layer & CollisionLayer_Enemy)
+	{
+		find_enemy_with_collidable(&first_entity, first);
+	}
+	else if (first->collision_box->collision_layer & CollisionLayer_Tower)
+	{
+		find_tower_with_collidable(&first_entity, first);
+	}
+	else if (first->collision_box->collision_layer & CollisionLayer_Castle)
+	{
+		first_entity = castle;
+	}
+
+	if (second->collision_box->collision_layer & CollisionLayer_Enemy)
+	{
+		find_enemy_with_collidable(&second_entity, second);
+	}
+	else if (second->collision_box->collision_layer & CollisionLayer_Tower)
+	{
+		find_tower_with_collidable(&second_entity, second);
+	}
+	else if (second->collision_box->collision_layer & CollisionLayer_Castle)
+	{
+		second_entity = castle;
+	}
+
+	if (NULL != first_entity && NULL != second_entity)
+	{
+		resolve_entities_collision(first_entity, second_entity);
+		return;
+	}
+
+	// Tower - Road collision.
 	if (NULL != first_entity && first->collision_box->collision_layer & CollisionLayer_Tower)
 	{
 		if (second->collision_box->collision_layer & CollisionLayer_Road)
@@ -156,11 +224,6 @@ static void process_collision_event_hook(Collidable2D* first, Collidable2D* seco
 			get_drawable_def(&first_drawable, first_entity->drawable_handle);
 
 			Vec4 color_vec = COLOR_VEC_GREEN;
-
-			if (first->collision_state & CollisionState_Collided)
-			{
-				color_vec = COLOR_VEC_RED;
-			}
 
 			add_uniform_vec4f(first_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
 		}
@@ -174,11 +237,6 @@ static void process_collision_event_hook(Collidable2D* first, Collidable2D* seco
 			get_drawable_def(&second_drawable, second_entity->drawable_handle);
 
 			Vec4 color_vec = COLOR_VEC_GREEN;
-
-			if (second->collision_state & CollisionState_Collided)
-			{
-				color_vec = COLOR_VEC_RED;
-			}
 
 			add_uniform_vec4f(second_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
 		}
@@ -213,7 +271,7 @@ static void process_key_hook(GWindow* window, int key, int scancode, int action,
 		s_buildingModeEnabled = 1;
 		DrawableDef* tower_drawable = NULL;
 
-		for (int i = 0; i < TOWERS_AMOUNT; i++)
+		for (int i = 0; i < TOWER_TYPES_AMOUNT; i++)
 		{
 			get_drawable_def(&tower_drawable, towers[i]->drawable_handle);
 			tower_drawable->visible = 0;
@@ -398,7 +456,8 @@ int main(int argc, int* argv[])
 	bind_window_resize_fn(&window_resize_hook);
 	bind_key_pressed_cb(&process_key_hook);
 	bind_mouse_button_cb(&process_mouse_button_hook);
-	physics_bind_collision_event_cb(&process_collision_event_hook);
+	physics_bind_collision_begind_cb(&process_collision_begin_hook);
+	physics_bind_collision_end_cb(&process_collision_end_hook);
 
 	map_mgr_init();
 
@@ -446,7 +505,7 @@ int main(int argc, int* argv[])
 		{
 			graphics_get_cursor_pos(&cursor_xpos, &cursor_ypos);
 
-			CHECK_EXPR_FAIL_RET_TERMINATE(s_currentTowerIdx < TOWERS_AMOUNT, "[game]: currentTowerIdx is greater than towers amount.");
+			CHECK_EXPR_FAIL_RET_TERMINATE(s_currentTowerIdx < TOWER_TYPES_AMOUNT, "[game]: currentTowerIdx is greater than towers amount.");
 
 			EntityDef* tower_entity = towers[s_currentTowerIdx];
 			DrawableDef* tower_drawable = NULL;

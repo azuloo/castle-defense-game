@@ -4,6 +4,8 @@
 #include "lin_alg.h"
 #include "global_decl.h"
 
+#define MAX_COLLISION_HANDLES 16
+
 enum PhysicsCollisionLayer
 {
 	CollisionLayer_None       = 0,
@@ -40,11 +42,15 @@ typedef struct Collidable2D
 	int               handle;
 	CollisionBox2D*   collision_box;
 	uint8_t           collision_state;
-};
+	int               collision_handles[MAX_COLLISION_HANDLES];
+	int               collisions_detected;
+} Collidable2D;
 
 typedef void (*PhysicsCollisionEventCbPtr)(Collidable2D* first, Collidable2D* second);
 
-void physics_bind_collision_event_cb(PhysicsCollisionEventCbPtr cb);
+void physics_bind_collision_begind_cb(PhysicsCollisionEventCbPtr cb);
+void physics_bind_collision_end_cb(PhysicsCollisionEventCbPtr cb);
+
 // ! Allocates memory on heap !
 int add_collidable2D(Collidable2D** dest, const Vec3* initial_pos, const Vec3* initial_size);
 void add_collision_layer2D(CollisionBox2D* collision_box, uint16_t layer);
