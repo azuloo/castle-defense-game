@@ -245,6 +245,9 @@ int physics_step()
 
                         second_collidable->collision_handles[second_collidable->collisions_detected] = first_collidable->handle;
                         second_collidable->collisions_detected += 1;
+
+                        first_collidable->collision_state = CollisionState_Collided;
+                        second_collidable->collision_state = CollisionState_Collided;
                         
                         if (NULL != s_CollisionBeginCbPtr)
                         {
@@ -292,6 +295,9 @@ int physics_step()
 
                 if (trigger_uncollided_first && trigger_uncollided_second)
                 {
+                    first_collidable->collision_state = CollisionState_Uncollided;
+                    second_collidable->collision_state = CollisionState_Uncollided;
+
                     if (NULL != s_CollisionEndCbPtr)
                     {
                         (*s_CollisionEndCbPtr)(first_collidable, second_collidable);
