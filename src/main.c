@@ -26,12 +26,14 @@ int wHeight    = WINDOW_DEFAULT_RES_H;
 float dt       = 0.0f;  // delta time
 float lft      = 0.0f;  // last frame time
 
-double cursor_xpos = 0.f;
-double cursor_ypos = 0.f;
+static double s_CursorXPos = 0.f;
+static double s_CursorYPos = 0.f;
 
-int s_buildingModeEnabled = 0;
-int s_currentTowerIdx = 0;
-EntityType s_currentTowerType = EntityType_None;
+static int s_BuildingModeEnabled = 0;
+static int s_CurrentTowerIdx = 0;
+static EntityType s_CurrentTowerType = EntityType_None;
+
+static Vec3 s_EnemyScale = { { 35.f, 35.f, 1.f } };
 
 #define TOWER_TYPES_AMOUNT 3
 // TODO: Use map here
@@ -65,7 +67,6 @@ static int find_enemy_with_collidable(EntityDef** dest, const Collidable2D* coll
 	return 0;
 }
 
-// TODO: Need HEAVY optimization
 static int find_tower_with_collidable(EntityDef** dest, const Collidable2D* collidable)
 {
 	for (int i = 0; i < TOWER_TYPES_AMOUNT; i++)
@@ -250,25 +251,25 @@ static void process_key_hook(GWindow* window, int key, int scancode, int action,
 	if (key == K_1 && action == KEY_PRESS)
 	{
 		key_pressed = true;
-		s_currentTowerIdx = 0;
-		s_currentTowerType = EntityType_Square;
+		s_CurrentTowerIdx = 0;
+		s_CurrentTowerType = EntityType_Square;
 	}
 	if (key == K_2 && action == KEY_PRESS)
 	{
 		key_pressed = true;
-		s_currentTowerIdx = 1;
-		s_currentTowerType = EntityType_Circle;
+		s_CurrentTowerIdx = 1;
+		s_CurrentTowerType = EntityType_Circle;
 	}
 	if (key == K_3 && action == KEY_PRESS)
 	{
 		key_pressed = true;
-		s_currentTowerIdx = 2;
-		s_currentTowerType = EntityType_Triangle;
+		s_CurrentTowerIdx = 2;
+		s_CurrentTowerType = EntityType_Triangle;
 	}
 
 	if (key_pressed)
 	{
-		s_buildingModeEnabled = 1;
+		s_BuildingModeEnabled = 1;
 		DrawableDef* tower_drawable = NULL;
 
 		for (int i = 0; i < TOWER_TYPES_AMOUNT; i++)
@@ -277,42 +278,40 @@ static void process_key_hook(GWindow* window, int key, int scancode, int action,
 			tower_drawable->visible = 0;
 		}
 
-		get_drawable_def(&tower_drawable, towers[s_currentTowerIdx]->drawable_handle);
+		get_drawable_def(&tower_drawable, towers[s_CurrentTowerIdx]->drawable_handle);
 		tower_drawable->visible = 1;
 	}
 }
 
 static void process_mouse_button_hook(GWindow* window, int button, int action, int mods)
 {
-	if (button == MOUSE_BUTTON_LEFT && action == KEY_PRESS && s_buildingModeEnabled)
+	if (button == MOUSE_BUTTON_LEFT && action == KEY_PRESS && s_BuildingModeEnabled)
 	{
 		// Spawn a tower only if it's not colliding with anything.
-		if (NULL != towers[s_currentTowerIdx]->collidable2D && towers[s_currentTowerIdx]->collidable2D->collision_state & CollisionState_Uncollided)
+		if (NULL != towers[s_CurrentTowerIdx]->collidable2D && towers[s_CurrentTowerIdx]->collidable2D->collision_state & CollisionState_Uncollided)
 		{
 			EntityDef* entity = NULL;
 
-			// TODO: Common data; move
-			Vec3 sq_pos = { { cursor_xpos, wHeight - cursor_ypos, Z_DEPTH_INITIAL_ENTITY } };
-			Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
-			Vec4 sq_color = COLOR_VEC_GREEN;
+			Vec3 enemy_pos = { { s_CursorXPos, wHeight - s_CursorYPos, Z_DEPTH_INITIAL_ENTITY } };
+			Vec4 enemy_color = COLOR_VEC_GREEN;
 
-			switch (s_currentTowerType)
+			switch (s_CurrentTowerType)
 			{
 			case EntityType_Square:
 			{
-				add_entity(EntityType_Square, &entity, &sq_pos, &sq_scale, &sq_color);
+				add_entity(EntityType_Square, &entity, &enemy_pos, &s_EnemyScale, &enemy_color);
 			}
 			break;
 
 			case EntityType_Circle:
 			{
-				add_entity(EntityType_Circle, &entity, &sq_pos, &sq_scale, &sq_color);
+				add_entity(EntityType_Circle, &entity, &enemy_pos, &s_EnemyScale, &enemy_color);
 			}
 			break;
 
 			case EntityType_Triangle:
 			{
-				add_entity(EntityType_Triangle, &entity, &sq_pos, &sq_scale, &sq_color);
+				add_entity(EntityType_Triangle, &entity, &enemy_pos, &s_EnemyScale, &enemy_color);
 			}
 			break;
 			default:
@@ -332,7 +331,7 @@ static void process_mouse_button_hook(GWindow* window, int button, int action, i
 				add_collision_layer2D(entity->collidable2D->collision_box, CollisionLayer_Tower);
 			}
 
-			s_buildingModeEnabled = !s_buildingModeEnabled;
+			s_BuildingModeEnabled = !s_BuildingModeEnabled;
 		}
 	}
 }
@@ -501,13 +500,13 @@ int main(int argc, int* argv[])
 
 		enemy_waves_spawn(dt);
 
-		if (s_buildingModeEnabled)
+		if (s_BuildingModeEnabled)
 		{
-			graphics_get_cursor_pos(&cursor_xpos, &cursor_ypos);
+			graphics_get_cursor_pos(&s_CursorXPos, &s_CursorYPos);
 
-			CHECK_EXPR_FAIL_RET_TERMINATE(s_currentTowerIdx < TOWER_TYPES_AMOUNT, "[game]: currentTowerIdx is greater than towers amount.");
+			CHECK_EXPR_FAIL_RET_TERMINATE(s_CurrentTowerIdx < TOWER_TYPES_AMOUNT, "[game]: currentTowerIdx is greater than towers amount.");
 
-			EntityDef* tower_entity = towers[s_currentTowerIdx];
+			EntityDef* tower_entity = towers[s_CurrentTowerIdx];
 			DrawableDef* tower_drawable = NULL;
 
 			get_drawable_def(&tower_drawable, tower_entity->drawable_handle);
@@ -518,9 +517,9 @@ int main(int argc, int* argv[])
 				float tower_scale_y = tower_drawable->init_transform.scale.y * wHeight / WINDOW_DEFAULT_RES_H;
 				// TODO: Resize all entities
 				resize_entity(tower_entity, tower_scale_x, tower_scale_y);
-				move_entity(tower_entity, cursor_xpos, wHeight - cursor_ypos);
+				move_entity(tower_entity, s_CursorXPos, wHeight - s_CursorYPos);
 				// TODO: Add error checking
-				move_collision_box2D(tower_entity->collidable2D->collision_box, cursor_xpos, wHeight - cursor_ypos);
+				move_collision_box2D(tower_entity->collidable2D->collision_box, s_CursorXPos, wHeight - s_CursorYPos);
 			}
 		}
 
