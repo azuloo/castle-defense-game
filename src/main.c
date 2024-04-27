@@ -443,6 +443,22 @@ int create_tower_entities()
 	return 0;
 }
 
+static int add_castle()
+{
+	draw_castle_entity(&castle);
+
+	DrawableDef* castle_drawable = NULL;
+	get_drawable_def(&castle_drawable, castle->drawable_handle);
+	CHECK_EXPR_FAIL_RET_TERMINATE(castle_drawable != NULL, "[game]: Failed to fetch castle drawable.");
+
+	add_collidable2D(&castle->collidable2D, &castle_drawable->transform.translation, &castle_drawable->transform.scale);
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != castle->collidable2D, "[game]: Failed to add collidable2D for castle.");
+	add_collision_layer2D(castle->collidable2D->collision_box, CollisionLayer_Castle);
+	add_collision_mask2D(castle->collidable2D->collision_box, CollisionLayer_Enemy);
+
+	return 0;
+}
+
 int main(int argc, int* argv[])
 {
 	int init_graphics_res = init_graphics();
@@ -467,20 +483,7 @@ int main(int argc, int* argv[])
 	}
 
 	create_tower_entities();
-	draw_castle_entity(&castle);
-
-	DrawableDef* castle_drawable = NULL;
-	get_drawable_def(&castle_drawable, castle->drawable_handle);
-	CHECK_EXPR_FAIL_RET_TERMINATE(castle_drawable != NULL, "[game]: Failed to fetch castle drawable.");
-
-	// TODO: Add error checks
-	add_collidable2D(&castle->collidable2D, &castle_drawable->transform.translation, &castle_drawable->transform.scale);
-	add_collision_layer2D(castle->collidable2D->collision_box, CollisionLayer_Castle);
-	add_collision_mask2D(castle->collidable2D->collision_box, CollisionLayer_Enemy);
-
-	const float time_step = 250;
-	float path_delay_sq = 250;
-	float path_delay_cir = 500;
+	add_castle();
 
 	init_ft();
 	load_ascii_chars();
@@ -503,10 +506,10 @@ int main(int argc, int* argv[])
 		if (s_BuildingModeEnabled)
 		{
 			graphics_get_cursor_pos(&s_CursorXPos, &s_CursorYPos);
-
 			CHECK_EXPR_FAIL_RET_TERMINATE(s_CurrentTowerIdx < TOWER_TYPES_AMOUNT, "[game]: currentTowerIdx is greater than towers amount.");
 
 			EntityDef* tower_entity = towers[s_CurrentTowerIdx];
+			CHECK_EXPR_FAIL_RET_TERMINATE(NULL != tower_entity, "[game]: Tower entity is empty.");
 			DrawableDef* tower_drawable = NULL;
 
 			get_drawable_def(&tower_drawable, tower_entity->drawable_handle);
@@ -518,7 +521,6 @@ int main(int argc, int* argv[])
 				// TODO: Resize all entities
 				resize_entity(tower_entity, tower_scale_x, tower_scale_y);
 				move_entity(tower_entity, s_CursorXPos, wHeight - s_CursorYPos);
-				// TODO: Add error checking
 				move_collision_box2D(tower_entity->collidable2D->collision_box, s_CursorXPos, wHeight - s_CursorYPos);
 			}
 		}
