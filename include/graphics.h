@@ -133,6 +133,7 @@ int create_texture_2D(unsigned char* data, int width, int height, unsigned int* 
 int add_uniform_mat4f(unsigned int shader_prog, const char* uniform_name, const Mat4* mat);
 int add_uniform_vec4f(unsigned int shader_prog, const char* uniform_name, const Vec4* vec);
 int add_uniform_vec3f(unsigned int shader_prog, const char* uniform_name, const Vec3* vec);
+int add_uniform_1f(unsigned int shader_prog, const char* uniform_name, float val);
 int add_texture_2D(DrawableDef* drawable, const char* texture_path, int texture_type);
 int setup_drawable(DrawableDef* drawable, const DrawBufferData* buf_data, const char* vertex_shader_path, const char* fragment_shader_path);
 int register_drawable_attribute(DrawableDef* drawable, unsigned int size);

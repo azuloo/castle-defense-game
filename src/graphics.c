@@ -466,6 +466,17 @@ int add_uniform_vec3f(unsigned int shader_prog, const char* uniform_name, const 
 	return 0;
 }
 
+int add_uniform_1f(unsigned int shader_prog, const char* uniform_name, float val)
+{
+	ASSERT_GRAPHICS_INITIALIZED
+
+	glUseProgram(shader_prog);
+	unsigned int transformLoc = glGetUniformLocation(shader_prog, uniform_name);
+	glUniform1f(transformLoc, val);
+
+	return 0;
+}
+
 int add_texture_2D(DrawableDef* drawable, const char* texture_path, int texture_type)
 {
 	static char path_buf[256];
