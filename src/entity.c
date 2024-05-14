@@ -179,9 +179,9 @@ int move_entity(EntityDef* dest, float pos_x, float pos_y)
 	drawable->transform.translation.x = pos_x;
 	drawable->transform.translation.y = pos_y;
 
-	if (NULL != dest->collidable2D && NULL != NULL != dest->collidable2D->collision_box)
+	if (NULL != dest->collidable2D)
 	{
-		move_collision_box2D(dest->collidable2D->collision_box, pos_x, pos_y);
+		move_collision_box2D(&dest->collidable2D->collision_box, pos_x, pos_y);
 	}
 
 	drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
@@ -198,9 +198,9 @@ int resize_entity(EntityDef* dest, float scale_x, float scale_y)
 	drawable->transform.scale.x = scale_x;
 	drawable->transform.scale.y = scale_y;
 
-	if (NULL != dest->collidable2D && NULL != dest->collidable2D->collision_box)
+	if (NULL != dest->collidable2D)
 	{
-		resize_collision_box2D(dest->collidable2D->collision_box, scale_x, scale_y);
+		resize_collision_box2D(&dest->collidable2D->collision_box, scale_x, scale_y);
 	}
 
 	drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
@@ -330,16 +330,6 @@ void entity_free_resources()
 		if (NULL != entity_def->path)
 		{
 			free(entity_def->path);
-		}
-
-		if (NULL != entity_def->collidable2D)
-		{
-			if (NULL != entity_def->collidable2D->collision_box)
-			{
-				free(entity_def->collidable2D->collision_box);
-			}
-
-			free(entity_def->collidable2D);
 		}
 	}
 

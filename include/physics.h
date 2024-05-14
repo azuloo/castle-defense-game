@@ -40,7 +40,7 @@ typedef struct CollisionBox2D
 typedef struct Collidable2D
 {
 	int               handle;
-	CollisionBox2D*   collision_box;
+	CollisionBox2D    collision_box;
 	uint8_t           collision_state;
 	int               collision_handles[MAX_COLLISION_HANDLES];
 	int               collisions_detected;
@@ -60,5 +60,6 @@ int resize_collision_box2D(CollisionBox2D* collision_box, float size_x, float si
 
 int is_collided_AABB(const CollisionBox2D* first, const CollisionBox2D* second);
 int physics_step();
+void physics_free_resources();
 
 #endif // _PHYSICS_H

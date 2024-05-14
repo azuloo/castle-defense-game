@@ -124,7 +124,7 @@ static int initial_add_path()
 
 		// TODO: Add NULL check
 		add_collidable2D(&s_PathDef[i].collidable2D, &drawable->transform.translation, &drawable->transform.scale);
-		add_collision_layer2D(s_PathDef[i].collidable2D->collision_box, CollisionLayer_Road);
+		add_collision_layer2D(&s_PathDef[i].collidable2D->collision_box, CollisionLayer_Road);
 	}
 
 	return 0;
@@ -137,18 +137,6 @@ static Vec2 get_path_start()
 
 static void initial_free_resources()
 {
-	for (int i = 0; i < INTIAL_MAP_PATH_LEN; i++)
-	{
-		if (NULL != s_PathDef[i].collidable2D)
-		{
-			if (NULL != s_PathDef[i].collidable2D->collision_box)
-			{
-				free(s_PathDef[i].collidable2D->collision_box);
-			}
-
-			free(s_PathDef[i].collidable2D);
-		}
-	}
 }
 
 static const PathDef* initial_get_path()
