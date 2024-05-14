@@ -23,6 +23,15 @@ static int alloc_collidable2D_handles_arr()
     return 0;
 }
 
+static void refresh_drawable_addrs()
+{
+    for (int i = 0; i < s_2DCollidablesCount; i++)
+    {
+        Collidable2D* collidable2D = s_Collidables2D + i;
+        refresh_obj_addr(collidable2D->handle, collidable2D);
+    }
+}
+
 int is_collided_AABB(const CollisionBox2D* first, const CollisionBox2D* second)
 {
     if (NULL == first || NULL == second)
@@ -60,6 +69,8 @@ int add_collidable2D(Collidable2D** dest, const Vec3* initial_pos, const Vec3* i
     {
         int alloc_handles_res = alloc_collidable2D_handles_arr();
         CHECK_EXPR_FAIL_RET_TERMINATE(alloc_handles_res != TERMINATE_ERR_CODE, "[physics]: Failed to create collidable 2D collidables arr.");
+    
+        refresh_drawable_addrs();
     }
 
     Collidable2D* collidable2D                       = s_Collidables2D + s_2DCollidablesCount;

@@ -17,8 +17,6 @@ static int alloc_registry()
 	return 0;
 }
 
-// ----------------------- PUBLIC FUNCTIONS ----------------------- //
-
 void registry_free()
 {
 	if (NULL == s_Registry)
@@ -47,9 +45,17 @@ int register_obj(void* obj, int* handle)
 void* get_obj_from_registry(int handle)
 {
 	CHECK_EXPR_FAIL_RET_NULL(NULL != s_Registry, "[obj_registry]: Registry was not initialized.");
-	CHECK_EXPR_FAIL_RET_NULL(handle < s_RegistryObjCount || handle >= s_RegistryObjCount, "[obj_registry]: Handle value is out of bounds.");
+	CHECK_EXPR_FAIL_RET_NULL(handle >= 0 && handle < s_RegistryObjCount, "[obj_registry]: Handle value is out of bounds.");
 
 	return s_Registry[handle];
 }
 
-// ----------------------- PUBLIC FUNCTIONS END ----------------------- //
+int refresh_obj_addr(int handle, void* new_addr)
+{
+	CHECK_EXPR_FAIL_RET_NULL(NULL != s_Registry, "[obj_registry]: Registry was not initialized.");
+	CHECK_EXPR_FAIL_RET_NULL(handle >= 0 && handle < s_RegistryObjCount, "[obj_registry]: Count value is out of bounds.");
+
+	s_Registry[handle] = new_addr;
+
+	return 0;
+}

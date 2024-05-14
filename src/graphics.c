@@ -258,6 +258,15 @@ static int create_drawable_attributes(DrawableDef* drawable)
 	return add_drawable_attributes_res;
 }
 
+static void refresh_drawable_addrs()
+{
+	for (int i = 0; i < s_DrawableNum; i++)
+	{
+		DrawableDef* drawable = s_DrawableData + i;
+		refresh_obj_addr(drawable->handle, drawable);
+	}
+}
+
 static DrawableDef* create_drawable_def()
 {
 	// TODO: How do we solve pointers invalidation problem? (use Registry)
@@ -265,6 +274,8 @@ static DrawableDef* create_drawable_def()
 	{
 		int alloc_drawable_res = alloc_drawable_arr();
 		CHECK_EXPR_FAIL_RET_NULL(TERMINATE_ERR_CODE != alloc_drawable_res, "[graphics]: Failed to create drawable def.");
+
+		refresh_drawable_addrs();
 	}
 
 	DrawableDef* drawable             = s_DrawableData + s_DrawableNum;
