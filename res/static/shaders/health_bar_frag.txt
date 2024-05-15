@@ -1,0 +1,13 @@
+#version 330 core
+out vec4 FragColor;
+
+in vec2 TexCoord;
+
+uniform float uFilled;
+uniform sampler2D uTexture;
+
+void main() {
+    float offset = TexCoord.x < uFilled ? 0.0 : 0.5;
+    vec2 texCoordOut = vec2(TexCoord.x, TexCoord.y / 2 + offset); // horizontal hb
+    FragColor = texture(uTexture, texCoordOut);
+};
