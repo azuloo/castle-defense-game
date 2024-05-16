@@ -24,6 +24,8 @@ extern int wHeight;
 #define DRAW_MODE_DYNAMIC    GL_DYNAMIC_DRAW
 #define DRAW_MODE_STREAM     GL_STREAM_DRAW
 
+#define DEFAULT_UNPACK_ALIGNMENT 4
+
 int check_graphics_initialized();
 #define ASSERT_GRAPHICS_INITIALIZED assert( check_graphics_initialized() == 1 );
 

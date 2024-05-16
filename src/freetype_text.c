@@ -81,6 +81,8 @@ int load_ascii_chars()
 		s_Chars[c] = character;
 	}
 
+	set_unpack_alignment(DEFAULT_UNPACK_ALIGNMENT);
+
 	return 0;
 }
 
