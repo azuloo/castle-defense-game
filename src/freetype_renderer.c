@@ -1,6 +1,5 @@
 #include "freetype_renderer.h"
 #include "graphics.h"
-#include "graphics_defs.h"
 #include "freetype_text.h"
 #include "utils.h"
 

@@ -4,7 +4,6 @@
 #include "utils.h"
 #include "lin_alg.h"
 #include "global_defs.h"
-#include "graphics_defs.h"
 #include "drawable_ops.h"
 #include "physics.h"
 #include "enemy_wave.h"

@@ -5,7 +5,6 @@
 #include "lin_alg.h"
 #include "key_bindings.h"
 #include "obj_registry.h"
-#include "graphics_defs.h"
 #include "freetype_text.h"
 #include "freetype_renderer.h"
 #include "global_defs.h"

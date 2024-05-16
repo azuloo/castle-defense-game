@@ -4,7 +4,6 @@
 #include "utils.h"
 #include "obj_registry.h"
 #include "global_defs.h"
-#include "graphics_defs.h"
 #include "drawable_ops.h"
 #include "file_reader.h"
 #include "map/map_mgr.h"

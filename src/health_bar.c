@@ -2,7 +2,6 @@
 #include "graphics.h"
 #include "drawable_ops.h"
 #include "global_defs.h"
-#include "graphics_defs.h"
 #include "utils.h"
 
 static const char* s_HealthBarOuterTexture = "/res/static/textures/health_bar.png";

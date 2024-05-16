@@ -6,10 +6,19 @@
 #include "lin_alg.h"
 #include "global_decl.h"
 
+extern int wWidth;
+extern int wHeight;
+
 #define CLOSE_GLFW_WINDOW 1
 #define LIB_MAJOR_VER 3
 #define LIB_MINOR_VER 3
 #define LIB_DEFUALT_PROFILE GLFW_OPENGL_CORE_PROFILE
+
+#define WINDOW_DEFAULT_RES_W 1920
+#define WINDOW_DEFAULT_RES_H 1080
+#define WINDOW_DEFUALT_NAME "Application"
+
+#define COMMON_ORTHO_MAT ortho(0.f, (float)wWidth, 0.f, (float)wHeight, -1.f, 1.f)
 
 #define DRAW_MODE_STATIC     GL_STATIC_DRAW
 #define DRAW_MODE_DYNAMIC    GL_DYNAMIC_DRAW
