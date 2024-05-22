@@ -18,7 +18,7 @@ extern int wHeight;
 #define WINDOW_DEFAULT_RES_H 1080
 #define WINDOW_DEFUALT_NAME "Application"
 
-#define COMMON_ORTHO_MAT ortho(0.f, (float)wWidth, 0.f, (float)wHeight, -1.f, 1.f)
+#define COMMON_ORTHO_MAT ortho(0.f, WINDOW_DEFAULT_RES_W, 0.f, WINDOW_DEFAULT_RES_H, -1.f, 1.f)
 
 #define DRAW_MODE_STATIC     GL_STATIC_DRAW
 #define DRAW_MODE_DYNAMIC    GL_DYNAMIC_DRAW
