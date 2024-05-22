@@ -38,9 +38,9 @@ int get_quad_draw_buffer_data(DrawBufferData** dest)
 
 	static DrawBufferData draw_buf_data;
 	draw_buf_data.vertices = vertices;
-	draw_buf_data.vertices_len = sizeof(vertices);
+	draw_buf_data.vertices_len = sizeof(vertices) / sizeof(vertices[0]);
 	draw_buf_data.indices = indices;
-	draw_buf_data.indices_len = sizeof(indices);
+	draw_buf_data.indices_len = sizeof(indices) / sizeof(indices[0]);
 
 	*dest = &draw_buf_data;
 
