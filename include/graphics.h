@@ -140,7 +140,7 @@ void graphics_free_resources();
 void set_unpack_alignment(int align);
 
 int create_drawable(DrawableDef** dest);
-int create_texture_2D(unsigned char* data, int width, int height, unsigned int* texture, enum TextureType type);
+int create_texture_2D(unsigned char* data, int width, int height, unsigned int* texture, enum TextureType type, int* tex_params, int tex_params_amount);
 int add_uniform_mat4f(unsigned int shader_prog, const char* uniform_name, const Mat4* mat);
 int add_uniform_vec4f(unsigned int shader_prog, const char* uniform_name, const Vec4* vec);
 int add_uniform_vec3f(unsigned int shader_prog, const char* uniform_name, const Vec3* vec);

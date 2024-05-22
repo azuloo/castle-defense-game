@@ -410,18 +410,20 @@ int create_drawable(DrawableDef** dest)
 	return 0;
 }
 
-int create_texture_2D(unsigned char* data, int width, int height, unsigned int* texture, enum TextureType type)
+int create_texture_2D(unsigned char* data, int width, int height, unsigned int* texture, enum TextureType type, int* tex_params, int tex_params_amount)
 {
 	ASSERT_GRAPHICS_INITIALIZED
 
 	glGenTextures(1, texture);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, *texture);
-	// TODO: Configure filtering options
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	CHECK_EXPR_FAIL_RET_TERMINATE(tex_params_amount % 2 == 0, "[graphics]: Texture parameters should come in paris (parameter-value).");
+	for (int i = 0; i < tex_params_amount; i += 2)
+	{
+		int param_name = tex_params[i];
+		int param_value = tex_params[i+1];
+		glTexParameteri(GL_TEXTURE_2D, param_name, param_value);
+	}
 
 	switch (type)
 	{
@@ -498,7 +500,13 @@ int add_texture_2D(DrawableDef* drawable, const char* texture_path, int texture_
 
 	memset(path_buf, 0, sizeof *path_buf);
 
-	int create_texture_2D_res = create_texture_2D(img_data, width, height, &drawable->texture, texture_type);
+	static const default_tex_params[8] = {
+		GL_TEXTURE_WRAP_S, GL_REPEAT,
+		GL_TEXTURE_WRAP_T, GL_REPEAT,
+		GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR,
+		GL_TEXTURE_MAG_FILTER, GL_LINEAR
+	};
+	int create_texture_2D_res = create_texture_2D(img_data, width, height, &drawable->texture, texture_type, default_tex_params, sizeof(default_tex_params) / sizeof(default_tex_params[0]));
 	fr_free_image_resources(img_data);
 	CHECK_EXPR_FAIL_RET_TERMINATE(TERMINATE_ERR_CODE != create_texture_2D_res, "[graphics]: Failed to add env texute.");
 

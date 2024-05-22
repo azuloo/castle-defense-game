@@ -54,6 +54,13 @@ int ft_free_resources()
 
 int load_ascii_chars()
 {
+	static const tex_params[8] = {
+		GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER,
+		GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER,
+		GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR,
+		GL_TEXTURE_MAG_FILTER, GL_LINEAR
+
+	};
 	set_unpack_alignment(1);
 	// TODO: Take into account window resizing
 	for (unsigned char c = 0; c < 128; c++)
@@ -66,7 +73,7 @@ int load_ascii_chars()
 		}
 
 		unsigned int texture;
-		create_texture_2D(s_Face->glyph->bitmap.buffer, s_Face->glyph->bitmap.width, s_Face->glyph->bitmap.rows, &texture, TexType_RED);
+		create_texture_2D(s_Face->glyph->bitmap.buffer, s_Face->glyph->bitmap.width, s_Face->glyph->bitmap.rows, &texture, TexType_RED, tex_params, sizeof(tex_params) / sizeof(tex_params[0]));
 
 		Vec2i size = { { s_Face->glyph->bitmap.width, s_Face->glyph->bitmap.rows } };
 		Vec2i bearing = { { s_Face->glyph->bitmap_left, s_Face->glyph->bitmap_top } };
