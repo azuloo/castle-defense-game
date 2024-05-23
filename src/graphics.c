@@ -78,11 +78,31 @@ static unsigned int create_fragment_shader(const char** source)
 
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-	glViewport(0, 0, width, height);
+	static const float targetAr = 16.f / 9.f;
+	float windowAr = (float)width / (float)height;
+	float resAr = windowAr / targetAr;
+
+	int resWidth = width;
+	int resHeight = height;
+	int x = 0;
+	int y = 0;
+
+	if (resAr < 1.f)
+	{
+		resHeight = resWidth * 9 / 16;
+		y = (height - resHeight) / 2;
+	}
+	else
+	{
+		resWidth = resHeight * 16 / 9;
+		x = (width - resWidth) / 2;
+	}
+
+	glViewport(x, y, resWidth, resHeight);
 
 	if (NULL != window_resize_fn_ptr)
 	{
-		(*window_resize_fn_ptr)(window, width, height);
+		(*window_resize_fn_ptr)(window, x, y, resWidth, resHeight);
 	}
 }
 

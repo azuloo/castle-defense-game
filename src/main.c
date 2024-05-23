@@ -20,6 +20,8 @@
 
 #define DRAW_COLLISION_BOX_BOUNDS 0
 
+int xWOffset   = 0;
+int yWOffset   = 0;
 int wWidth     = WINDOW_DEFAULT_RES_W;
 int wHeight    = WINDOW_DEFAULT_RES_H;
 
@@ -342,8 +344,10 @@ static int should_be_terminated()
 }
 
 // TODO: Take the window param into accout
-void window_resize_hook(GWindow* window, int width, int height)
+void window_resize_hook(GWindow* window, int x, int y, int width, int height)
 {
+	xWOffset = x;
+	yWOffset = y;
 	wWidth = width;
 	wHeight = height;
 }
@@ -520,8 +524,8 @@ int main(int argc, int* argv[])
 
 			if (NULL != tower_drawable)
 			{
-				float tower_scale_x = tower_drawable->init_transform.scale.x * wWidth / WINDOW_DEFAULT_RES_W;
-				float tower_scale_y = tower_drawable->init_transform.scale.y * wHeight / WINDOW_DEFAULT_RES_H;
+				float tower_scale_x = tower_drawable->init_transform.scale.x;
+				float tower_scale_y = tower_drawable->init_transform.scale.y;
 				// TODO: Resize all entities
 				resize_entity(tower_entity, tower_scale_x, tower_scale_y);
 				move_entity(tower_entity, s_CursorXPos, wHeight - s_CursorYPos);

@@ -107,7 +107,7 @@ typedef struct DrawableDef
 
 typedef struct GLFWwindow GWindow;
 typedef void (*InputFnPtr)(GWindow* window);
-typedef void (*WindowResizeFnPtr)(GWindow* window, int width, int height);
+typedef void (*WindowResizeFnPtr)(GWindow* window, int x, int y, int width, int height);
 typedef void (*KeyCbPtr)(GWindow* window, int key, int scancode, int action, int mods);
 typedef void (*MouseButtonCbPtr)(GWindow* window, int button, int action, int mods);
 
