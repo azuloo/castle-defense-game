@@ -528,8 +528,8 @@ int main(int argc, int* argv[])
 				float tower_scale_y = tower_drawable->init_transform.scale.y;
 				// TODO: Resize all entities
 				resize_entity(tower_entity, tower_scale_x, tower_scale_y);
-				move_entity(tower_entity, s_CursorXPos, wHeight - s_CursorYPos);
-				move_collision_box2D(&tower_entity->collidable2D->collision_box, s_CursorXPos, wHeight - s_CursorYPos);
+				move_entity(tower_entity, s_CursorXPos, s_CursorYPos);
+				move_collision_box2D(&tower_entity->collidable2D->collision_box, s_CursorXPos, s_CursorYPos);
 			}
 		}
 
