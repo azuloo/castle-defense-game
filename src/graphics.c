@@ -78,11 +78,31 @@ static unsigned int create_fragment_shader(const char** source)
 
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-	glViewport(0, 0, width, height);
+	static const float targetAr = 16.f / 9.f;
+	float windowAr = (float)width / (float)height;
+	float resAr = windowAr / targetAr;
+
+	int resWidth = width;
+	int resHeight = height;
+	int x = 0;
+	int y = 0;
+
+	if (resAr < 1.f)
+	{
+		resHeight = resWidth * 9 / 16;
+		y = (height - resHeight) / 2;
+	}
+	else
+	{
+		resWidth = resHeight * 16 / 9;
+		x = (width - resWidth) / 2;
+	}
+
+	glViewport(x, y, resWidth, resHeight);
 
 	if (NULL != window_resize_fn_ptr)
 	{
-		(*window_resize_fn_ptr)(window, 0, 0, width, height);
+		(*window_resize_fn_ptr)(window, x, y, resWidth, resHeight);
 	}
 }
 
@@ -92,7 +112,6 @@ static void init_glfw()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, LIB_MAJOR_VER);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, LIB_MINOR_VER);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, LIB_DEFUALT_PROFILE);
-	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 }
 
 static void set_context_current(GLFWwindow* window)

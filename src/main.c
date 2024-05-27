@@ -294,26 +294,26 @@ static void process_mouse_button_hook(GWindow* window, int button, int action, i
 		{
 			EntityDef* entity = NULL;
 
-			Vec3 enemy_pos = { { s_CursorXPos, wHeight - s_CursorYPos, Z_DEPTH_INITIAL_ENTITY } };
-			Vec4 enemy_color = COLOR_VEC_GREEN;
+			Vec3 tower_pos = { { s_CursorXPos, wHeight - s_CursorYPos, Z_DEPTH_INITIAL_ENTITY } };
+			Vec4 tower_color = COLOR_VEC_GREEN;
 
 			switch (s_CurrentTowerType)
 			{
 			case EntityType_Square:
 			{
-				add_entity(EntityType_Square, &entity, &enemy_pos, &s_EnemyScale, &enemy_color);
+				add_entity(EntityType_Square, &entity, &tower_pos, &s_EnemyScale, &tower_color);
 			}
 			break;
 
 			case EntityType_Circle:
 			{
-				add_entity(EntityType_Circle, &entity, &enemy_pos, &s_EnemyScale, &enemy_color);
+				add_entity(EntityType_Circle, &entity, &tower_pos, &s_EnemyScale, &tower_color);
 			}
 			break;
 
 			case EntityType_Triangle:
 			{
-				add_entity(EntityType_Triangle, &entity, &enemy_pos, &s_EnemyScale, &enemy_color);
+				add_entity(EntityType_Triangle, &entity, &tower_pos, &s_EnemyScale, &tower_color);
 			}
 			break;
 			default:
@@ -528,8 +528,8 @@ int main(int argc, int* argv[])
 				float tower_scale_y = tower_drawable->init_transform.scale.y;
 				// TODO: Resize all entities
 				resize_entity(tower_entity, tower_scale_x, tower_scale_y);
-				move_entity(tower_entity, s_CursorXPos, s_CursorYPos);
-				move_collision_box2D(&tower_entity->collidable2D->collision_box, s_CursorXPos, s_CursorYPos);
+				move_entity(tower_entity, s_CursorXPos, wHeight - s_CursorYPos);
+				move_collision_box2D(&tower_entity->collidable2D->collision_box, s_CursorXPos, wHeight - s_CursorYPos);
 			}
 		}
 
