@@ -524,8 +524,10 @@ int main(int argc, int* argv[])
 
 			if (NULL != tower_drawable)
 			{
-				float tower_scale_x = tower_drawable->init_transform.scale.x;
-				float tower_scale_y = tower_drawable->init_transform.scale.y;
+				float scaleX = (float)wWidth / WINDOW_DEFAULT_RES_W;
+				float scaleY = (float)wHeight / WINDOW_DEFAULT_RES_H;
+				float tower_scale_x = tower_drawable->init_transform.scale.x * scaleX;
+				float tower_scale_y = tower_drawable->init_transform.scale.y * scaleY;
 				// TODO: Resize all entities
 				resize_entity(tower_entity, tower_scale_x, tower_scale_y);
 				move_entity(tower_entity, s_CursorXPos - xWOffset, wHeight - s_CursorYPos + yWOffset);
