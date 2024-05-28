@@ -10,7 +10,7 @@
 
 static int s_Initialized                        = 0;
 
-static GLFWwindow* window                       = NULL;
+static GLFWwindow* s_Window                       = NULL;
 static InputFnPtr input_fn_ptr                  = NULL;
 static WindowResizeFnPtr window_resize_fn_ptr   = NULL;
 
@@ -379,7 +379,7 @@ int graphics_get_cursor_pos(double* xpos, double* ypos)
 {
 	ASSERT_GRAPHICS_INITIALIZED
 
-	glfwGetCursorPos(window, xpos, ypos);
+	glfwGetCursorPos(s_Window, xpos, ypos);
 	return 0;
 }
 
@@ -392,7 +392,7 @@ int graphics_should_be_terminated()
 {
 	ASSERT_GRAPHICS_INITIALIZED
 
-	return glfwWindowShouldClose(window);
+	return glfwWindowShouldClose(s_Window);
 }
 
 void graphics_free_resources()
@@ -624,21 +624,21 @@ void bind_key_pressed_cb(KeyCbPtr ptr)
 {
 	ASSERT_GRAPHICS_INITIALIZED
 
-	glfwSetKeyCallback(window, ptr);
+	glfwSetKeyCallback(s_Window, ptr);
 }
 
 void bind_mouse_button_cb(MouseButtonCbPtr ptr)
 {
 	ASSERT_GRAPHICS_INITIALIZED
 
-	glfwSetMouseButtonCallback(window, ptr);
+	glfwSetMouseButtonCallback(s_Window, ptr);
 }
 
 int init_graphics()
 {
 	init_glfw();
-	window = create_window();
-	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != window, "[graphics]: Failed to create window.");
+	s_Window = create_window();
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != s_Window, "[graphics]: Failed to create window.");
 
 	init_glad();
 
@@ -675,7 +675,7 @@ int graphics_draw()
 
 	if (NULL != input_fn_ptr)
 	{
-		(*input_fn_ptr)(window);
+		(*input_fn_ptr)(s_Window);
 	}
 
 	glEnable(GL_DEPTH_TEST);
@@ -711,7 +711,7 @@ int graphics_draw()
 		}
 	}
 
-	glfwSwapBuffers(window);
+	glfwSwapBuffers(s_Window);
 	glfwPollEvents();
 	
 	return 0;
