@@ -122,7 +122,7 @@ static void set_context_current(GLFWwindow* window)
 static GLFWwindow* create_window()
 {
 	GLFWwindow* window = glfwCreateWindow(WINDOW_DEFAULT_RES_W, WINDOW_DEFAULT_RES_H, WINDOW_DEFUALT_NAME, NULL, NULL);
-	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != window, "[graphics]: Failed to init window.");
+	CHECK_EXPR_FAIL_RET_NULL(NULL != window, "[graphics]: Failed to init window.");
 
 	set_context_current(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
