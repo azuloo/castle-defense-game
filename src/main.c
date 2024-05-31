@@ -42,6 +42,9 @@ static Vec3 s_EnemyScale = { { 35.f, 35.f, 1.f } };
 EntityDef* towers[TOWER_TYPES_AMOUNT];
 EntityDef* castle = NULL;
 
+extern float get_window_scale_x();
+extern float get_window_scale_y();
+
 static int find_enemy_with_collidable(EntityDef** dest, const Collidable2D* collidable)
 {
 	const EnemyWaveDef* enemy_wave = NULL;
@@ -350,6 +353,8 @@ void window_resize_hook(GWindow* window, int x, int y, int width, int height)
 	yWOffset = y;
 	wWidth = width;
 	wHeight = height;
+
+	map_mgr_recalculate_path();
 }
 
 void process_input(GWindow* window)
@@ -524,14 +529,8 @@ int main(int argc, int* argv[])
 
 			if (NULL != tower_drawable)
 			{
-				float scaleX = (float)wWidth / WINDOW_DEFAULT_RES_W;
-				float scaleY = (float)wHeight / WINDOW_DEFAULT_RES_H;
-				float tower_scale_x = tower_drawable->init_transform.scale.x * scaleX;
-				float tower_scale_y = tower_drawable->init_transform.scale.y * scaleY;
-				// TODO: Resize all entities
-				resize_entity(tower_entity, tower_scale_x, tower_scale_y);
 				move_entity(tower_entity, s_CursorXPos - xWOffset, wHeight - s_CursorYPos + yWOffset);
-				move_collision_box2D(&tower_entity->collidable2D->collision_box, s_CursorXPos, wHeight - s_CursorYPos);
+				move_collision_box2D(&tower_entity->collidable2D->collision_box, s_CursorXPos - xWOffset, wHeight - s_CursorYPos + yWOffset);
 			}
 		}
 

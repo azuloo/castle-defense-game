@@ -150,6 +150,11 @@ int add_entity(enum EntityType type, EntityDef** dest, const Vec3* pos, const Ve
 // ! Allocates memory on heap !
 int add_entity_path(EntityDef* dest, const PathDef* path, int path_len)
 {
+	if (NULL != dest->path)
+	{
+		free(dest->path);
+	}
+
 	PathSegment* path_ptr = malloc(path_len * sizeof *path_ptr);
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != path_ptr, "[entity]: Failed to allocate sufficient memory chunk for PathSegment ptr.");
 

@@ -60,6 +60,7 @@ int map_mgr_load_map()
 	const MapFuncsDef* map_def = get_curr_map();
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != map_def, "[map_mgr]: Failed to get current map ptr.");
 
+	// TODO: Add NULL ptr checks
 	map_def->map_init();
 	map_def->add_background();
 	map_def->add_path();
@@ -72,6 +73,19 @@ int map_mgr_advance_to_next_map()
 	// TODO: Do we need to clear prev map resources?
 	s_CurrMapIdx++;
 	// TODO: If we've reached the end - return some op code
+	return 0;
+}
+
+int map_mgr_recalculate_path()
+{
+	const MapFuncsDef* map_def = get_curr_map();
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != map_def, "[map_mgr]: Failed to get current map ptr.");
+
+	if (NULL != map_def->recalculate_path)
+	{
+		map_def->recalculate_path();
+	}
+
 	return 0;
 }
 

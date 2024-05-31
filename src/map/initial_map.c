@@ -10,11 +10,23 @@
 
 #define INTIAL_MAP_PATH_LEN 5
 #define INITIAL_ENEMY_WAVES 5
+#define PATH_HEIGHT 0.05f
 
 extern int wWidth;
 extern int wHeight;
 
+extern int xWOffset;
+extern int yWOffset;
+
+extern float get_window_scale_x();
+extern float get_window_scale_y();
+
+static const char* road_texture_path = "/res/static/textures/road.jpg";
+static const char* field_texture_path = "/res/static/textures/field.jpg";
+
+static PathSegment s_PathSegments[INTIAL_MAP_PATH_LEN];
 static PathDef s_PathDef[INTIAL_MAP_PATH_LEN];
+
 static const EnemyWaveCnf s_EnemyWaveCnf[INITIAL_ENEMY_WAVES] = {
 	{ EnemyWaveType_Random, 5, 3.f, 1.f },
 	{ EnemyWaveType_Random, 6, 3.f, 1.f },
@@ -33,90 +45,149 @@ static int map_init()
 	return 0;
 }
 
-static int initial_add_background()
+static int add_background()
 {
-	static const char* texture_path = "/res/static/textures/field.jpg";
-
 	Vec3 translation = { { wWidth / 2.f, wHeight / 2.f, Z_DEPTH_INITIAL_MAP_BACKGROUND } };
 	Vec3 scale = { { wWidth / 2.f, wHeight / 2.f, 1.f } };
 	Vec4 color = COLOR_VEC_WHITE;
 
 	DrawableDef* drawable = NULL;
-	draw_quad(&drawable, texture_path, TexType_RGB, &translation, &scale, &color);
+	draw_quad(&drawable, field_texture_path, TexType_RGB, &translation, &scale, &color);
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[initial_map]: Failed to draw triangle entity (empty quad drawable).");
 
 	return 0;
 }
 
-static int initial_add_path()
+static int init_path_segments()
 {
-	static const char* texture_path = "/res/static/textures/road.jpg";
-
-	// TODO: Clear up "magic"
-	float path_h = (float)wHeight / 10.f;
-	float half_path_h = path_h / 2.f;
-	float path_y_offset = (float)wHeight / 6.f;
-
 	PathSegment predefined_path[INTIAL_MAP_PATH_LEN] = {
-		{ .start = { 0.f, (float)(wHeight - path_y_offset) }, .end = { 550.f, (float)(wHeight - path_y_offset) } },
-		{ .start = { 550.f, (float)(wHeight - path_y_offset) }, .end = { 550.f, (float)path_y_offset } },
-		{ .start = { 550.f, (float)path_y_offset }, .end = { 1050.f, (float)path_y_offset } },
-		{ .start = { 1050.f, (float)path_y_offset }, .end = { 1050.f, (float)wHeight / 2.f } },
-		{ .start = { 1050.f, (float)wHeight / 2.f }, .end = { 1600.f, (float)wHeight / 2.f } }
+		{ .start = { 0.f, (float)wHeight * 0.8f }, .end = { (float)wWidth * 0.2f, (float)wHeight * 0.8f } },
+		{ .start = { (float)wWidth * 0.2f, (float)wHeight * 0.8f }, .end = { (float)wWidth * 0.2f, (float)wHeight * 0.2f } },
+		{ .start = { (float)wWidth * 0.2f, (float)wHeight * 0.2f }, .end = { (float)wWidth * 0.5f, (float)wHeight * 0.2f } },
+		{ .start = { (float)wWidth * 0.5f, (float)wHeight * 0.2f }, .end = { (float)wWidth * 0.5f, (float)wHeight * 0.5f } },
+		{ .start = { (float)wWidth * 0.5f, (float)wHeight * 0.5f  }, .end = { (float)wWidth * 0.8f, (float)wHeight * 0.5f } }
 	};
 
-	assert((sizeof(predefined_path) / sizeof(predefined_path[0])) == INTIAL_MAP_PATH_LEN);
+	memcpy(s_PathSegments, predefined_path, INTIAL_MAP_PATH_LEN * sizeof(PathSegment));
+	CHECK_EXPR_FAIL_RET_TERMINATE((sizeof(predefined_path) / sizeof(predefined_path[0])) == INTIAL_MAP_PATH_LEN, "[inital_map]: Wrong predefined path length.");
+	
+	return 0;
+}
 
-	Vec4 color = COLOR_VEC_WHITE;
+static int calculate_segment_translation(const PathSegment* path_segment, Vec3* translation)
+{
+	float pos_x = (path_segment->start.x + path_segment->end.x) / 2.f;
+	float pos_y = (path_segment->start.y + path_segment->end.y) / 2.f;
+
+	Vec3 new_translation = { { pos_x, pos_y, Z_DEPTH_INITIAL_MAP_PATH } };
+	*translation = new_translation;
+
+	return 0;
+}
+
+static int calculate_segment_scale(const PathSegment* path_segment, Vec3* scale)
+{
+	float pos_x_diff = path_segment->end.x - path_segment->start.x;
+	float pos_y_diff = path_segment->end.y - path_segment->start.y;
+
+	float scale_x = 0;
+	float scale_y = 0;
+	float path_h = (float)wHeight * PATH_HEIGHT;
+
+	if (pos_x_diff == 0)
+	{
+		if (pos_y_diff < 0)
+		{
+			scale_y = pos_y_diff / 2.f - path_h;
+		}
+		else
+		{
+			scale_y = pos_y_diff / 2.f + path_h;
+		}
+
+		scale_x = path_h;
+	}
+	else if (pos_y_diff == 0)
+	{
+		if (pos_x_diff < 0)
+		{
+			scale_x = pos_x_diff / 2.f - path_h;
+		}
+		else
+		{
+			scale_x = pos_x_diff / 2.f + path_h;
+		}
+
+		scale_y = path_h;
+	}
+
+	float new_scale_x = fabsf(scale_x);
+	float new_scale_y = fabsf(scale_y);
+
+	Vec3 new_scale = { { new_scale_x, new_scale_y, 1.f } };
+	*scale = new_scale;
+
+	return 0;
+}
+
+static int recalculate_path()
+{
+	init_path_segments();
 
 	for (int i = 0; i < INTIAL_MAP_PATH_LEN; i++)
 	{
-		s_PathDef[i].path_segment    = predefined_path[i];
-		s_PathDef[i].collidable2D    = NULL;
+		s_PathDef[i].path_segment = s_PathSegments[i];
+		const PathSegment* path_segment = &s_PathDef[i].path_segment;
 
-		PathSegment* path_segment    = &s_PathDef[i].path_segment;
+		Vec3 translation;
+		calculate_segment_translation(path_segment, &translation);
 
-		float pos_x_diff = path_segment->end.x - path_segment->start.x;
-		float pos_y_diff = path_segment->end.y - path_segment->start.y;
-
-		float scale_x = 0;
-		float scale_y = 0;
-
-		if (pos_x_diff == 0)
-		{
-			if (pos_y_diff < 0)
-			{
-				scale_y = pos_y_diff / 2.f - half_path_h;
-			}
-			else
-			{
-				scale_y = pos_y_diff / 2.f + half_path_h;
-			}
-
-			scale_x = half_path_h;
-		}
-		else if (pos_y_diff == 0)
-		{
-			if (pos_x_diff < 0)
-			{
-				scale_x = pos_x_diff / 2.f - half_path_h;
-			}
-			else
-			{
-				scale_x = pos_x_diff / 2.f + half_path_h;
-			}
-
-			scale_y = half_path_h;
-		}
-
-		float pos_x = (path_segment->start.x + path_segment->end.x) / 2.f;
-		float pos_y = (path_segment->start.y + path_segment->end.y) / 2.f;
-
-		Vec3 translation = { { pos_x, pos_y, Z_DEPTH_INITIAL_MAP_PATH } };
-		Vec3 scale = { { fabsf(scale_x), fabsf(scale_y), 1.f } };
+		Vec3 scale;
+		calculate_segment_scale(path_segment, &scale);
 
 		DrawableDef* drawable = NULL;
-		draw_quad(&drawable, texture_path, TexType_RGB, &translation, &scale, &color);
+		get_drawable_def(&drawable, s_PathDef[i].drawable_handle);
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[initial_map] Failed to fetch drawable.");
+
+		drawable->transform.translation.x = translation.x;
+		drawable->transform.translation.y = translation.y;
+
+		drawable->transform.scale.x = scale.x;
+		drawable->transform.scale.y = scale.y;
+
+		if (NULL != s_PathDef[i].collidable2D)
+		{
+			float scaleX = get_window_scale_x();
+			float scaleY = get_window_scale_y();
+			move_collision_box2D(&s_PathDef[i].collidable2D->collision_box, translation.x, translation.y);
+			resize_collision_box2D(&s_PathDef[i].collidable2D->collision_box, scale.x, scale.y);
+		}
+
+		drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
+	}
+}
+
+static int add_path()
+{
+	Vec4 color = COLOR_VEC_WHITE;
+
+	init_path_segments();
+
+	for (int i = 0; i < INTIAL_MAP_PATH_LEN; i++)
+	{
+		s_PathDef[i].path_segment = s_PathSegments[i];
+		s_PathDef[i].collidable2D = NULL;
+
+		const PathSegment* path_segment = &s_PathDef[i].path_segment;
+		
+		Vec3 translation;
+		calculate_segment_translation(path_segment, &translation);
+
+		Vec3 scale;
+		calculate_segment_scale(path_segment, &scale);
+
+		DrawableDef* drawable = NULL;
+		draw_quad(&drawable, road_texture_path, TexType_RGB, &translation, &scale, &color);
 		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[initial_map]: Failed to draw triangle entity (empty quad drawable).");
 
 		s_PathDef[i].drawable_handle = drawable->handle;
@@ -134,16 +205,16 @@ static Vec2 get_path_start()
 	return s_PathDef[0].path_segment.start;
 }
 
-static void initial_free_resources()
+static void free_map_resources()
 {
 }
 
-static const PathDef* initial_get_path()
+static const PathDef* get_path()
 {
 	return s_PathDef;
 }
 
-static int initial_get_path_len()
+static int get_path_len()
 {
 	return INTIAL_MAP_PATH_LEN;
 }
@@ -154,13 +225,14 @@ int initial_map_init()
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != map_func_def, "[initial_map]: Failed to allocate sufficient memory for MapFuncsDef.");
 
 	map_func_def->map_init          = map_init;
-	map_func_def->add_background    = initial_add_background;
-	map_func_def->add_path          = initial_add_path;
+	map_func_def->add_background    = add_background;
+	map_func_def->add_path          = add_path;
+	map_func_def->init_path         = recalculate_path;
 	map_func_def->get_path_start    = get_path_start;
-	map_func_def->free_resources    = initial_free_resources;
+	map_func_def->free_resources    = free_map_resources;
 
-	map_func_def->get_path          = initial_get_path;
-	map_func_def->get_path_len      = initial_get_path_len;
+	map_func_def->get_path          = get_path;
+	map_func_def->get_path_len      = get_path_len;
 
 	map_mgr_register_map(map_func_def);
 
