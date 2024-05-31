@@ -33,7 +33,7 @@ typedef struct MapFuncsDef
 int map_mgr_register_map(const MapFuncsDef* map_funcs_def);
 int map_mgr_load_map();
 int map_mgr_advance_to_next_map();
-int map_mgr_init_path();
+int map_mgr_recalculate_path();
 
 const PathDef*        map_mgr_get_path();
 Vec2                  map_mgr_get_path_start();

@@ -227,7 +227,7 @@ int initial_map_init()
 	map_func_def->map_init          = map_init;
 	map_func_def->add_background    = add_background;
 	map_func_def->add_path          = add_path;
-	map_func_def->init_path         = recalculate_path;
+	map_func_def->recalculate_path  = recalculate_path;
 	map_func_def->get_path_start    = get_path_start;
 	map_func_def->free_resources    = free_map_resources;
 
