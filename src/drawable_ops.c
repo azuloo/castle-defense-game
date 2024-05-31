@@ -68,16 +68,13 @@ int draw_quad(DrawableDef** dest, const char* texture_path, int texture_type, co
 	register_drawable_attribute(drawable, POS_TEXTURE_ATTRIBUTE_SIZE);       // Position + texture.
 	process_drawable_attributes(drawable);
 
-	drawable->transform.translation   = *new_pos;
-	drawable->transform.scale         = *new_scale;
+	drawable->transform.translation = *new_pos;
+	drawable->transform.scale = *new_scale;
 
-	drawable->init_transform.translation   = *new_pos;
-	drawable->init_transform.scale         = *new_scale;
+	drawable->init_transform.translation = *new_pos;
+	drawable->init_transform.scale = *new_scale;
 
 	drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
-
-	drawable->matrices.projection = COMMON_ORTHO_MAT;
-	add_uniform_mat4f(drawable->shader_prog, COMMON_PROJECTION_UNIFORM_NAME, &drawable->matrices.projection);
 
 	add_uniform_vec4f(drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, new_color);
 

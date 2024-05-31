@@ -137,7 +137,7 @@ int init_enemy_waves(int amount)
 	return 0;
 }
 
-int set_enemy_waves_cnf(EnemyWaveCnf* cnf, int amount)
+int set_enemy_waves_cnf(const EnemyWaveCnf* cnf, int amount)
 {
 	CHECK_EXPR_FAIL_RET_TERMINATE(amount == s_EnemyWavesAmount, "[enemy_wave]: Enemy waves cnf amount should be less than enemy waves amount.");
 	for (int i = 0; i < amount; i++)
