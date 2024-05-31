@@ -297,26 +297,36 @@ static void process_mouse_button_hook(GWindow* window, int button, int action, i
 		{
 			EntityDef* entity = NULL;
 
-			Vec3 tower_pos = { { s_CursorXPos, wHeight - s_CursorYPos, Z_DEPTH_INITIAL_ENTITY } };
+			float tower_x_pos = (float)s_CursorXPos - xWOffset;
+			float tower_y_pos = (float)wHeight - (float)s_CursorYPos + yWOffset;
+
+			Vec3 tower_pos = { { tower_x_pos, tower_y_pos, Z_DEPTH_INITIAL_ENTITY } };
 			Vec4 tower_color = COLOR_VEC_GREEN;
+
+			EntityDef* tower_entity = towers[s_CurrentTowerIdx];
+			CHECK_EXPR_FAIL_RET_TERMINATE(NULL != tower_entity, "[game]: Tower entity is empty.");
+			DrawableDef* tower_drawable = NULL;
+
+			get_drawable_def(&tower_drawable, tower_entity->drawable_handle);
+			CHECK_EXPR_FAIL_RET(NULL != tower_drawable, "[game]: Failed to get tower drawable.");
 
 			switch (s_CurrentTowerType)
 			{
 			case EntityType_Square:
 			{
-				add_entity(EntityType_Square, &entity, &tower_pos, &s_EnemyScale, &tower_color);
+				add_entity(EntityType_Square, &entity, &tower_pos, &tower_drawable->transform.scale, &tower_color);
 			}
 			break;
 
 			case EntityType_Circle:
 			{
-				add_entity(EntityType_Circle, &entity, &tower_pos, &s_EnemyScale, &tower_color);
+				add_entity(EntityType_Circle, &entity, &tower_pos, &tower_drawable->transform.scale, &tower_color);
 			}
 			break;
 
 			case EntityType_Triangle:
 			{
-				add_entity(EntityType_Triangle, &entity, &tower_pos, &s_EnemyScale, &tower_color);
+				add_entity(EntityType_Triangle, &entity, &tower_pos, &tower_drawable->transform.scale, &tower_color);
 			}
 			break;
 			default:
@@ -364,7 +374,6 @@ static int resize_tower()
 			float tower_scale_y = tower_drawable->init_transform.scale.y * scaleY;
 
 			resize_entity(tower_entity, tower_scale_x, tower_scale_y);
-			resize_collision_box2D(&tower_entity->collidable2D->collision_box, tower_scale_x, tower_scale_y);
 		}
 	}
 
@@ -389,7 +398,7 @@ void window_resize_hook(GWindow* window, int x, int y, int width, int height)
 	wWidth = width;
 	wHeight = height;
 
-	map_mgr_recalculate_path();
+	map_mgr_recalculte_path();
 	resize_tower();
 }
 
@@ -541,6 +550,9 @@ int main(int argc, int* argv[])
 	Vec3 color = { 1.f, 1.f, 1.f };
 	render_text("Press 1, 2 or 3 to select Towers", wWidth - 400.f, wHeight - 50.f, color);
 
+	float tower_x_pos = 0.f;
+	float tower_y_pos = 0.f;
+
 	// TODO: Handle Windows window drag (other events?)
 	while (!should_be_terminated())
 	{
@@ -565,8 +577,9 @@ int main(int argc, int* argv[])
 
 			if (NULL != tower_drawable)
 			{
-				move_entity(tower_entity, s_CursorXPos - xWOffset, wHeight - s_CursorYPos + yWOffset);
-				move_collision_box2D(&tower_entity->collidable2D->collision_box, s_CursorXPos - xWOffset, wHeight - s_CursorYPos + yWOffset);
+				tower_x_pos = (float)s_CursorXPos - xWOffset;
+				tower_y_pos = (float)wHeight - (float)s_CursorYPos + yWOffset;
+				move_entity(tower_entity, tower_x_pos, tower_y_pos);
 			}
 		}
 
