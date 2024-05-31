@@ -346,6 +346,41 @@ static int should_be_terminated()
 	return graphics_should_be_terminated();
 }
 
+static int resize_tower()
+{
+	for (int i = 0; i < TOWER_TYPES_AMOUNT; i++)
+	{
+		EntityDef* tower_entity = towers[i];
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != tower_entity, "[game]: Tower entity is empty.");
+		DrawableDef* tower_drawable = NULL;
+
+		get_drawable_def(&tower_drawable, tower_entity->drawable_handle);
+
+		if (NULL != tower_drawable)
+		{
+			float scaleX = get_window_scale_x();
+			float scaleY = get_window_scale_y();
+			float tower_scale_x = tower_drawable->init_transform.scale.x * scaleX;
+			float tower_scale_y = tower_drawable->init_transform.scale.y * scaleY;
+
+			resize_entity(tower_entity, tower_scale_x, tower_scale_y);
+			resize_collision_box2D(&tower_entity->collidable2D->collision_box, tower_scale_x, tower_scale_y);
+		}
+	}
+
+	return 0;
+}
+
+float get_window_scale_x()
+{
+	return (float)wWidth / WINDOW_DEFAULT_RES_W;
+}
+
+float get_window_scale_y()
+{
+	return (float)wHeight / WINDOW_DEFAULT_RES_H;
+}
+
 // TODO: Take the window param into accout
 void window_resize_hook(GWindow* window, int x, int y, int width, int height)
 {
@@ -355,6 +390,7 @@ void window_resize_hook(GWindow* window, int x, int y, int width, int height)
 	wHeight = height;
 
 	map_mgr_recalculate_path();
+	resize_tower();
 }
 
 void process_input(GWindow* window)
