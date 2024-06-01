@@ -31,6 +31,8 @@ typedef struct EntityDef
 	int               path_len;
 	enum EntityState  state;
 	int               drawable_handle;
+	Vec2              initial_speed;
+	Vec2              speed;
 	Collidable2D*     collidable2D;
 } EntityDef;
 

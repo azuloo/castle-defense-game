@@ -34,8 +34,6 @@ static int s_BuildingModeEnabled = 0;
 static int s_CurrentTowerIdx = 0;
 static EntityType s_CurrentTowerType = EntityType_None;
 
-static Vec3 s_EnemyScale = { { 35.f, 35.f, 1.f } };
-
 #define TOWER_TYPES_AMOUNT 3
 // TODO: Use map here
 EntityDef* towers[TOWER_TYPES_AMOUNT];
@@ -354,7 +352,7 @@ static int should_be_terminated()
 	return graphics_should_be_terminated();
 }
 
-static int resize_tower()
+static int resize_towers()
 {
 	for (int i = 0; i < TOWER_TYPES_AMOUNT; i++)
 	{
@@ -397,7 +395,8 @@ void window_resize_hook(GWindow* window, int x, int y, int width, int height)
 	wHeight = height;
 
 	map_mgr_on_window_resize();
-	resize_tower();
+	enemy_wave_on_window_resize();
+	resize_towers();
 }
 
 void process_input(GWindow* window)
@@ -411,7 +410,7 @@ void process_input(GWindow* window)
 int draw_triangle_entity(EntityDef** triangle)
 {
 	Vec3 tri_pos = { { 700.f, wHeight / 2.f + 200.f, Z_DEPTH_INITIAL_ENTITY } };
-	Vec3 tri_scale = { { 35.f, 35.f, 1.f } };
+	Vec3 tri_scale = { { (float)wHeight * 0.03f, (float)wHeight * 0.03f, 1.f } };
 	Vec4 tri_color = COLOR_VEC_GREEN;
 
 	add_entity(EntityType_Triangle, triangle, &tri_pos, &tri_scale, &tri_color);
@@ -422,7 +421,7 @@ int draw_triangle_entity(EntityDef** triangle)
 int draw_square_entity(EntityDef** square)
 {
 	Vec3 sq_pos = { { 900.f, wHeight / 2.f + 200.f, Z_DEPTH_INITIAL_ENTITY } };
-	Vec3 sq_scale = { { 35.f, 35.f, 1.f } };
+	Vec3 sq_scale = { { (float)wHeight * 0.03f, (float)wHeight * 0.03f, 1.f } };
 	Vec4 sq_color = COLOR_VEC_GREEN;
 
 	add_entity(EntityType_Square, square, &sq_pos, &sq_scale, &sq_color);
@@ -433,7 +432,7 @@ int draw_square_entity(EntityDef** square)
 int draw_circle_entity(EntityDef** circle)
 {
 	Vec3 circle_pos = { { 1100.f, wHeight / 2.f + 200.f, Z_DEPTH_INITIAL_ENTITY } };
-	Vec3 circle_scale = { { 35.f, 35.f, 1.f } };
+	Vec3 circle_scale = { { (float)wHeight * 0.03f, (float)wHeight * 0.03f, 1.f } };
 	Vec4 circle_color = COLOR_VEC_GREEN;
 
 	add_entity(EntityType_Circle, circle, &circle_pos, &circle_scale, &circle_color);
@@ -544,7 +543,7 @@ int main(int argc, int* argv[])
 			if (NULL != tower_drawable)
 			{
 				tower_x_pos = (float)s_CursorXPos - xWOffset;
-				tower_y_pos = (float)wHeight - (float)s_CursorYPos + yWOffset;
+				tower_y_pos = (float)wHeight - (float)s_CursorYPos - yWOffset;
 				move_entity(tower_entity, tower_x_pos, tower_y_pos);
 			}
 		}

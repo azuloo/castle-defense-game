@@ -47,6 +47,7 @@ int init_enemy_waves(int amount);
 int set_enemy_waves_cnf(const EnemyWaveCnf* cnf, int amount);
 int enemy_waves_spawn(float frameTime);
 void reset_enemy_waves();
+void enemy_wave_on_window_resize();
 void enemy_waves_free_resources();
 
 #endif // _ENEMY_WAVE_H

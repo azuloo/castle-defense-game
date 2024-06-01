@@ -20,6 +20,9 @@ static EntityType s_EnemyTypes[]       = {
 	EntityType_Triangle,
 };
 
+extern float get_window_scale_x();
+extern float get_window_scale_y();
+
 static int reset_data()
 {
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != s_EnemyWaves, "[enemy_wave]: Enemy waves data has not been initiated.");
@@ -56,7 +59,7 @@ static int fill_enemies_data()
 	Vec2 path_start = map_mgr_get_path_start();
 
 	Vec3 enemy_pos = { { path_start.x, path_start.y, Z_DEPTH_INITIAL_ENTITY } };
-	Vec3 enemy_scale = { { 35.f, 35.f, 1.f } };
+	Vec3 enemy_scale = { { (float)wHeight * 0.03f, (float)wHeight * 0.03f, 1.f } };
 	Vec4 enemy_color = COLOR_VEC_GREEN;
 
 	EnemyWaveCnf* wave_cnf = &enemy_wave->cnf;
@@ -248,6 +251,41 @@ int enemy_waves_spawn(float frameTime)
 void reset_enemy_waves()
 {
 	reset_data();
+}
+
+void enemy_wave_on_window_resize()
+{
+	EnemyWaveDef* enemy_wave = NULL;
+	int get_enemy_wave_res = get_enemy_wave(&enemy_wave);
+	CHECK_EXPR_FAIL_RET_TERMINATE(TERMINATE_ERR_CODE != get_enemy_wave_res, "[enemy_wave]: Failed to fetch enemy wave def.");
+
+	const PathDef* path = map_mgr_get_path();
+	int path_len = map_mgr_get_path_len();
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != path && 0 != path_len, "[enemy_wave]: Path has not been determined for the current map.");
+
+	for (int i = 0; i < enemy_wave->enemies_left; i++)
+	{
+		EntityDef* enemy = enemy_wave->enemies + i;
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemy, "[enemy_wave]: Enemy entity is empty.");
+		DrawableDef* enemy_drawable = NULL;
+
+		get_drawable_def(&enemy_drawable, enemy->drawable_handle);
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemy_drawable, "[enemy_wave]: Enemy drawable is empty.");
+
+		if (NULL != enemy_drawable)
+		{
+			float scaleX = get_window_scale_x();
+			float scaleY = get_window_scale_y();
+			float tower_scale_x = enemy_drawable->init_transform.scale.x * scaleX;
+			float tower_scale_y = enemy_drawable->init_transform.scale.y * scaleY;
+
+			enemy->speed.x = enemy->initial_speed.x * scaleX;
+			enemy->speed.y = enemy->initial_speed.y * scaleY;
+
+			resize_entity(enemy, tower_scale_x, tower_scale_y);
+			add_entity_path(enemy, path, path_len);
+		}
+	}
 }
 
 void enemy_waves_free_resources()

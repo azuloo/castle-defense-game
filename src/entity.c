@@ -54,6 +54,8 @@ static int create_entity_def(EntityDef** dest, enum EntityType type)
 	entity_def->path_idx           = -1;
 	entity_def->path_len           = 0;
 	entity_def->state              = EntityState_Setup;
+	entity_def->initial_speed      = (Vec2){ { ENTITY_MOVEMENT_SPEED, ENTITY_MOVEMENT_SPEED } };
+	entity_def->speed              = (Vec2){ { ENTITY_MOVEMENT_SPEED, ENTITY_MOVEMENT_SPEED } };
 	entity_def->drawable_handle    = -1;
 	entity_def->collidable2D       = NULL;
 
@@ -133,16 +135,14 @@ int add_entity(enum EntityType type, EntityDef** dest, const Vec3* pos, const Ve
 // ! Allocates memory on heap !
 int add_entity_path(EntityDef* dest, const PathDef* path, int path_len)
 {
-	if (NULL != dest->path)
+	PathSegment* path_ptr = NULL;
+	if (NULL == dest->path)
 	{
-		free(dest->path);
+		path_ptr = malloc(path_len * sizeof * path_ptr);
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != path_ptr, "[entity]: Failed to allocate sufficient memory chunk for PathSegment ptr.");
+		dest->path = path_ptr;
 	}
 
-	PathSegment* path_ptr = malloc(path_len * sizeof *path_ptr);
-	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != path_ptr, "[entity]: Failed to allocate sufficient memory chunk for PathSegment ptr.");
-
-	dest->path = path_ptr;
-	
 	for (int i = 0; i < path_len; i++)
 	{
 		PathSegment* path_seg_dest = dest->path + i;
@@ -152,7 +152,12 @@ int add_entity_path(EntityDef* dest, const PathDef* path, int path_len)
 	}
 
 	dest->path_len = path_len;
-	dest->path_idx = 0;
+
+	// If the path was re-assigned (e.g. after scaling) we don't need to reset the path_idx.
+	if (dest->path_idx == -1)
+	{
+		dest->path_idx = 0;
+	}
 
 	return 0;
 }
@@ -208,9 +213,11 @@ int entity_follow_path(EntityDef* entity)
 
 	// TODO: If we later need to separate 'visible' (graphics) from 'active' (physics) - switch it here
 	if (!drawable->visible)
+	{
 		return 0;
+	}
 
-	// Place at the start of the path
+	// Place at the start of the path.
 	if (entity->state == EntityState_Setup && entity->path_len != 0)
 	{
 		entity->state = EntityState_Moving;
@@ -235,20 +242,20 @@ int entity_follow_path(EntityDef* entity)
 
 		if (pos_end->x > pos_start->x)
 		{
-			pos_x_step = ENTITY_MOVEMENT_SPEED;
+			pos_x_step = entity->speed.x;
 		}
 		else if (pos_end->x < pos_start->x)
 		{
-			pos_x_step = -ENTITY_MOVEMENT_SPEED;
+			pos_x_step = -entity->speed.x;
 		}
 
 		if (pos_end->y > pos_start->y)
 		{
-			pos_y_step = ENTITY_MOVEMENT_SPEED;
+			pos_y_step = entity->speed.y;
 		}
 		else if (pos_end->y < pos_start->y)
 		{
-			pos_y_step = -ENTITY_MOVEMENT_SPEED;
+			pos_y_step = -entity->speed.y;
 		}
 
 		float new_pos_x = drawable->transform.translation.x + pos_x_step * dt;
