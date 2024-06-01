@@ -64,6 +64,7 @@ int map_mgr_load_map()
 	map_def->map_init();
 	map_def->add_background();
 	map_def->add_path();
+	map_def->add_castle();
 
 	return 0;
 }
@@ -76,14 +77,14 @@ int map_mgr_advance_to_next_map()
 	return 0;
 }
 
-int map_mgr_recalculte_path()
+int map_mgr_on_window_resize()
 {
 	const MapFuncsDef* map_def = get_curr_map();
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != map_def, "[map_mgr]: Failed to get current map ptr.");
 
-	if (NULL != map_def->recalculate_path)
+	if (NULL != map_def->on_window_resize)
 	{
-		map_def->recalculate_path();
+		map_def->on_window_resize();
 	}
 
 	return 0;
@@ -126,6 +127,11 @@ int map_mgr_free_resources()
 
 	for (int i = 0; i < s_NextAvailableIdx; i++)
 	{
+		if (NULL != s_MapFunctions[i]->free_resources)
+		{
+			s_MapFunctions[i]->free_resources();
+		}
+		
 		free(s_MapFunctions[i]);
 	}
 

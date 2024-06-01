@@ -20,5 +20,6 @@ typedef struct Collidable2D Collidable2D;
 // Map manager
 typedef struct PathSegment PathSegment;
 typedef struct PathDef PathDef;
+typedef struct CastleDef CastleDef;
 
 #endif // _GLOBAL_DECL_H

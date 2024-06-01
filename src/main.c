@@ -9,7 +9,6 @@
 #include "freetype_renderer.h"
 #include "global_defs.h"
 #include "drawable_ops.h"
-#include "health_bar.h"
 
 #include "map/map_mgr.h"
 #include "entity.h"
@@ -40,7 +39,6 @@ static Vec3 s_EnemyScale = { { 35.f, 35.f, 1.f } };
 #define TOWER_TYPES_AMOUNT 3
 // TODO: Use map here
 EntityDef* towers[TOWER_TYPES_AMOUNT];
-EntityDef* castle = NULL;
 
 extern float get_window_scale_x();
 extern float get_window_scale_y();
@@ -130,10 +128,10 @@ static void process_collision_begin_hook(Collidable2D* first, Collidable2D* seco
 	{
 		find_tower_with_collidable(&first_entity, first);
 	}
-	else if (first->collision_box.collision_layer & CollisionLayer_Castle)
-	{
-		first_entity = castle;
-	}
+	//else if (first->collision_box.collision_layer & CollisionLayer_Castle)
+	//{
+	//	first_entity = castle;
+	//}
 
 	if (second->collision_box.collision_layer & CollisionLayer_Enemy)
 	{
@@ -143,10 +141,10 @@ static void process_collision_begin_hook(Collidable2D* first, Collidable2D* seco
 	{
 		find_tower_with_collidable(&second_entity, second);
 	}
-	else if (second->collision_box.collision_layer & CollisionLayer_Castle)
-	{
-		second_entity = castle;
-	}
+	//else if (second->collision_box.collision_layer & CollisionLayer_Castle)
+	//{
+	//	second_entity = castle;
+	//}
 
 	if (NULL != first_entity && NULL != second_entity)
 	{
@@ -197,10 +195,10 @@ static void process_collision_end_hook(Collidable2D* first, Collidable2D* second
 	{
 		find_tower_with_collidable(&first_entity, first);
 	}
-	else if (first->collision_box.collision_layer & CollisionLayer_Castle)
-	{
-		first_entity = castle;
-	}
+	//else if (first->collision_box.collision_layer & CollisionLayer_Castle)
+	//{
+	//	first_entity = castle;
+	//}
 
 	if (second->collision_box.collision_layer & CollisionLayer_Enemy)
 	{
@@ -210,10 +208,10 @@ static void process_collision_end_hook(Collidable2D* first, Collidable2D* second
 	{
 		find_tower_with_collidable(&second_entity, second);
 	}
-	else if (second->collision_box.collision_layer & CollisionLayer_Castle)
-	{
-		second_entity = castle;
-	}
+	//else if (second->collision_box.collision_layer & CollisionLayer_Castle)
+	//{
+	//	second_entity = castle;
+	//}
 
 	if (NULL != first_entity && NULL != second_entity)
 	{
@@ -398,7 +396,7 @@ void window_resize_hook(GWindow* window, int x, int y, int width, int height)
 	wWidth = width;
 	wHeight = height;
 
-	map_mgr_recalculte_path();
+	map_mgr_on_window_resize();
 	resize_tower();
 }
 
@@ -439,17 +437,6 @@ int draw_circle_entity(EntityDef** circle)
 	Vec4 circle_color = COLOR_VEC_GREEN;
 
 	add_entity(EntityType_Circle, circle, &circle_pos, &circle_scale, &circle_color);
-
-	return 0;
-}
-
-int draw_castle_entity(EntityDef** castle)
-{
-	Vec3 castle_pos = { { 1600.f, wHeight / 2.f, Z_DEPTH_INITIAL_CASTLE } };
-	Vec3 castle_scale = { { 125.f, 125.f, 1.f } };
-	Vec4 castle_color = COLOR_VEC_WHITE;
-
-	add_entity(EntityType_Castle, castle, &castle_pos, &castle_scale, &castle_color);
 
 	return 0;
 }
@@ -497,26 +484,6 @@ int create_tower_entities()
 	return 0;
 }
 
-static int add_castle()
-{
-	draw_castle_entity(&castle);
-
-	DrawableDef* castle_drawable = NULL;
-	get_drawable_def(&castle_drawable, castle->drawable_handle);
-	CHECK_EXPR_FAIL_RET_TERMINATE(castle_drawable != NULL, "[game]: Failed to fetch castle drawable.");
-
-	add_collidable2D(&castle->collidable2D, &castle_drawable->transform.translation, &castle_drawable->transform.scale);
-	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != castle->collidable2D, "[game]: Failed to add collidable2D for castle.");
-	add_collision_layer2D(&castle->collidable2D->collision_box, CollisionLayer_Castle);
-	add_collision_mask2D(&castle->collidable2D->collision_box, CollisionLayer_Enemy);
-
-	const Vec3 pos = { { castle_drawable->transform.translation.x, castle_drawable->transform.translation.y + 150.f, castle_drawable->transform.translation.z } };
-	const Vec3 scale = { { 125.f, 12.f, 1.f } };
-	add_health_bar(&pos, &scale);
-
-	return 0;
-}
-
 int main(int argc, int* argv[])
 {
 	int init_graphics_res = init_graphics();
@@ -541,7 +508,6 @@ int main(int argc, int* argv[])
 	}
 
 	create_tower_entities();
-	add_castle();
 
 	init_ft();
 	load_ascii_chars();

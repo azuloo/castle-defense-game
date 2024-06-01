@@ -21,7 +21,6 @@ static EntityDef* s_EntityDefs      = NULL;
 static const char* triangle_texture_path   = "/res/static/textures/triangle.png";
 static const char* square_texture_path     = "/res/static/textures/square.png";
 static const char* circle_texture_path     = "/res/static/textures/circle.png";
-static const char* castle_texture_path     = "/res/static/textures/castle.png";
 
 // ! Allocates memory on heap !
 static int alloc_entities_arr()
@@ -104,19 +103,6 @@ static int add_circle(EntityDef** dest, const Vec3* pos, const Vec3* scale, cons
 	return 0;
 }
 
-static int add_castle(EntityDef** dest, const Vec3* pos, const Vec3* scale, const Vec4* color)
-{
-	create_entity_def(dest, EntityType_Castle);
-
-	DrawableDef* drawable = NULL;
-	draw_quad(&drawable, castle_texture_path, TexType_RGBA, pos, scale, color);
-	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[entity]: Failed to draw castle entity (empty quad drawable).");
-
-	(*dest)->drawable_handle = drawable->handle;
-
-	return 0;
-}
-
 int add_entity(enum EntityType type, EntityDef** dest, const Vec3* pos, const Vec3* scale, const Vec4* color)
 {
 	if (NULL == s_EntityDefs)
@@ -135,9 +121,6 @@ int add_entity(enum EntityType type, EntityDef** dest, const Vec3* pos, const Ve
 		break;
 	case EntityType_Circle:
 		add_circle(dest, pos, scale, color);
-		break;
-	case EntityType_Castle:
-		add_castle(dest, pos, scale, color);
 		break;
 	default:
 		PRINT_ERR("[entity]: Unknown entity type.");

@@ -7,6 +7,7 @@
 #include "drawable_ops.h"
 #include "physics.h"
 #include "enemy_wave.h"
+#include "health_bar.h"
 
 #define INTIAL_MAP_PATH_LEN 5
 #define INITIAL_ENEMY_WAVES 5
@@ -15,17 +16,17 @@
 extern int wWidth;
 extern int wHeight;
 
-extern int xWOffset;
-extern int yWOffset;
-
 extern float get_window_scale_x();
 extern float get_window_scale_y();
 
 static const char* road_texture_path = "/res/static/textures/road.jpg";
 static const char* field_texture_path = "/res/static/textures/field.jpg";
+static const char* castle_texture_path = "/res/static/textures/castle.png";
 
 static PathSegment s_PathSegments[INTIAL_MAP_PATH_LEN];
 static PathDef s_PathDef[INTIAL_MAP_PATH_LEN];
+
+CastleDef* s_Castle = NULL;
 
 static const EnemyWaveCnf s_EnemyWaveCnf[INITIAL_ENEMY_WAVES] = {
 	{ EnemyWaveType_Random, 5, 3.f, 1.f },
@@ -149,16 +150,11 @@ static int recalculate_path()
 		get_drawable_def(&drawable, s_PathDef[i].drawable_handle);
 		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[initial_map] Failed to fetch drawable.");
 
-		drawable->transform.translation.x = translation.x;
-		drawable->transform.translation.y = translation.y;
-
-		drawable->transform.scale.x = scale.x;
-		drawable->transform.scale.y = scale.y;
+		drawable->transform.translation = translation;
+		drawable->transform.scale = scale;
 
 		if (NULL != s_PathDef[i].collidable2D)
 		{
-			float scaleX = get_window_scale_x();
-			float scaleY = get_window_scale_y();
 			move_collision_box2D(&s_PathDef[i].collidable2D->collision_box, translation.x, translation.y);
 			resize_collision_box2D(&s_PathDef[i].collidable2D->collision_box, scale.x, scale.y);
 		}
@@ -200,6 +196,92 @@ static int add_path()
 	return 0;
 }
 
+static int create_castle()
+{
+	if (NULL != s_Castle)
+	{
+		return;
+	}
+
+	CastleDef* castle = malloc(sizeof * castle);
+	CHECK_EXPR_FAIL_RET_TERMINATE(castle != NULL, "[game]: Failed to create the castle.");
+
+	castle->drawable_handle = -1;
+	// TODO: Entity should be generalized or we should use different type for castle
+	castle->type = EntityType_Castle;
+	castle->collidable2D = NULL;
+
+	s_Castle = castle;
+
+	return 0;
+}
+
+static int resize_castle()
+{
+	if (NULL == s_Castle)
+	{
+		return TERMINATE_ERR_CODE;
+	}
+
+	Vec3 castle_pos = { { (float)wWidth * 0.8f, (float)wHeight * 0.5f, Z_DEPTH_INITIAL_CASTLE } };
+	Vec3 castle_scale = { { (float)wHeight * 0.11f, (float)wHeight * 0.11f, 1.f } };
+
+	DrawableDef* castle_drawable = NULL;
+	get_drawable_def(&castle_drawable, s_Castle->drawable_handle);
+	CHECK_EXPR_FAIL_RET_TERMINATE(castle_drawable != NULL, "[game]: Failed to get the castle drawable.");
+
+	castle_drawable->transform.translation = castle_pos;
+	castle_drawable->transform.scale = castle_scale;
+
+	if (NULL != s_Castle->collidable2D)
+	{
+		move_collision_box2D(&s_Castle->collidable2D->collision_box, castle_pos.x, castle_pos.y);
+		resize_collision_box2D(&s_Castle->collidable2D->collision_box, castle_scale.x, castle_scale.y);
+	}
+
+	// TODO: Add resizing castle health bar once we add it's state to the Castle
+
+	drawable_transform_ts(castle_drawable, COMMON_MODEL_UNIFORM_NAME);
+
+	return 0;
+}
+
+static int add_castle()
+{
+	if (NULL == s_Castle)
+	{
+		int create_castle_res = create_castle();
+		CHECK_EXPR_FAIL_RET_TERMINATE(TERMINATE_SUCCESS_CODE == create_castle_res, "[initial_map]: Castle creation function failed.");
+	}
+
+	Vec3 castle_pos = { { (float)wWidth * 0.8f, (float)wHeight * 0.5f, Z_DEPTH_INITIAL_CASTLE } };
+	Vec3 castle_scale = { { (float)wHeight * 0.11f, (float)wHeight * 0.11f, 1.f } };
+	Vec4 castle_color = COLOR_VEC_WHITE;
+
+	DrawableDef* castle_drawable = NULL;
+	draw_quad(&castle_drawable, castle_texture_path, TexType_RGBA, &castle_pos, &castle_scale, &castle_color);
+	CHECK_EXPR_FAIL_RET_TERMINATE(castle_drawable != NULL, "[game]: Failed to draw the castle.");
+
+	s_Castle->drawable_handle = castle_drawable->handle;
+
+	add_collidable2D(&s_Castle->collidable2D, &castle_drawable->transform.translation, &castle_drawable->transform.scale);
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != s_Castle->collidable2D, "[game]: Failed to add collidable2D for the castle.");
+	add_collision_layer2D(&s_Castle->collidable2D->collision_box, CollisionLayer_Castle);
+	add_collision_mask2D(&s_Castle->collidable2D->collision_box, CollisionLayer_Enemy);
+
+	const Vec3 hb_pos = { { castle_drawable->transform.translation.x, castle_drawable->transform.translation.y + (float)wHeight * 0.13f, castle_drawable->transform.translation.z } };
+	const Vec3 hb_scale = { { (float)wHeight * 0.11f, (float)wHeight * 0.01f, 1.f } };
+	add_health_bar(&hb_pos, &hb_scale);
+
+	return 0;
+}
+
+static int on_window_resize()
+{
+	recalculate_path();
+	resize_castle();
+}
+
 static Vec2 get_path_start()
 {
 	return s_PathDef[0].path_segment.start;
@@ -207,6 +289,10 @@ static Vec2 get_path_start()
 
 static void free_map_resources()
 {
+	if (NULL != s_Castle)
+	{
+		free(s_Castle);
+	}
 }
 
 static const PathDef* get_path()
@@ -227,7 +313,8 @@ int initial_map_init()
 	map_func_def->map_init          = map_init;
 	map_func_def->add_background    = add_background;
 	map_func_def->add_path          = add_path;
-	map_func_def->recalculate_path  = recalculate_path;
+	map_func_def->add_castle        = add_castle;
+	map_func_def->on_window_resize  = on_window_resize;
 	map_func_def->get_path_start    = get_path_start;
 	map_func_def->free_resources    = free_map_resources;
 
