@@ -543,7 +543,7 @@ int main(int argc, int* argv[])
 			if (NULL != tower_drawable)
 			{
 				tower_x_pos = (float)s_CursorXPos - xWOffset;
-				tower_y_pos = (float)wHeight - (float)s_CursorYPos - yWOffset;
+				tower_y_pos = (float)wHeight - (float)s_CursorYPos + yWOffset;
 				move_entity(tower_entity, tower_x_pos, tower_y_pos);
 			}
 		}
