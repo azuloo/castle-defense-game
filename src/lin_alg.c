@@ -23,6 +23,16 @@ float math_lerp(float a, float b, float f)
 	return a + f * (b - a);
 }
 
+Vec2 vec2_multiply_by_scalar(float scalar, Vec2 v)
+{
+	return (Vec2) { scalar * v.x, scalar * v.y };
+}
+
+bool vec2_equals(Vec2 v1, Vec2 v2)
+{
+	return v1.x == v2.x && v1.y == v2.y;
+}
+
 Mat4 multiply_mat4(const Mat4* m1, const Mat4* m2)
 {
 	Mat4 out = IdentityMat;

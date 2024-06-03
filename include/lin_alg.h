@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <math.h>
+#include <stdbool.h>
 
 /* row-major ordering */
 typedef struct Mat4 {
@@ -44,6 +45,11 @@ static const Vec4 InvXAxis = { {-1, 0, 0, 0} };
 static const Vec4 InvYAxis = { {0, -1, 0, 0} };
 static const Vec4 InvZAxis = { {0, 0, -1, 0} };
 
+static const Vec2 Vec2_LEFT = { { -1.f, 0.f } };
+static const Vec2 Vec2_RIGHT = { { 1.f, 0.f } };
+static const Vec2 Vec2_UP = { { 0.f, 1.f } };
+static const Vec2 Vec2_DOWN = { { 0.f, -1.f } };
+
 static const Mat4 IdentityMat = { {
 	1, 0, 0, 0,
 	0, 1, 0, 0,
@@ -55,6 +61,9 @@ float math_min(float a, float b);
 float math_max(float a, float b);
 float math_clamp(float a, float min_val, float max_val);
 float math_lerp(float a, float b, float f);
+
+Vec2 vec2_multiply_by_scalar(float scalar, Vec2 v);
+bool vec2_equals(Vec2 v1, Vec2 v2);
 
 Mat4 multiply_mat4(const Mat4* m1, const Mat4* m2);
 Vec4 mulmat_vec4(const Mat4* m, const Vec4* v);
