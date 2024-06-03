@@ -196,6 +196,11 @@ static int add_path()
 	return 0;
 }
 
+static Vec2 get_init_direction()
+{
+	return Vec2_RIGHT;
+}
+
 static int create_castle()
 {
 	if (NULL != s_Castle)
@@ -310,16 +315,17 @@ int initial_map_init()
 	MapFuncsDef* map_func_def = malloc(sizeof * map_func_def);
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != map_func_def, "[initial_map]: Failed to allocate sufficient memory for MapFuncsDef.");
 
-	map_func_def->map_init          = map_init;
-	map_func_def->add_background    = add_background;
-	map_func_def->add_path          = add_path;
-	map_func_def->add_castle        = add_castle;
-	map_func_def->on_window_resize  = on_window_resize;
-	map_func_def->get_path_start    = get_path_start;
-	map_func_def->free_resources    = free_map_resources;
+	map_func_def->map_init             = map_init;
+	map_func_def->add_background       = add_background;
+	map_func_def->add_path             = add_path;
+	map_func_def->get_init_direction   = get_init_direction;
+	map_func_def->add_castle           = add_castle;
+	map_func_def->on_window_resize     = on_window_resize;
+	map_func_def->get_path_start       = get_path_start;
+	map_func_def->free_resources       = free_map_resources;
 
-	map_func_def->get_path          = get_path;
-	map_func_def->get_path_len      = get_path_len;
+	map_func_def->get_path             = get_path;
+	map_func_def->get_path_len         = get_path_len;
 
 	map_mgr_register_map(map_func_def);
 

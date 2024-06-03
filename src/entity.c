@@ -14,6 +14,9 @@
 extern int wHeight;
 extern float dt;
 
+extern int xWOffset;
+extern int yWOffset;
+
 static int s_EntitiesCnfCapacity    = 32;
 static int s_EntitiesNum            = 0;
 static EntityDef* s_EntityDefs      = NULL;
@@ -53,11 +56,14 @@ static int create_entity_def(EntityDef** dest, enum EntityType type)
 	entity_def->path               = NULL;
 	entity_def->path_idx           = -1;
 	entity_def->path_len           = 0;
+	entity_def->segment_percent    = 0.f;
 	entity_def->state              = EntityState_Setup;
-	entity_def->initial_speed      = (Vec2){ { ENTITY_MOVEMENT_SPEED, ENTITY_MOVEMENT_SPEED } };
-	entity_def->speed              = (Vec2){ { ENTITY_MOVEMENT_SPEED, ENTITY_MOVEMENT_SPEED } };
+	entity_def->initial_speed      = ENTITY_MOVEMENT_SPEED;
+	entity_def->speed              = ENTITY_MOVEMENT_SPEED;
 	entity_def->drawable_handle    = -1;
 	entity_def->collidable2D       = NULL;
+
+	memset(&entity_def->direction, 0, sizeof(Vec2));
 
 	*dest = entity_def;
 
@@ -217,7 +223,6 @@ int entity_follow_path(EntityDef* entity)
 		return 0;
 	}
 
-	// Place at the start of the path.
 	if (entity->state == EntityState_Setup && entity->path_len != 0)
 	{
 		entity->state = EntityState_Moving;
@@ -225,13 +230,49 @@ int entity_follow_path(EntityDef* entity)
 		Vec3 starting_pos = { { entity->path->start.x, entity->path->start.y, drawable->transform.translation.z } };
 		drawable->transform.translation = starting_pos;
 
-		drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
+		move_entity(entity, starting_pos.x, starting_pos.y);
+	}
+
+	if (entity->state == EntityState_OnWindowResize && entity->path_len != 0)
+	{
+		int path_idx = entity->path_idx;
+		const PathSegment* path_seg = entity->path + path_idx;
+
+		float path_pos_x = 0.f;
+		float path_pos_y = 0.f;
+
+		if (vec2_equals(entity->direction, Vec2_RIGHT))
+		{
+			path_pos_x = math_lerp(path_seg->start.x, path_seg->end.x, entity->segment_percent);
+			path_pos_y = math_lerp(path_seg->start.y, path_seg->end.y, entity->segment_percent);
+		}
+		else if (vec2_equals(entity->direction, Vec2_LEFT))
+		{
+			path_pos_x = math_lerp(path_seg->end.x, path_seg->start.x, entity->segment_percent);
+			path_pos_y = math_lerp(path_seg->end.y, path_seg->start.y, entity->segment_percent);
+		}
+		else if (vec2_equals(entity->direction, Vec2_UP))
+		{
+			path_pos_x = math_lerp(path_seg->start.x, path_seg->end.x, entity->segment_percent);
+			path_pos_y = math_lerp(path_seg->start.y, path_seg->end.y, entity->segment_percent);
+		}
+		else if (vec2_equals(entity->direction, Vec2_DOWN))
+		{
+			path_pos_x = math_lerp(path_seg->end.x, path_seg->start.x, entity->segment_percent);
+			path_pos_y = math_lerp(path_seg->end.y, path_seg->start.y, entity->segment_percent);
+		}
+
+		Vec3 starting_pos = { { path_pos_x, path_pos_y, drawable->transform.translation.z } };
+		drawable->transform.translation = starting_pos;
+
+		move_entity(entity, starting_pos.x, starting_pos.y);
+
+		entity->state = EntityState_Moving;
 	}
 
 	if (entity->state == EntityState_Moving && entity->path_len != 0)
 	{
 		int path_idx = entity->path_idx;
-
 		const PathSegment* path_seg = entity->path + path_idx;
 
 		const Vec2* pos_start = &path_seg->start;
@@ -242,62 +283,95 @@ int entity_follow_path(EntityDef* entity)
 
 		if (pos_end->x > pos_start->x)
 		{
-			pos_x_step = entity->speed.x;
+			entity->direction = Vec2_RIGHT;
 		}
 		else if (pos_end->x < pos_start->x)
 		{
-			pos_x_step = -entity->speed.x;
+			entity->direction = Vec2_LEFT;
 		}
-
 		if (pos_end->y > pos_start->y)
 		{
-			pos_y_step = entity->speed.y;
+			entity->direction = Vec2_UP;
 		}
 		else if (pos_end->y < pos_start->y)
 		{
-			pos_y_step = -entity->speed.y;
+			entity->direction = Vec2_DOWN;
 		}
 
-		float new_pos_x = drawable->transform.translation.x + pos_x_step * dt;
-		float new_pos_y = drawable->transform.translation.y + pos_y_step * dt;
+		float delta_pos_x = entity->speed * entity->direction.x * dt;
+		float delta_pos_y = entity->speed * entity->direction.y * dt;
 
-		// TODO: Better way to do this?
+		float new_pos_x = drawable->transform.translation.x + delta_pos_x;
+		float new_pos_y = drawable->transform.translation.y + delta_pos_y;
+
 		bool move_to_next_segment = false;
-		if (pos_x_step >= 0 && pos_y_step >= 0)
+		float segment_percent = 0.f;
+		float total_distance = 0.f;
+		float entity_distance = 0.f;
+
+		if (vec2_equals(entity->direction, Vec2_RIGHT))
 		{
-			move_to_next_segment = new_pos_x >= pos_end->x && new_pos_y >= pos_end->y;
+			if (new_pos_x > pos_end->x)
+			{
+				move_to_next_segment = true;
+			}
+
+			total_distance = fabs(path_seg->end.x - path_seg->start.x);
+			entity_distance = fabs(new_pos_x - path_seg->start.x);
+			segment_percent = entity_distance / total_distance;
 		}
-		else if (pos_x_step < 0 && pos_y_step >= 0)
+		else if (vec2_equals(entity->direction, Vec2_LEFT))
 		{
-			move_to_next_segment = new_pos_x <= pos_end->x && new_pos_y >= pos_end->y;
+			if (new_pos_x < pos_end->x)
+			{
+				move_to_next_segment = true;
+			}
+
+			total_distance = (float)fabs(path_seg->end.x - path_seg->start.x);
+			entity_distance = (float)fabs(new_pos_x - path_seg->start.x);
+			segment_percent = entity_distance / total_distance;
 		}
-		else if (pos_x_step >= 0 && pos_y_step < 0)
+		else if (vec2_equals(entity->direction, Vec2_UP))
 		{
-			move_to_next_segment = new_pos_x >= pos_end->x && new_pos_y <= pos_end->y;
+			if (new_pos_y > pos_end->y)
+			{
+				move_to_next_segment = true;
+			}
+
+			total_distance = fabs(path_seg->end.y - path_seg->start.y);
+			entity_distance = fabs(new_pos_y - path_seg->start.y);
+			segment_percent = entity_distance / total_distance;
 		}
-		else if (pos_x_step < 0 && pos_y_step < 0)
+		else if (vec2_equals(entity->direction, Vec2_DOWN))
 		{
-			move_to_next_segment = new_pos_x <= pos_end->x && new_pos_y <= pos_end->y;
+			if (new_pos_y < pos_end->y)
+			{
+				move_to_next_segment = true;
+			}
+		
+			total_distance = fabs(path_seg->end.y - path_seg->start.y);
+			entity_distance = fabs(new_pos_y - path_seg->start.y);
+			segment_percent = entity_distance / total_distance;
 		}
+		
+		entity->segment_percent = segment_percent;
 
 		if (move_to_next_segment)
 		{
 			entity->path_idx++;
+			entity->segment_percent = 0.f;
 
 			drawable->transform.translation.x = pos_end->x;
 			drawable->transform.translation.y = pos_end->y;
 
 			if (entity->path_idx >= entity->path_len)
 			{
-				// Stop at the end of the path
+				// Stop at the end of the path.
 				entity->state = EntityState_Idle;
 			}
 
 			return 0;
 		}
-
-		drawable->transform.translation.x = new_pos_x;
-		drawable->transform.translation.y = new_pos_y;
 
 		move_entity(entity, new_pos_x, new_pos_y);
 	}

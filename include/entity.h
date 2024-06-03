@@ -11,6 +11,7 @@ enum EntityState
 {
 	EntityState_Setup,
 	EntityState_Idle,
+	EntityState_OnWindowResize,
 	EntityState_Moving
 };
 
@@ -29,10 +30,12 @@ typedef struct EntityDef
 	PathSegment*      path;
 	int               path_idx;
 	int               path_len;
+	float             segment_percent;
 	enum EntityState  state;
 	int               drawable_handle;
-	Vec2              initial_speed;
-	Vec2              speed;
+	int               initial_speed;
+	int               speed;
+	Vec2              direction;
 	Collidable2D*     collidable2D;
 } EntityDef;
 

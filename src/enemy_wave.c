@@ -20,6 +20,9 @@ static EntityType s_EnemyTypes[]       = {
 	EntityType_Triangle,
 };
 
+extern int xWOffset;
+extern int yWOffset;
+
 extern float get_window_scale_x();
 extern float get_window_scale_y();
 
@@ -78,6 +81,7 @@ static int fill_enemies_data()
 			add_entity(s_EnemyTypes[enemy_idx], &enemy, &enemy_pos, &enemy_scale, &enemy_color);
 			CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemy, "[enemy_wave]: Failed to create an enemy.");
 			add_entity_path(enemy, path, path_len);
+			enemy->direction = map_mgr_get_init_direction();
 
 			get_drawable_def(&enemy_drawable, enemy->drawable_handle);
 			CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemy_drawable, "[enemy_wave]: Failed to get drawable for this enemy.");
@@ -279,8 +283,18 @@ void enemy_wave_on_window_resize()
 			float tower_scale_x = enemy_drawable->init_transform.scale.x * scaleX;
 			float tower_scale_y = enemy_drawable->init_transform.scale.y * scaleY;
 
-			enemy->speed.x = enemy->initial_speed.x * scaleX;
-			enemy->speed.y = enemy->initial_speed.y * scaleY;
+			float scaling_factor = 0.f;
+			if (xWOffset > 0)
+			{
+				scaling_factor = scaleX;
+			}
+			else if (yWOffset > 0)
+			{
+				scaling_factor = scaleY;
+			}
+
+			enemy->speed = enemy->initial_speed * scaling_factor;
+			enemy->state = EntityState_OnWindowResize;
 
 			resize_entity(enemy, tower_scale_x, tower_scale_y);
 			add_entity_path(enemy, path, path_len);
