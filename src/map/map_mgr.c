@@ -90,6 +90,19 @@ int map_mgr_on_window_resize()
 	return 0;
 }
 
+Vec2 map_mgr_get_init_direction()
+{
+	Vec2 init_direction = { 0.f, 0.f };
+	const MapFuncsDef* map_def = get_curr_map();
+
+	if (NULL != map_def)
+	{
+		init_direction = map_def->get_init_direction();
+	}
+
+	return init_direction;
+}
+
 const PathDef* map_mgr_get_path()
 {
 	const MapFuncsDef* map_def = get_curr_map();
@@ -102,6 +115,7 @@ Vec2 map_mgr_get_path_start()
 {
 	Vec2 path_start = { 0.f, 0.f };
 	const MapFuncsDef* map_def = get_curr_map();
+
 	if (NULL != map_def)
 	{
 		path_start = map_def->get_path_start();
