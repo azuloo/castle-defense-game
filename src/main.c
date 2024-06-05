@@ -184,6 +184,7 @@ static void process_collision_end_hook(Collidable2D* first, Collidable2D* second
 {
 	EntityDef* first_entity = NULL;
 	EntityDef* second_entity = NULL;
+	CastleDef* castle = NULL;
 
 	// Enemy - Tower collision.
 	if (first->collision_box.collision_layer & CollisionLayer_Enemy)
@@ -194,10 +195,6 @@ static void process_collision_end_hook(Collidable2D* first, Collidable2D* second
 	{
 		find_tower_with_collidable(&first_entity, first);
 	}
-	//else if (first->collision_box.collision_layer & CollisionLayer_Castle)
-	//{
-	//	first_entity = castle;
-	//}
 
 	if (second->collision_box.collision_layer & CollisionLayer_Enemy)
 	{
@@ -207,14 +204,21 @@ static void process_collision_end_hook(Collidable2D* first, Collidable2D* second
 	{
 		find_tower_with_collidable(&second_entity, second);
 	}
-	//else if (second->collision_box.collision_layer & CollisionLayer_Castle)
-	//{
-	//	second_entity = castle;
-	//}
 
-	if (NULL != first_entity && NULL != second_entity)
+	if (first->collision_box.collision_layer & CollisionLayer_Castle || second->collision_box.collision_layer & CollisionLayer_Castle)
 	{
-		resolve_entity_castle_collision(first_entity, second_entity);
+		map_mgr_get_castle(&castle);
+		CHECK_EXPR_FAIL_RET(castle != NULL, "[game]: Failed to get the castle.");
+	}
+
+	if (NULL != first_entity && NULL != castle)
+	{
+		resolve_entity_castle_collision(first_entity, castle);
+		return;
+	}
+	else if (NULL != second_entity && NULL != castle)
+	{
+		resolve_entity_castle_collision(second_entity, castle);
 		return;
 	}
 
