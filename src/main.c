@@ -84,7 +84,7 @@ static int find_tower_with_collidable(EntityDef** dest, const Collidable2D* coll
 	return 0;
 }
 
-static void resolve_entities_collision(EntityDef* first, EntityDef* second)
+static void resolve_entity_castle_collision(EntityDef* first, CastleDef* second)
 {
 	DrawableDef* first_drawable = NULL;
 	get_drawable_def(&first_drawable, first->drawable_handle);
@@ -114,10 +114,10 @@ static void resolve_entities_collision(EntityDef* first, EntityDef* second)
 // TODO: Code duplication (function - process_collision_end_hook())
 static void process_collision_begin_hook(Collidable2D* first, Collidable2D* second)
 {
-	EntityDef* first_entity    = NULL;
-	EntityDef* second_entity   = NULL;
+	EntityDef* first_entity = NULL;
+	EntityDef* second_entity = NULL;
+	CastleDef* castle = NULL;
 
-	// Enemy - Tower collision.
 	if (first->collision_box.collision_layer & CollisionLayer_Enemy)
 	{
 		find_enemy_with_collidable(&first_entity, first);
@@ -126,10 +126,6 @@ static void process_collision_begin_hook(Collidable2D* first, Collidable2D* seco
 	{
 		find_tower_with_collidable(&first_entity, first);
 	}
-	//else if (first->collision_box.collision_layer & CollisionLayer_Castle)
-	//{
-	//	first_entity = castle;
-	//}
 
 	if (second->collision_box.collision_layer & CollisionLayer_Enemy)
 	{
@@ -139,18 +135,24 @@ static void process_collision_begin_hook(Collidable2D* first, Collidable2D* seco
 	{
 		find_tower_with_collidable(&second_entity, second);
 	}
-	//else if (second->collision_box.collision_layer & CollisionLayer_Castle)
-	//{
-	//	second_entity = castle;
-	//}
 
-	if (NULL != first_entity && NULL != second_entity)
+	if (first->collision_box.collision_layer & CollisionLayer_Castle || second->collision_box.collision_layer & CollisionLayer_Castle)
 	{
-		resolve_entities_collision(first_entity, second_entity);
+		map_mgr_get_castle(&castle);
+		CHECK_EXPR_FAIL_RET(castle != NULL, "[game]: Failed to get the castle.");
+	}
+
+	if (NULL != first_entity && NULL != castle)
+	{
+		resolve_entity_castle_collision(first_entity, castle);
+		return;
+	}
+	else if (NULL != second_entity && NULL != castle)
+	{
+		resolve_entity_castle_collision(second_entity, castle);
 		return;
 	}
 
-	// Tower - Road collision.
 	if (NULL != first_entity && first->collision_box.collision_layer & CollisionLayer_Tower)
 	{
 		if (second->collision_box.collision_layer & CollisionLayer_Road)
@@ -163,7 +165,6 @@ static void process_collision_begin_hook(Collidable2D* first, Collidable2D* seco
 			add_uniform_vec4f(first_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
 		}
 	}
-
 	if (NULL != second_entity && second->collision_box.collision_layer & CollisionLayer_Tower)
 	{
 		if (first->collision_box.collision_layer & CollisionLayer_Road)
@@ -213,7 +214,7 @@ static void process_collision_end_hook(Collidable2D* first, Collidable2D* second
 
 	if (NULL != first_entity && NULL != second_entity)
 	{
-		resolve_entities_collision(first_entity, second_entity);
+		resolve_entity_castle_collision(first_entity, second_entity);
 		return;
 	}
 
