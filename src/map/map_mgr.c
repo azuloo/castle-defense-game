@@ -132,6 +132,19 @@ int map_mgr_get_path_len()
 	return map_def->get_path_len();
 }
 
+int map_mgr_get_castle(CastleDef** dest)
+{
+	const MapFuncsDef* map_def = get_curr_map();
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != map_def, "[map_mgr]: Failed to get current map ptr.");
+
+	if (NULL != map_def->get_castle)
+	{
+		map_def->get_castle(dest);
+	}
+
+	return 0;
+}
+
 int map_mgr_free_resources()
 {
 	if (NULL == s_MapFunctions)

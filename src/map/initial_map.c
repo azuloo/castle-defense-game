@@ -281,6 +281,13 @@ static int add_castle()
 	return 0;
 }
 
+static int get_castle(CastleDef** dest)
+{
+	// TODO: Should dest be const?
+	*dest = s_Castle;
+	return 0;
+}
+
 static int on_window_resize()
 {
 	recalculate_path();
@@ -320,6 +327,7 @@ int initial_map_init()
 	map_func_def->add_path             = add_path;
 	map_func_def->get_init_direction   = get_init_direction;
 	map_func_def->add_castle           = add_castle;
+	map_func_def->get_castle           = get_castle;
 	map_func_def->on_window_resize     = on_window_resize;
 	map_func_def->get_path_start       = get_path_start;
 	map_func_def->free_resources       = free_map_resources;
