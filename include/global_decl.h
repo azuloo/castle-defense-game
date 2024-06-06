@@ -22,4 +22,7 @@ typedef struct PathSegment PathSegment;
 typedef struct PathDef PathDef;
 typedef struct CastleDef CastleDef;
 
+// UI
+typedef struct HealthBarDef HealthBarDef;
+
 #endif // _GLOBAL_DECL_H
