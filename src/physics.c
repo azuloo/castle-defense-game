@@ -7,9 +7,9 @@
 static PhysicsCollisionEventCbPtr s_CollisionBeginCbPtr = NULL;
 static PhysicsCollisionEventCbPtr s_CollisionEndCbPtr = NULL;
 
-static Collidable2D* s_Collidables2D        = NULL;
-static int s_2DCollidablesCapacity          = 16;
-static int s_2DCollidablesCount             = 0;
+static Collidable2D* s_Collidables2D = NULL;
+static int s_2DCollidablesCapacity = 64; // TODO: Towers' collidables mem realloc problem here
+static int s_2DCollidablesCount  = 0;
 
 static int alloc_collidable2D_handles_arr()
 {
@@ -83,21 +83,20 @@ int add_collidable2D(Collidable2D** dest, const Vec3* initial_pos, const Vec3* i
 
     // TODO: Should be configurated by client.
 #if DRAW_COLLISION_BOX_BOUNDS
-    collision_box2D->DEBUG_draw_bounds = 1;
+    collidable2D->collision_box.DEBUG_draw_bounds = 1;
     static const char* debug_quad_texture_path = "/res/static/textures/debug_quad.png";
 
     DrawableDef* debug_drawable = NULL;
 
     Vec4 debug_color = { { 1.f, 0.f, 0.f, 1.f } };
-    draw_quad(&debug_drawable, debug_quad_texture_path, TexType_RGBA, &collision_box2D->position, &collision_box2D->size, &debug_color);
+    draw_quad(&debug_drawable, debug_quad_texture_path, TexType_RGBA, &collidable2D->collision_box.position, &collidable2D->collision_box.size, &debug_color);
     CHECK_EXPR_FAIL_RET_TERMINATE(NULL != debug_drawable, "[physics] Failed to create drawable for debug quad.");
 
-    collision_box2D->DEBUG_bounds_drawable = debug_drawable;
+    collidable2D->collision_box.DEBUG_bounds_drawable = debug_drawable;
 #endif // DRAW_COLLISION_BOX_BOUNDS
 
-    collidable2D->handle                 = -1;
-    collidable2D->collision_state        = CollisionState_Uncollided;
-    collidable2D->collisions_detected    = 0;
+    collidable2D->handle = -1;
+    collidable2D->collisions_detected = 0;
 
     memset(collidable2D->collision_handles, -1, MAX_COLLISION_HANDLES * sizeof(int));
 
@@ -165,6 +164,7 @@ int resize_collision_box2D(CollisionBox2D* collision_box, float size_x, float si
 }
 
 // TODO: Add broad phase detection
+// TODO: This needs to be reworked...
 int physics_step()
 {
     for (int i = 0; i < s_2DCollidablesCount; i++)
@@ -203,26 +203,38 @@ int physics_step()
                 if (first_collidable->collisions_detected < MAX_COLLISION_HANDLES && second_collidable->collisions_detected < MAX_COLLISION_HANDLES)
                 {
                     bool already_collides = false;
-                    for (int i = 0; i < first_collidable->collisions_detected; i++)
+                    int next_free_spot_first = -1;
+                    for (int ii = 0; ii < MAX_COLLISION_HANDLES; ii++)
                     {
-                        int collidable_handle = first_collidable->collision_handles[i];
+                        int collidable_handle = first_collidable->collision_handles[ii];
+                        if (next_free_spot_first == -1 && collidable_handle == -1)
+                        {
+                            next_free_spot_first = ii;
+                        }
                         if (second_collidable->handle == collidable_handle)
                         {
                             already_collides = true;
                             break;
                         }
                     }
+                    int next_free_spot_second = -1;
+                    for (int ii = 0; ii < MAX_COLLISION_HANDLES; ii++)
+                    {
+                        int collidable_handle = second_collidable->collision_handles[ii];
+                        if (next_free_spot_second == -1 && collidable_handle == -1)
+                        {
+                            next_free_spot_second = ii;
+                            break;
+                        }
+                    }
 
                     if (!already_collides)
                     {
-                        first_collidable->collision_handles[first_collidable->collisions_detected] = second_collidable->handle;
+                        first_collidable->collision_handles[next_free_spot_first] = second_collidable->handle;
                         first_collidable->collisions_detected += 1;
 
-                        second_collidable->collision_handles[second_collidable->collisions_detected] = first_collidable->handle;
+                        second_collidable->collision_handles[next_free_spot_second] = first_collidable->handle;
                         second_collidable->collisions_detected += 1;
-
-                        first_collidable->collision_state = CollisionState_Collided;
-                        second_collidable->collision_state = CollisionState_Collided;
                         
                         if (NULL != s_CollisionBeginCbPtr)
                         {
@@ -233,20 +245,15 @@ int physics_step()
             }
             else
             {
-                if (first_collidable->collisions_detected == 0 || second_collidable->collisions_detected == 0)
-                {
-                    continue;
-                }
-
                 bool trigger_uncollided_first = false;
-                for (int i = 0; i < first_collidable->collisions_detected; i++)
+                for (int jj = 0; jj < MAX_COLLISION_HANDLES; jj++)
                 {
-                    int collidable_handle = first_collidable->collision_handles[i];
+                    int collidable_handle = first_collidable->collision_handles[jj];
                     if (second_collidable->handle == collidable_handle)
                     {
                         trigger_uncollided_first = true;
 
-                        first_collidable->collision_handles[i] = -1;
+                        first_collidable->collision_handles[jj] = -1;
                         first_collidable->collisions_detected -= 1;
 
                         break;
@@ -254,14 +261,14 @@ int physics_step()
                 }
 
                 bool trigger_uncollided_second = false;
-                for (int i = 0; i < second_collidable->collisions_detected; i++)
+                for (int kk = 0; kk < MAX_COLLISION_HANDLES; kk++)
                 {
-                    int collidable_handle = second_collidable->collision_handles[i];
+                    int collidable_handle = second_collidable->collision_handles[kk];
                     if (first_collidable->handle == collidable_handle)
                     {
                         trigger_uncollided_second = true;
 
-                        second_collidable->collision_handles[i] = -1;
+                        second_collidable->collision_handles[kk] = -1;
                         second_collidable->collisions_detected -= 1;
 
                         break;
@@ -270,9 +277,6 @@ int physics_step()
 
                 if (trigger_uncollided_first && trigger_uncollided_second)
                 {
-                    first_collidable->collision_state = CollisionState_Uncollided;
-                    second_collidable->collision_state = CollisionState_Uncollided;
-
                     if (NULL != s_CollisionEndCbPtr)
                     {
                         (*s_CollisionEndCbPtr)(first_collidable, second_collidable);

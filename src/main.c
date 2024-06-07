@@ -9,6 +9,7 @@
 #include "freetype_renderer.h"
 #include "global_defs.h"
 #include "drawable_ops.h"
+#include "health_bar.h"
 
 #include "map/map_mgr.h"
 #include "entity.h"
@@ -16,8 +17,6 @@
 
 #include <string.h>
 #include <stdbool.h>
-
-#define DRAW_COLLISION_BOX_BOUNDS 0
 
 int xWOffset   = 0;
 int yWOffset   = 0;
@@ -142,12 +141,12 @@ static void process_collision_begin_hook(Collidable2D* first, Collidable2D* seco
 		CHECK_EXPR_FAIL_RET(castle != NULL, "[game]: Failed to get the castle.");
 	}
 
-	if (NULL != first_entity && NULL != castle)
+	if (NULL != first_entity && first_entity->collidable2D->collision_box.collision_layer & ~CollisionLayer_Tower && NULL != castle)
 	{
 		resolve_entity_castle_collision(first_entity, castle);
 		return;
 	}
-	else if (NULL != second_entity && NULL != castle)
+	else if (NULL != second_entity && second_entity->collidable2D->collision_box.collision_layer & ~CollisionLayer_Tower && NULL != castle)
 	{
 		resolve_entity_castle_collision(second_entity, castle);
 		return;
@@ -155,7 +154,7 @@ static void process_collision_begin_hook(Collidable2D* first, Collidable2D* seco
 
 	if (NULL != first_entity && first->collision_box.collision_layer & CollisionLayer_Tower)
 	{
-		if (second->collision_box.collision_layer & CollisionLayer_Road)
+		if (second->collision_box.collision_layer & (CollisionLayer_Road | CollisionLayer_Castle))
 		{
 			DrawableDef* first_drawable = NULL;
 			get_drawable_def(&first_drawable, first_entity->drawable_handle);
@@ -167,7 +166,7 @@ static void process_collision_begin_hook(Collidable2D* first, Collidable2D* seco
 	}
 	if (NULL != second_entity && second->collision_box.collision_layer & CollisionLayer_Tower)
 	{
-		if (first->collision_box.collision_layer & CollisionLayer_Road)
+		if (first->collision_box.collision_layer & (CollisionLayer_Road | CollisionLayer_Castle))
 		{
 			DrawableDef* second_drawable = NULL;
 			get_drawable_def(&second_drawable, second_entity->drawable_handle);
@@ -186,7 +185,6 @@ static void process_collision_end_hook(Collidable2D* first, Collidable2D* second
 	EntityDef* second_entity = NULL;
 	CastleDef* castle = NULL;
 
-	// Enemy - Tower collision.
 	if (first->collision_box.collision_layer & CollisionLayer_Enemy)
 	{
 		find_enemy_with_collidable(&first_entity, first);
@@ -211,21 +209,22 @@ static void process_collision_end_hook(Collidable2D* first, Collidable2D* second
 		CHECK_EXPR_FAIL_RET(castle != NULL, "[game]: Failed to get the castle.");
 	}
 
-	if (NULL != first_entity && NULL != castle)
+	if (NULL != first_entity && first_entity->collidable2D->collision_box.collision_layer & ~CollisionLayer_Tower && NULL != castle)
 	{
 		resolve_entity_castle_collision(first_entity, castle);
 		return;
 	}
-	else if (NULL != second_entity && NULL != castle)
+	else if (NULL != second_entity && second_entity->collidable2D->collision_box.collision_layer & ~CollisionLayer_Tower && NULL != castle)
 	{
 		resolve_entity_castle_collision(second_entity, castle);
 		return;
 	}
 
-	// Tower - Road collision.
 	if (NULL != first_entity && first->collision_box.collision_layer & CollisionLayer_Tower)
 	{
-		if (second->collision_box.collision_layer & CollisionLayer_Road)
+		bool road_collision_pred = second->collision_box.collision_layer & CollisionLayer_Road && first_entity->collidable2D->collisions_detected == 0;
+		bool castle_collision_pred = second->collision_box.collision_layer & CollisionLayer_Castle && first_entity->collidable2D->collisions_detected == 0;
+		if (road_collision_pred || castle_collision_pred)
 		{
 			DrawableDef* first_drawable = NULL;
 			get_drawable_def(&first_drawable, first_entity->drawable_handle);
@@ -238,7 +237,9 @@ static void process_collision_end_hook(Collidable2D* first, Collidable2D* second
 
 	if (NULL != second_entity && second->collision_box.collision_layer & CollisionLayer_Tower)
 	{
-		if (first->collision_box.collision_layer & CollisionLayer_Road)
+		bool road_collision_pred = first->collision_box.collision_layer & CollisionLayer_Road && second_entity->collidable2D->collisions_detected == 0;
+		bool castle_collision_pred = first->collision_box.collision_layer & CollisionLayer_Castle && second_entity->collidable2D->collisions_detected == 0;
+		if (road_collision_pred || castle_collision_pred)
 		{
 			DrawableDef* second_drawable = NULL;
 			get_drawable_def(&second_drawable, second_entity->drawable_handle);
@@ -294,7 +295,7 @@ static void process_mouse_button_hook(GWindow* window, int button, int action, i
 	if (button == MOUSE_BUTTON_LEFT && action == KEY_PRESS && s_BuildingModeEnabled)
 	{
 		// Spawn a tower only if it's not colliding with anything.
-		if (NULL != towers[s_CurrentTowerIdx]->collidable2D && towers[s_CurrentTowerIdx]->collidable2D->collision_state & CollisionState_Uncollided)
+		if (NULL != towers[s_CurrentTowerIdx]->collidable2D && towers[s_CurrentTowerIdx]->collidable2D->collisions_detected == 0)
 		{
 			EntityDef* entity = NULL;
 
@@ -461,7 +462,7 @@ int create_tower_entities()
 	// TODO: Add error checks
 	add_collidable2D(&tower_entity->collidable2D, &tower_drawable->transform.translation, &tower_drawable->transform.scale);
 	add_collision_layer2D(&tower_entity->collidable2D->collision_box, CollisionLayer_Tower);
-	add_collision_mask2D(&tower_entity->collidable2D->collision_box, CollisionLayer_Road);
+	add_collision_mask2D(&tower_entity->collidable2D->collision_box, CollisionLayer_Road | CollisionLayer_Castle);
 
 	draw_circle_entity(&tower_entity);
 	towers[1] = tower_entity;
@@ -472,7 +473,7 @@ int create_tower_entities()
 	// TODO: Add error checks
 	add_collidable2D(&tower_entity->collidable2D, &tower_drawable->transform.translation, &tower_drawable->transform.scale);
 	add_collision_layer2D(&tower_entity->collidable2D->collision_box, CollisionLayer_Tower);
-	add_collision_mask2D(&tower_entity->collidable2D->collision_box, CollisionLayer_Road);
+	add_collision_mask2D(&tower_entity->collidable2D->collision_box, CollisionLayer_Road | CollisionLayer_Castle);
 
 	draw_triangle_entity(&tower_entity);
 	towers[2] = tower_entity;
@@ -483,7 +484,7 @@ int create_tower_entities()
 	// TODO: Add error checks
 	add_collidable2D(&tower_entity->collidable2D, &tower_drawable->transform.translation, &tower_drawable->transform.scale);
 	add_collision_layer2D(&tower_entity->collidable2D->collision_box, CollisionLayer_Tower);
-	add_collision_mask2D(&tower_entity->collidable2D->collision_box, CollisionLayer_Road);
+	add_collision_mask2D(&tower_entity->collidable2D->collision_box, CollisionLayer_Road | CollisionLayer_Castle);
 
 	return 0;
 }

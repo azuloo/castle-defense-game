@@ -41,7 +41,6 @@ typedef struct Collidable2D
 {
 	int               handle;
 	CollisionBox2D    collision_box;
-	uint8_t           collision_state;
 	int               collision_handles[MAX_COLLISION_HANDLES];
 	int               collisions_detected;
 } Collidable2D;
