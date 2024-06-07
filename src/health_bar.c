@@ -51,7 +51,13 @@ int add_health_bar(const Vec3* pos, const Vec3* scale)
 	create_drawable(&drawable);
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[health_bar]: Drawable is not defined.");
 
-	add_texture_2D(drawable, s_HealthBarOuterTexture, TexType_RGBA);
+	static const int quad_texture_params[DEFAULT_TEXTURE_PARAMS_COUNT] = {
+		GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER,
+		GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER,
+		GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR,
+		GL_TEXTURE_MAG_FILTER, GL_LINEAR
+	};
+	add_texture_2D(drawable, s_HealthBarOuterTexture, TexType_RGBA, quad_texture_params, sizeof(quad_texture_params) / sizeof(quad_texture_params[0]));
 
 	DrawBufferData* draw_buf_data = NULL;
 	get_quad_draw_buffer_data(&draw_buf_data);

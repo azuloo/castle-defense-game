@@ -26,6 +26,14 @@ extern int wHeight;
 
 #define DEFAULT_UNPACK_ALIGNMENT 4
 
+#define DEFAULT_TEXTURE_PARAMS_COUNT 8
+static const int default_texture_params[DEFAULT_TEXTURE_PARAMS_COUNT] = {
+	GL_TEXTURE_WRAP_S, GL_REPEAT,
+	GL_TEXTURE_WRAP_T, GL_REPEAT,
+	GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR,
+	GL_TEXTURE_MAG_FILTER, GL_LINEAR
+};
+
 int check_graphics_initialized();
 #define ASSERT_GRAPHICS_INITIALIZED assert( check_graphics_initialized() == 1 );
 
@@ -145,7 +153,7 @@ int add_uniform_mat4f(unsigned int shader_prog, const char* uniform_name, const 
 int add_uniform_vec4f(unsigned int shader_prog, const char* uniform_name, const Vec4* vec);
 int add_uniform_vec3f(unsigned int shader_prog, const char* uniform_name, const Vec3* vec);
 int add_uniform_1f(unsigned int shader_prog, const char* uniform_name, float val);
-int add_texture_2D(DrawableDef* drawable, const char* texture_path, int texture_type);
+int add_texture_2D(DrawableDef* drawable, const char* texture_path, int texture_type, int texture_params[], int texture_params_count);
 int setup_drawable(DrawableDef* drawable, const DrawBufferData* buf_data, const char* vertex_shader_path, const char* fragment_shader_path);
 int register_drawable_attribute(DrawableDef* drawable, unsigned int size);
 int process_drawable_attributes(DrawableDef* drawable);

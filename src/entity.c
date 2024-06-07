@@ -24,6 +24,13 @@ static const char* triangle_texture_path   = "/res/static/textures/triangle.png"
 static const char* square_texture_path     = "/res/static/textures/square.png";
 static const char* circle_texture_path     = "/res/static/textures/circle.png";
 
+static const int entity_texture_params[DEFAULT_TEXTURE_PARAMS_COUNT] = {
+	GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER,
+	GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER,
+	GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR,
+	GL_TEXTURE_MAG_FILTER, GL_LINEAR
+};
+
 // ! Allocates memory on heap !
 static int alloc_entities_arr()
 {
@@ -76,7 +83,7 @@ static int add_triangle(EntityDef** dest, const Vec3* pos, const Vec3* scale, co
 	create_entity_def(dest, EntityType_Triangle);
 
 	DrawableDef* drawable = NULL;
-	draw_quad(&drawable, triangle_texture_path, TexType_RGBA, pos, scale, color);
+	draw_quad(&drawable, pos, scale, color, triangle_texture_path, TexType_RGBA, entity_texture_params, DEFAULT_TEXTURE_PARAMS_COUNT);
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[entity]: Failed to draw triangle entity (empty quad drawable).");
 
 	(*dest)->drawable_handle = drawable->handle;
@@ -89,7 +96,7 @@ static int add_square(EntityDef** dest, const Vec3* pos, const Vec3* scale, cons
 	create_entity_def(dest, EntityType_Square);
 
 	DrawableDef* drawable = NULL;
-	draw_quad(&drawable, square_texture_path, TexType_RGBA, pos, scale, color);
+	draw_quad(&drawable, pos, scale, color, square_texture_path, TexType_RGBA, entity_texture_params, DEFAULT_TEXTURE_PARAMS_COUNT);
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[entity]: Failed to draw square entity (empty quad drawable).");
 
 	(*dest)->drawable_handle = drawable->handle;
@@ -102,7 +109,7 @@ static int add_circle(EntityDef** dest, const Vec3* pos, const Vec3* scale, cons
 	create_entity_def(dest, EntityType_Circle);
 
 	DrawableDef* drawable = NULL;
-	draw_quad(&drawable, circle_texture_path, TexType_RGBA, pos, scale, color);
+	draw_quad(&drawable, pos, scale, color, circle_texture_path, TexType_RGBA, entity_texture_params, DEFAULT_TEXTURE_PARAMS_COUNT);
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[entity]: Failed to draw circle entity (empty quad drawable).");
 
 	(*dest)->drawable_handle = drawable->handle;

@@ -59,7 +59,6 @@ int load_ascii_chars()
 		GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER,
 		GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR,
 		GL_TEXTURE_MAG_FILTER, GL_LINEAR
-
 	};
 	set_unpack_alignment(1);
 	// TODO: Take into account window resizing

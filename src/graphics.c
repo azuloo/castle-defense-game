@@ -496,7 +496,7 @@ int add_uniform_1f(unsigned int shader_prog, const char* uniform_name, float val
 	return 0;
 }
 
-int add_texture_2D(DrawableDef* drawable, const char* texture_path, int texture_type)
+int add_texture_2D(DrawableDef* drawable, const char* texture_path, int texture_type, int texture_params[], int texture_params_count)
 {
 	static char path_buf[256];
 	get_file_path(texture_path, &path_buf, 256);
@@ -507,13 +507,7 @@ int add_texture_2D(DrawableDef* drawable, const char* texture_path, int texture_
 
 	memset(path_buf, 0, sizeof *path_buf);
 
-	static const default_tex_params[8] = {
-		GL_TEXTURE_WRAP_S, GL_REPEAT,
-		GL_TEXTURE_WRAP_T, GL_REPEAT,
-		GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR,
-		GL_TEXTURE_MAG_FILTER, GL_LINEAR
-	};
-	int create_texture_2D_res = create_texture_2D(img_data, width, height, &drawable->texture, texture_type, default_tex_params, sizeof(default_tex_params) / sizeof(default_tex_params[0]));
+	int create_texture_2D_res = create_texture_2D(img_data, width, height, &drawable->texture, texture_type, texture_params, texture_params_count);
 	fr_free_image_resources(img_data);
 	CHECK_EXPR_FAIL_RET_TERMINATE(TERMINATE_ERR_CODE != create_texture_2D_res, "[graphics]: Failed to add env texute.");
 

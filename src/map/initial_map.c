@@ -53,7 +53,7 @@ static int add_background()
 	Vec4 color = COLOR_VEC_WHITE;
 
 	DrawableDef* drawable = NULL;
-	draw_quad(&drawable, field_texture_path, TexType_RGB, &translation, &scale, &color);
+	draw_quad(&drawable, &translation, &scale, &color, field_texture_path, TexType_RGB, default_texture_params, DEFAULT_TEXTURE_PARAMS_COUNT);
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[initial_map]: Failed to draw triangle entity (empty quad drawable).");
 
 	return 0;
@@ -187,7 +187,7 @@ static int add_path()
 		calculate_segment_scale(path_segment, &scale);
 
 		DrawableDef* drawable = NULL;
-		draw_quad(&drawable, road_texture_path, TexType_RGB, &translation, &scale, &color);
+		draw_quad(&drawable, &translation, &scale, &color, road_texture_path, TexType_RGB, default_texture_params, DEFAULT_TEXTURE_PARAMS_COUNT);
 		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[initial_map]: Failed to draw triangle entity (empty quad drawable).");
 
 		s_PathDef[i].drawable_handle = drawable->handle;
@@ -275,11 +275,10 @@ static int add_castle()
 	Vec4 castle_color = COLOR_VEC_WHITE;
 
 	DrawableDef* castle_drawable = NULL;
-	draw_quad(&castle_drawable, castle_texture_path, TexType_RGBA, &castle_pos, &castle_scale, &castle_color);
+	draw_quad(&castle_drawable, &castle_pos, &castle_scale, &castle_color, castle_texture_path, TexType_RGBA, default_texture_params, DEFAULT_TEXTURE_PARAMS_COUNT);
 	CHECK_EXPR_FAIL_RET_TERMINATE(castle_drawable != NULL, "[initial_map]: Failed to draw the castle.");
 
 	s_Castle->drawable_handle = castle_drawable->handle;
-
 
 	add_collidable2D(&s_Castle->collidable2D_handle, &castle_drawable->transform.translation, &castle_drawable->transform.scale);
 	Collidable2D* collidable2D = NULL;
