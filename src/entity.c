@@ -2,7 +2,6 @@
 #include "physics.h"
 #include "file_reader.h"
 #include "utils.h"
-#include "obj_registry.h"
 #include "global_defs.h"
 #include "drawable_ops.h"
 #include "file_reader.h"

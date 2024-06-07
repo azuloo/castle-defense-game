@@ -4,7 +4,6 @@
 #include "utils.h"
 #include "lin_alg.h"
 #include "key_bindings.h"
-#include "obj_registry.h"
 #include "freetype_text.h"
 #include "freetype_renderer.h"
 #include "global_defs.h"
@@ -605,7 +604,6 @@ int main(int argc, int* argv[])
 	entity_free_resources();
 	graphics_free_resources();
 	physics_free_resources();
-	registry_free();
 
 	return 0;
 }
