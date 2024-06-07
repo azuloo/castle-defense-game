@@ -30,8 +30,6 @@ typedef struct MapFuncsDef
 	int                    (*add_background)();
 	int                    (*add_path)();
 	Vec2                   (*get_init_direction)();
-	int                    (*add_castle)();
-	int                    (*get_castle)(CastleDef**);
 	int                    (*on_window_resize)();
 	Vec2                   (*get_path_start)();
 	void                   (*free_resources)();
@@ -49,6 +47,7 @@ Vec2 map_mgr_get_init_direction();
 const PathDef* map_mgr_get_path();
 Vec2 map_mgr_get_path_start();
 int map_mgr_get_path_len();
+int map_mgr_add_castle();
 int map_mgr_get_castle(CastleDef** dest);
 
 int map_mgr_init();

@@ -546,6 +546,7 @@ int main(int argc, int* argv[])
 	physics_bind_collision_end_cb(&process_collision_end_hook);
 
 	map_mgr_init();
+	map_mgr_add_castle();
 
 	int load_map_res = map_mgr_load_map();
 	if (TERMINATE_ERR_CODE == load_map_res)
