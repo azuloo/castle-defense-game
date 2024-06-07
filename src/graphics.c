@@ -2,7 +2,7 @@
 #include "file_reader.h"
 #include "stb_image.h"
 #include "lin_alg.h"
-#include "obj_registry.h"
+#include "utils.h"
 
 #include <stdlib.h>
 
@@ -304,7 +304,7 @@ static DrawableDef* create_drawable_def()
 	drawable->texture                 = 0;
 	drawable->num_indices             = 0;
 	drawable->attributes              = NULL;
-	drawable->handle                  = -1;
+	drawable->handle                  = s_DrawableNum;
 	drawable->visible                 = 1;
 	drawable->draw_mode               = DRAW_MODE_STATIC;
 
@@ -315,8 +315,6 @@ static DrawableDef* create_drawable_def()
 
 	int create_drawable_attributes_res = create_drawable_attributes(drawable);
 	CHECK_EXPR_FAIL_RET_NULL(TERMINATE_ERR_CODE != create_drawable_attributes_res, "[graphics]: Failed to create drawable attibutes.");
-
-	REGISTER_OBJ(drawable, &drawable->handle);
 
 	s_DrawableNum++;
 
@@ -661,8 +659,11 @@ void drawable_set_visible(DrawableDef* drawable, int visible)
 
 int get_drawable_def(DrawableDef** dest, int handle)
 {
-	DrawableDef* drawable = (DrawableDef*) GET_FROM_REGISTRY(handle);
-	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[graphics]: Failed to fetch DrawableDef from registry.");
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != s_DrawableData, "[graphics]: Drawable arr has not been initialized.");
+	CHECK_EXPR_FAIL_RET_TERMINATE(handle >= 0 && handle < s_DrawableNum, "[graphics]: Drawable handle is out of bounds.");
+
+	DrawableDef* drawable = s_DrawableData + handle;
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[graphics]: Drawable has not been set.");
 
 	*dest = drawable;
 
