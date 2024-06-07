@@ -55,7 +55,12 @@ static int find_enemy_with_collidable(EntityDef** dest, const Collidable2D* coll
 	{
 		enemy = enemies + i;
 		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemies, "[game]: Failed to retrieve an ememy from the enemies array.");
-		if (NULL == enemy->collidable2D || enemy->collidable2D->handle != collidable->handle)
+
+		Collidable2D* collidable2D = NULL;
+		get_collidable2D(&collidable2D, enemy->collidable2D_handle);
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[game] Failed to fetch Collidable2D for the enemy.");
+
+		if (enemy->collidable2D_handle != collidable->handle)
 		{
 			continue;
 		}
@@ -71,7 +76,11 @@ static int find_tower_with_collidable(EntityDef** dest, const Collidable2D* coll
 {
 	for (int i = 0; i < TOWER_TYPES_AMOUNT; i++)
 	{
-		if (NULL == towers[i]->collidable2D || towers[i]->collidable2D->handle != collidable->handle)
+		Collidable2D* collidable2D = NULL;
+		get_collidable2D(&collidable2D, towers[i]->collidable2D_handle);
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[game] Failed to fetch Collidable2D for the entity.");
+
+		if (collidable2D->handle != collidable->handle)
 		{
 			continue;
 		}
@@ -141,39 +150,54 @@ static void process_collision_begin_hook(Collidable2D* first, Collidable2D* seco
 		CHECK_EXPR_FAIL_RET(castle != NULL, "[game]: Failed to get the castle.");
 	}
 
-	if (NULL != first_entity && first_entity->collidable2D->collision_box.collision_layer & ~CollisionLayer_Tower && NULL != castle)
+	if (NULL != first_entity)
 	{
-		resolve_entity_castle_collision(first_entity, castle);
-		return;
-	}
-	else if (NULL != second_entity && second_entity->collidable2D->collision_box.collision_layer & ~CollisionLayer_Tower && NULL != castle)
-	{
-		resolve_entity_castle_collision(second_entity, castle);
-		return;
-	}
+		Collidable2D* first_collidable2D = NULL;
+		get_collidable2D(&first_collidable2D, first_entity->collidable2D_handle);
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != first_collidable2D, "[game] Failed to fetch Collidable2D for the entity.");
 
-	if (NULL != first_entity && first->collision_box.collision_layer & CollisionLayer_Tower)
-	{
-		if (second->collision_box.collision_layer & (CollisionLayer_Road | CollisionLayer_Castle))
+		if (first_collidable2D->collision_box.collision_layer & ~CollisionLayer_Tower && NULL != castle)
 		{
-			DrawableDef* first_drawable = NULL;
-			get_drawable_def(&first_drawable, first_entity->drawable_handle);
+			resolve_entity_castle_collision(first_entity, castle);
+			return;
+		}
 
-			Vec4 color_vec = COLOR_VEC_RED;
+		if (first->collision_box.collision_layer & CollisionLayer_Tower)
+		{
+			if (second->collision_box.collision_layer & (CollisionLayer_Road | CollisionLayer_Castle))
+			{
+				DrawableDef* first_drawable = NULL;
+				get_drawable_def(&first_drawable, first_entity->drawable_handle);
 
-			add_uniform_vec4f(first_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
+				Vec4 color_vec = COLOR_VEC_RED;
+
+				add_uniform_vec4f(first_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
+			}
 		}
 	}
-	if (NULL != second_entity && second->collision_box.collision_layer & CollisionLayer_Tower)
+	else if (NULL != second_entity)
 	{
-		if (first->collision_box.collision_layer & (CollisionLayer_Road | CollisionLayer_Castle))
+		Collidable2D* second_collidable2D = NULL;
+		get_collidable2D(&second_collidable2D, second_entity->collidable2D_handle);
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != second_collidable2D, "[game] Failed to fetch Collidable2D for the entity.");
+
+		if (second_collidable2D->collision_box.collision_layer & ~CollisionLayer_Tower && NULL != castle)
 		{
-			DrawableDef* second_drawable = NULL;
-			get_drawable_def(&second_drawable, second_entity->drawable_handle);
+			resolve_entity_castle_collision(second_entity, castle);
+			return;
+		}
 
-			Vec4 color_vec = COLOR_VEC_RED;
+		if (second->collision_box.collision_layer & CollisionLayer_Tower)
+		{
+			if (first->collision_box.collision_layer & (CollisionLayer_Road | CollisionLayer_Castle))
+			{
+				DrawableDef* second_drawable = NULL;
+				get_drawable_def(&second_drawable, second_entity->drawable_handle);
 
-			add_uniform_vec4f(second_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
+				Vec4 color_vec = COLOR_VEC_RED;
+
+				add_uniform_vec4f(second_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
+			}
 		}
 	}
 }
@@ -209,44 +233,50 @@ static void process_collision_end_hook(Collidable2D* first, Collidable2D* second
 		CHECK_EXPR_FAIL_RET(castle != NULL, "[game]: Failed to get the castle.");
 	}
 
-	if (NULL != first_entity && first_entity->collidable2D->collision_box.collision_layer & ~CollisionLayer_Tower && NULL != castle)
+	if (NULL != first_entity)
 	{
-		resolve_entity_castle_collision(first_entity, castle);
-		return;
-	}
-	else if (NULL != second_entity && second_entity->collidable2D->collision_box.collision_layer & ~CollisionLayer_Tower && NULL != castle)
-	{
-		resolve_entity_castle_collision(second_entity, castle);
-		return;
-	}
-
-	if (NULL != first_entity && first->collision_box.collision_layer & CollisionLayer_Tower)
-	{
-		bool road_collision_pred = second->collision_box.collision_layer & CollisionLayer_Road && first_entity->collidable2D->collisions_detected == 0;
-		bool castle_collision_pred = second->collision_box.collision_layer & CollisionLayer_Castle && first_entity->collidable2D->collisions_detected == 0;
-		if (road_collision_pred || castle_collision_pred)
+		if (NULL != castle && first->collision_box.collision_layer & ~CollisionLayer_Tower)
 		{
-			DrawableDef* first_drawable = NULL;
-			get_drawable_def(&first_drawable, first_entity->drawable_handle);
+			resolve_entity_castle_collision(first_entity, castle);
+			return;
+		}
 
-			Vec4 color_vec = COLOR_VEC_GREEN;
+		if (first->collision_box.collision_layer & CollisionLayer_Tower)
+		{
+			bool road_collision_pred = second->collision_box.collision_layer & CollisionLayer_Road && second->collisions_detected == 0;
+			bool castle_collision_pred = second->collision_box.collision_layer & CollisionLayer_Castle && second->collisions_detected == 0;
+			if (road_collision_pred || castle_collision_pred)
+			{
+				DrawableDef* first_drawable = NULL;
+				get_drawable_def(&first_drawable, first_entity->drawable_handle);
 
-			add_uniform_vec4f(first_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
+				Vec4 color_vec = COLOR_VEC_GREEN;
+
+				add_uniform_vec4f(first_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
+			}
 		}
 	}
-
-	if (NULL != second_entity && second->collision_box.collision_layer & CollisionLayer_Tower)
+	if (NULL != second_entity)
 	{
-		bool road_collision_pred = first->collision_box.collision_layer & CollisionLayer_Road && second_entity->collidable2D->collisions_detected == 0;
-		bool castle_collision_pred = first->collision_box.collision_layer & CollisionLayer_Castle && second_entity->collidable2D->collisions_detected == 0;
-		if (road_collision_pred || castle_collision_pred)
+		if (second->collision_box.collision_layer & ~CollisionLayer_Tower && NULL != castle)
 		{
-			DrawableDef* second_drawable = NULL;
-			get_drawable_def(&second_drawable, second_entity->drawable_handle);
+			resolve_entity_castle_collision(second_entity, castle);
+			return;
+		}
 
-			Vec4 color_vec = COLOR_VEC_GREEN;
+		if (second->collision_box.collision_layer & CollisionLayer_Tower)
+		{
+			bool road_collision_pred = first->collision_box.collision_layer & CollisionLayer_Road && first->collisions_detected == 0;
+			bool castle_collision_pred = first->collision_box.collision_layer & CollisionLayer_Castle && first->collisions_detected == 0;
+			if (road_collision_pred || castle_collision_pred)
+			{
+				DrawableDef* second_drawable = NULL;
+				get_drawable_def(&second_drawable, second_entity->drawable_handle);
 
-			add_uniform_vec4f(second_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
+			    Vec4 color_vec = COLOR_VEC_GREEN;
+
+				add_uniform_vec4f(second_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
+			}
 		}
 	}
 }
@@ -294,8 +324,13 @@ static void process_mouse_button_hook(GWindow* window, int button, int action, i
 {
 	if (button == MOUSE_BUTTON_LEFT && action == KEY_PRESS && s_BuildingModeEnabled)
 	{
+		EntityDef* tower = towers[s_CurrentTowerIdx];
+		Collidable2D* collidable2D = NULL;
+		get_collidable2D(&collidable2D, tower->collidable2D_handle);
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[game] Failed to fetch Collidable2D for the tower.");
+
 		// Spawn a tower only if it's not colliding with anything.
-		if (NULL != towers[s_CurrentTowerIdx]->collidable2D && towers[s_CurrentTowerIdx]->collidable2D->collisions_detected == 0)
+		if (collidable2D->collisions_detected == 0)
 		{
 			EntityDef* entity = NULL;
 
@@ -343,9 +378,13 @@ static void process_mouse_button_hook(GWindow* window, int button, int action, i
 				DrawableDef* drawable = NULL;
 				get_drawable_def(&drawable, entity->drawable_handle);
 				CHECK_EXPR_FAIL_RET(drawable != NULL, "[game]: Failed to fetch tower drawable.");
-				add_collidable2D(&entity->collidable2D, &drawable->transform.translation, &drawable->transform.scale);
-				CHECK_EXPR_FAIL_RET(entity->collidable2D != NULL, "[game]: Failed to attach Collidable2D.");
-				add_collision_layer2D(&entity->collidable2D->collision_box, CollisionLayer_Tower);
+				add_collidable2D(&entity->collidable2D_handle, &drawable->transform.translation, &drawable->transform.scale);
+				CHECK_EXPR_FAIL_RET(-1 != entity->collidable2D_handle, "[game]: Failed to attach Collidable2D.");
+
+				Collidable2D* collidable2D = NULL;
+				get_collidable2D(&collidable2D, entity->collidable2D_handle);
+				CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[game] Failed to fetch Collidable2D for the entity.");
+				add_collision_layer2D(&collidable2D->collision_box, CollisionLayer_Tower);
 			}
 
 			s_BuildingModeEnabled = !s_BuildingModeEnabled;
@@ -448,43 +487,46 @@ int draw_circle_entity(EntityDef** circle)
 
 int create_tower_entities()
 {
-	// TODO: Add error checks
+	static const tower_types[3] = { EntityType_Square, EntityType_Circle, EntityType_Triangle };
 	EntityDef* tower_entity = NULL;
 	DrawableDef* tower_drawable = NULL;
 
-	// TODO: General code; use loop
-	draw_square_entity(&tower_entity);
-	towers[0] = tower_entity;
+	for (int i = 0; i < 3; i++)
+	{
+		switch (tower_types[i])
+		{
+		case EntityType_Square: 
+		{
+			draw_square_entity(&tower_entity);
+		} break;
 
-	get_drawable_def(&tower_drawable, tower_entity->drawable_handle);
-	tower_drawable->visible = 0;
+		case EntityType_Circle:
+		{
+			draw_circle_entity(&tower_entity);
+		} break;
 
-	// TODO: Add error checks
-	add_collidable2D(&tower_entity->collidable2D, &tower_drawable->transform.translation, &tower_drawable->transform.scale);
-	add_collision_layer2D(&tower_entity->collidable2D->collision_box, CollisionLayer_Tower);
-	add_collision_mask2D(&tower_entity->collidable2D->collision_box, CollisionLayer_Road | CollisionLayer_Castle);
+		case EntityType_Triangle:
+		{
+			draw_triangle_entity(&tower_entity);
+		} break;
 
-	draw_circle_entity(&tower_entity);
-	towers[1] = tower_entity;
+		default:
+			break;
+		}
 
-	get_drawable_def(&tower_drawable, tower_entity->drawable_handle);
-	tower_drawable->visible = 0;
+		towers[i] = tower_entity;
 
-	// TODO: Add error checks
-	add_collidable2D(&tower_entity->collidable2D, &tower_drawable->transform.translation, &tower_drawable->transform.scale);
-	add_collision_layer2D(&tower_entity->collidable2D->collision_box, CollisionLayer_Tower);
-	add_collision_mask2D(&tower_entity->collidable2D->collision_box, CollisionLayer_Road | CollisionLayer_Castle);
+		get_drawable_def(&tower_drawable, tower_entity->drawable_handle);
+		tower_drawable->visible = 0;
 
-	draw_triangle_entity(&tower_entity);
-	towers[2] = tower_entity;
-
-	get_drawable_def(&tower_drawable, tower_entity->drawable_handle);
-	tower_drawable->visible = 0;
-
-	// TODO: Add error checks
-	add_collidable2D(&tower_entity->collidable2D, &tower_drawable->transform.translation, &tower_drawable->transform.scale);
-	add_collision_layer2D(&tower_entity->collidable2D->collision_box, CollisionLayer_Tower);
-	add_collision_mask2D(&tower_entity->collidable2D->collision_box, CollisionLayer_Road | CollisionLayer_Castle);
+		add_collidable2D(&tower_entity->collidable2D_handle, &tower_drawable->transform.translation, &tower_drawable->transform.scale);
+		
+		Collidable2D* collidable2D = NULL;
+		get_collidable2D(&collidable2D, tower_entity->collidable2D_handle);
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[game] Failed to fetch Collidable2D for the tower.");
+		add_collision_layer2D(&collidable2D->collision_box, CollisionLayer_Tower);
+		add_collision_mask2D(&collidable2D->collision_box, CollisionLayer_Road | CollisionLayer_Castle);
+	}
 
 	return 0;
 }

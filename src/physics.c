@@ -2,7 +2,6 @@
 #include "global_defs.h"
 #include "utils.h"
 #include "drawable_ops.h"
-#include "obj_registry.h"
 
 static PhysicsCollisionEventCbPtr s_CollisionBeginCbPtr = NULL;
 static PhysicsCollisionEventCbPtr s_CollisionEndCbPtr = NULL;
@@ -21,15 +20,6 @@ static int alloc_collidable2D_handles_arr()
     s_Collidables2D = collidables_arr;
 
     return 0;
-}
-
-static void refresh_drawable_addrs()
-{
-    for (int i = 0; i < s_2DCollidablesCount; i++)
-    {
-        Collidable2D* collidable2D = s_Collidables2D + i;
-        refresh_obj_addr(collidable2D->handle, collidable2D);
-    }
 }
 
 int is_collided_AABB(const CollisionBox2D* first, const CollisionBox2D* second)
@@ -63,14 +53,12 @@ void physics_bind_collision_end_cb(PhysicsCollisionEventCbPtr cb)
     s_CollisionEndCbPtr = cb;
 }
 
-int add_collidable2D(Collidable2D** dest, const Vec3* initial_pos, const Vec3* initial_size)
+int add_collidable2D(int* handle_dest, const Vec3* initial_pos, const Vec3* initial_size)
 {
     if (NULL == s_Collidables2D || s_2DCollidablesCount >= s_2DCollidablesCapacity)
     {
         int alloc_handles_res = alloc_collidable2D_handles_arr();
         CHECK_EXPR_FAIL_RET_TERMINATE(alloc_handles_res != TERMINATE_ERR_CODE, "[physics]: Failed to create collidable 2D collidables arr.");
-    
-        refresh_drawable_addrs();
     }
 
     Collidable2D* collidable2D                       = s_Collidables2D + s_2DCollidablesCount;
@@ -95,14 +83,12 @@ int add_collidable2D(Collidable2D** dest, const Vec3* initial_pos, const Vec3* i
     collidable2D->collision_box.DEBUG_bounds_drawable = debug_drawable;
 #endif // DRAW_COLLISION_BOX_BOUNDS
 
-    collidable2D->handle = -1;
+    collidable2D->handle = s_2DCollidablesCount;
     collidable2D->collisions_detected = 0;
 
     memset(collidable2D->collision_handles, -1, MAX_COLLISION_HANDLES * sizeof(int));
 
-    *dest = collidable2D;
-
-    REGISTER_OBJ(collidable2D, &collidable2D->handle);
+    *handle_dest = s_2DCollidablesCount;
 
     s_2DCollidablesCount++;
 
@@ -121,6 +107,19 @@ void add_collision_mask2D(CollisionBox2D* collision_box, uint16_t mask)
     CHECK_EXPR_FAIL_RET(NULL != collision_box, "[physics]: Collision box must be created before you assign a mask to it.");
 
     collision_box->collision_mask |= mask;
+}
+
+int get_collidable2D(Collidable2D** dest, int handle)
+{
+    CHECK_EXPR_FAIL_RET_TERMINATE(NULL != s_Collidables2D, "[physics]: Collidable2D arr has not been initialized.");
+    CHECK_EXPR_FAIL_RET_TERMINATE(handle >= 0 && handle < s_2DCollidablesCount, "[physics]: Collidable2D handle is out of bounds.");
+
+    Collidable2D* collidable2D = s_Collidables2D + handle;
+    CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[physics]: Collidable2D has not been found.");
+
+    *dest = collidable2D;
+
+    return 0;
 }
 
 int move_collision_box2D(CollisionBox2D* collision_box, float pos_x, float pos_y)

@@ -51,17 +51,17 @@ static int create_entity_def(EntityDef** dest, enum EntityType type)
 		CHECK_EXPR_FAIL_RET_TERMINATE(TERMINATE_ERR_CODE != alloc_entities_arr_res, "[entity]: Failed to create entities arr.");
 	}
 
-	EntityDef* entity_def          = s_EntityDefs + s_EntitiesNum;
-	entity_def->type               = type;
-	entity_def->path               = NULL;
-	entity_def->path_idx           = -1;
-	entity_def->path_len           = 0;
-	entity_def->segment_percent    = 0.f;
-	entity_def->state              = EntityState_Setup;
-	entity_def->initial_speed      = ENTITY_MOVEMENT_SPEED;
-	entity_def->speed              = ENTITY_MOVEMENT_SPEED;
-	entity_def->drawable_handle    = -1;
-	entity_def->collidable2D       = NULL;
+	EntityDef* entity_def             = s_EntityDefs + s_EntitiesNum;
+	entity_def->type                  = type;
+	entity_def->path                  = NULL;
+	entity_def->path_idx              = -1;
+	entity_def->path_len              = 0;
+	entity_def->segment_percent       = 0.f;
+	entity_def->state                 = EntityState_Setup;
+	entity_def->initial_speed         = ENTITY_MOVEMENT_SPEED;
+	entity_def->speed                 = ENTITY_MOVEMENT_SPEED;
+	entity_def->drawable_handle       = -1;
+	entity_def->collidable2D_handle   = -1;
 
 	memset(&entity_def->direction, 0, sizeof(Vec2));
 
@@ -177,9 +177,13 @@ int move_entity(EntityDef* dest, float pos_x, float pos_y)
 	drawable->transform.translation.x = pos_x;
 	drawable->transform.translation.y = pos_y;
 
-	if (NULL != dest->collidable2D)
+	if (-1 != dest->collidable2D_handle)
 	{
-		move_collision_box2D(&dest->collidable2D->collision_box, pos_x, pos_y);
+		Collidable2D* collidable2D = NULL;
+		get_collidable2D(&collidable2D, dest->collidable2D_handle);
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[entity] Failed to fetch Collidable2D for the entity.");
+
+		move_collision_box2D(&collidable2D->collision_box, pos_x, pos_y);
 	}
 
 	drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
@@ -196,9 +200,13 @@ int resize_entity(EntityDef* dest, float scale_x, float scale_y)
 	drawable->transform.scale.x = scale_x;
 	drawable->transform.scale.y = scale_y;
 
-	if (NULL != dest->collidable2D)
+	if (-1 != dest->collidable2D_handle)
 	{
-		resize_collision_box2D(&dest->collidable2D->collision_box, scale_x, scale_y);
+		Collidable2D* collidable2D = NULL;
+		get_collidable2D(&collidable2D, dest->collidable2D_handle);
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[entity] Failed to fetch Collidable2D for the entity.");
+
+		resize_collision_box2D(&collidable2D->collision_box, scale_x, scale_y);
 	}
 
 	drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);

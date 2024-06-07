@@ -8,7 +8,7 @@ typedef struct CastleDef
 {
 	enum EntityType    type;
 	int                drawable_handle;
-	Collidable2D*      collidable2D;
+	int                collidable2D_handle;
 } CastleDef;
 
 typedef struct PathSegment
@@ -20,8 +20,8 @@ typedef struct PathSegment
 typedef struct PathDef
 {                
 	PathSegment        path_segment;
-	Collidable2D*      collidable2D;
 	int                drawable_handle;
+	int                collidable2D_handle;
 } PathDef;
 
 typedef struct MapFuncsDef

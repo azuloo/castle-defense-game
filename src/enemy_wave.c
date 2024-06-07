@@ -87,10 +87,13 @@ static int fill_enemies_data()
 			CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemy_drawable, "[enemy_wave]: Failed to get drawable for this enemy.");
 			enemy_drawable->visible = 0;
 			
-			add_collidable2D(&enemy->collidable2D, &enemy_drawable->transform.translation, &enemy_drawable->transform.scale);
-			CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemy->collidable2D, "[enemy_wave]: Failed to add Collidable2D to the enemy obj.");
-			add_collision_layer2D(&enemy->collidable2D->collision_box, CollisionLayer_Enemy);
-			add_collision_mask2D(&enemy->collidable2D->collision_box, CollisionLayer_Castle);
+			add_collidable2D(&enemy->collidable2D_handle, &enemy_drawable->transform.translation, &enemy_drawable->transform.scale);
+			Collidable2D* collidable2D = NULL;
+			get_collidable2D(&collidable2D, enemy->collidable2D_handle);
+			CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[enemy_wave] Failed to fetch Collidable2D for the entity.");
+
+			add_collision_layer2D(&collidable2D->collision_box, CollisionLayer_Enemy);
+			add_collision_mask2D(&collidable2D->collision_box, CollisionLayer_Castle);
 
 			EntityDef* enemy_dest = enemy_wave->enemies + i;
 			memcpy(enemy_dest, enemy, sizeof(EntityDef));

@@ -33,10 +33,10 @@ typedef struct EntityDef
 	float             segment_percent;
 	enum EntityState  state;
 	int               drawable_handle;
+	int               collidable2D_handle;
 	int               initial_speed;
 	int               speed;
 	Vec2              direction;
-	Collidable2D*     collidable2D;
 } EntityDef;
 
 int add_entity(enum EntityType type, EntityDef** dest, const Vec3* pos, const Vec3* scale, const Vec4* color);

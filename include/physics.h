@@ -51,9 +51,10 @@ void physics_bind_collision_begind_cb(PhysicsCollisionEventCbPtr cb);
 void physics_bind_collision_end_cb(PhysicsCollisionEventCbPtr cb);
 
 // ! Allocates memory on heap !
-int add_collidable2D(Collidable2D** dest, const Vec3* initial_pos, const Vec3* initial_size);
+int add_collidable2D(int* handle_dest, const Vec3* initial_pos, const Vec3* initial_size);
 void add_collision_layer2D(CollisionBox2D* collision_box, uint16_t layer);
 void add_collision_mask2D(CollisionBox2D* collision_box, uint16_t mask);
+int get_collidable2D(Collidable2D** dest, int handle);
 int move_collision_box2D(CollisionBox2D* collision_box, float pos_x, float pos_y);
 int resize_collision_box2D(CollisionBox2D* collision_box, float size_x, float size_y);
 

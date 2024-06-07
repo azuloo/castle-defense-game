@@ -153,10 +153,14 @@ static int recalculate_path()
 		drawable->transform.translation = translation;
 		drawable->transform.scale = scale;
 
-		if (NULL != s_PathDef[i].collidable2D)
+		if (-1 != s_PathDef[i].collidable2D_handle)
 		{
-			move_collision_box2D(&s_PathDef[i].collidable2D->collision_box, translation.x, translation.y);
-			resize_collision_box2D(&s_PathDef[i].collidable2D->collision_box, scale.x, scale.y);
+			add_collidable2D(&s_PathDef[i].collidable2D_handle, &drawable->transform.translation, &drawable->transform.scale);
+			Collidable2D* collidable2D = NULL;
+			get_collidable2D(&collidable2D, s_PathDef[i].collidable2D_handle);
+
+			move_collision_box2D(&collidable2D->collision_box, translation.x, translation.y);
+			resize_collision_box2D(&collidable2D->collision_box, scale.x, scale.y);
 		}
 
 		drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
@@ -172,7 +176,7 @@ static int add_path()
 	for (int i = 0; i < INTIAL_MAP_PATH_LEN; i++)
 	{
 		s_PathDef[i].path_segment = s_PathSegments[i];
-		s_PathDef[i].collidable2D = NULL;
+		s_PathDef[i].collidable2D_handle = -1;
 
 		const PathSegment* path_segment = &s_PathDef[i].path_segment;
 		
@@ -188,9 +192,12 @@ static int add_path()
 
 		s_PathDef[i].drawable_handle = drawable->handle;
 
-		// TODO: Add NULL check
-		add_collidable2D(&s_PathDef[i].collidable2D, &drawable->transform.translation, &drawable->transform.scale);
-		add_collision_layer2D(&s_PathDef[i].collidable2D->collision_box, CollisionLayer_Road);
+		add_collidable2D(&s_PathDef[i].collidable2D_handle, &drawable->transform.translation, &drawable->transform.scale);
+		Collidable2D* collidable2D = NULL;
+		get_collidable2D(&collidable2D, s_PathDef[i].collidable2D_handle);
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[initial_map] Failed to fetch Collidable2D for the path.");
+
+		add_collision_layer2D(&collidable2D->collision_box, CollisionLayer_Road);
 	}
 
 	return 0;
@@ -214,7 +221,7 @@ static int create_castle()
 	castle->drawable_handle = -1;
 	// TODO: Entity should be generalized or we should use different type for castle
 	castle->type = EntityType_Castle;
-	castle->collidable2D = NULL;
+	castle->collidable2D_handle = -1;
 
 	s_Castle = castle;
 
@@ -238,10 +245,14 @@ static int resize_castle()
 	castle_drawable->transform.translation = castle_pos;
 	castle_drawable->transform.scale = castle_scale;
 
-	if (NULL != s_Castle->collidable2D)
+	if (-1 != s_Castle->collidable2D_handle)
 	{
-		move_collision_box2D(&s_Castle->collidable2D->collision_box, castle_pos.x, castle_pos.y);
-		resize_collision_box2D(&s_Castle->collidable2D->collision_box, castle_scale.x, castle_scale.y);
+		Collidable2D* collidable2D = NULL;
+		get_collidable2D(&collidable2D, s_Castle->collidable2D_handle);
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[initial_map] Failed to fetch Collidable2D for the castle.");
+
+		move_collision_box2D(&collidable2D->collision_box, castle_pos.x, castle_pos.y);
+		resize_collision_box2D(&collidable2D->collision_box, castle_scale.x, castle_scale.y);
 	}
 
 	// TODO: Add resizing castle health bar once we add it's state to the Castle
@@ -265,14 +276,18 @@ static int add_castle()
 
 	DrawableDef* castle_drawable = NULL;
 	draw_quad(&castle_drawable, castle_texture_path, TexType_RGBA, &castle_pos, &castle_scale, &castle_color);
-	CHECK_EXPR_FAIL_RET_TERMINATE(castle_drawable != NULL, "[game]: Failed to draw the castle.");
+	CHECK_EXPR_FAIL_RET_TERMINATE(castle_drawable != NULL, "[initial_map]: Failed to draw the castle.");
 
 	s_Castle->drawable_handle = castle_drawable->handle;
 
-	add_collidable2D(&s_Castle->collidable2D, &castle_drawable->transform.translation, &castle_drawable->transform.scale);
-	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != s_Castle->collidable2D, "[game]: Failed to add collidable2D for the castle.");
-	add_collision_layer2D(&s_Castle->collidable2D->collision_box, CollisionLayer_Castle);
-	add_collision_mask2D(&s_Castle->collidable2D->collision_box, CollisionLayer_Enemy);
+
+	add_collidable2D(&s_Castle->collidable2D_handle, &castle_drawable->transform.translation, &castle_drawable->transform.scale);
+	Collidable2D* collidable2D = NULL;
+	get_collidable2D(&collidable2D, s_Castle->collidable2D_handle);
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[initial_map] Failed to fetch Collidable2D for the castle.");
+
+	add_collision_layer2D(&collidable2D->collision_box, CollisionLayer_Castle);
+	add_collision_mask2D(&collidable2D->collision_box, CollisionLayer_Enemy);
 
 	const Vec3 hb_pos = { { castle_drawable->transform.translation.x, castle_drawable->transform.translation.y + (float)wHeight * 0.13f, castle_drawable->transform.translation.z } };
 	const Vec3 hb_scale = { { (float)wHeight * 0.11f, (float)wHeight * 0.01f, 1.f } };
