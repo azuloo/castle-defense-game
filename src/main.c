@@ -151,11 +151,7 @@ static void process_collision_begin_hook(Collidable2D* first, Collidable2D* seco
 
 	if (NULL != first_entity)
 	{
-		Collidable2D* first_collidable2D = NULL;
-		get_collidable2D(&first_collidable2D, first_entity->collidable2D_handle);
-		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != first_collidable2D, "[game] Failed to fetch Collidable2D for the entity.");
-
-		if (first_collidable2D->collision_box.collision_layer & ~CollisionLayer_Tower && NULL != castle)
+		if (first->collision_box.collision_layer & ~CollisionLayer_Tower && NULL != castle)
 		{
 			resolve_entity_castle_collision(first_entity, castle);
 			return;
@@ -176,11 +172,7 @@ static void process_collision_begin_hook(Collidable2D* first, Collidable2D* seco
 	}
 	else if (NULL != second_entity)
 	{
-		Collidable2D* second_collidable2D = NULL;
-		get_collidable2D(&second_collidable2D, second_entity->collidable2D_handle);
-		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != second_collidable2D, "[game] Failed to fetch Collidable2D for the entity.");
-
-		if (second_collidable2D->collision_box.collision_layer & ~CollisionLayer_Tower && NULL != castle)
+		if (second->collision_box.collision_layer & ~CollisionLayer_Tower && NULL != castle)
 		{
 			resolve_entity_castle_collision(second_entity, castle);
 			return;
@@ -234,7 +226,11 @@ static void process_collision_end_hook(Collidable2D* first, Collidable2D* second
 
 	if (NULL != first_entity)
 	{
-		if (NULL != castle && first->collision_box.collision_layer & ~CollisionLayer_Tower)
+		Collidable2D* first_collidable2D = NULL;
+		get_collidable2D(&first_collidable2D, first_entity->collidable2D_handle);
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != first_collidable2D, "[game] Failed to fetch Collidable2D for the entity.");
+
+		if (NULL != castle && first_collidable2D->collision_box.collision_layer & ~CollisionLayer_Tower)
 		{
 			resolve_entity_castle_collision(first_entity, castle);
 			return;
@@ -242,8 +238,8 @@ static void process_collision_end_hook(Collidable2D* first, Collidable2D* second
 
 		if (first->collision_box.collision_layer & CollisionLayer_Tower)
 		{
-			bool road_collision_pred = second->collision_box.collision_layer & CollisionLayer_Road && second->collisions_detected == 0;
-			bool castle_collision_pred = second->collision_box.collision_layer & CollisionLayer_Castle && second->collisions_detected == 0;
+			bool road_collision_pred = second->collision_box.collision_layer & CollisionLayer_Road && first_collidable2D->collisions_detected == 0;
+			bool castle_collision_pred = second->collision_box.collision_layer & CollisionLayer_Castle && first_collidable2D->collisions_detected == 0;
 			if (road_collision_pred || castle_collision_pred)
 			{
 				DrawableDef* first_drawable = NULL;
@@ -257,7 +253,11 @@ static void process_collision_end_hook(Collidable2D* first, Collidable2D* second
 	}
 	if (NULL != second_entity)
 	{
-		if (second->collision_box.collision_layer & ~CollisionLayer_Tower && NULL != castle)
+		Collidable2D* second_collidable2D = NULL;
+		get_collidable2D(&second_collidable2D, second_entity->collidable2D_handle);
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != second_collidable2D, "[game] Failed to fetch Collidable2D for the entity.");
+
+		if (NULL != castle && second_collidable2D->collision_box.collision_layer & ~CollisionLayer_Tower)
 		{
 			resolve_entity_castle_collision(second_entity, castle);
 			return;
@@ -265,8 +265,8 @@ static void process_collision_end_hook(Collidable2D* first, Collidable2D* second
 
 		if (second->collision_box.collision_layer & CollisionLayer_Tower)
 		{
-			bool road_collision_pred = first->collision_box.collision_layer & CollisionLayer_Road && first->collisions_detected == 0;
-			bool castle_collision_pred = first->collision_box.collision_layer & CollisionLayer_Castle && first->collisions_detected == 0;
+			bool road_collision_pred = first->collision_box.collision_layer & CollisionLayer_Road && second_collidable2D->collisions_detected == 0;
+			bool castle_collision_pred = first->collision_box.collision_layer & CollisionLayer_Castle && second_collidable2D->collisions_detected == 0;
 			if (road_collision_pred || castle_collision_pred)
 			{
 				DrawableDef* second_drawable = NULL;
