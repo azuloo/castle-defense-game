@@ -6,7 +6,6 @@
 
 typedef struct CastleDef
 {
-	enum EntityType    type;
 	int                drawable_handle;
 	int                collidable2D_handle;
 	int                health_bar_handle;

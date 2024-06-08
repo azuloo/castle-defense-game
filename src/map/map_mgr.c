@@ -51,8 +51,6 @@ static int create_castle()
 	CHECK_EXPR_FAIL_RET_TERMINATE(castle != NULL, "[game]: Failed to create the castle.");
 
 	castle->drawable_handle = -1;
-	// TODO: Entity should be generalized or we should use different type for castle
-	castle->type = EntityType_Castle;
 	castle->collidable2D_handle = -1;
 
 	s_Castle = castle;

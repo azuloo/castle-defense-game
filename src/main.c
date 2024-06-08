@@ -107,13 +107,21 @@ static void resolve_entity_castle_collision(EntityDef* first, CastleDef* second)
 		return;
 	}
 
-	if (NULL != first_drawable && first->type == EntityType_Castle)
+	Collidable2D* first_collidable2D = NULL;
+	get_collidable2D(&first_collidable2D, first->collidable2D_handle);
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != first_collidable2D, "[game] Failed to fetch Collidable2D for the entity.");
+
+	if (NULL != first_drawable && first_collidable2D->collision_box.collision_layer & CollisionLayer_Castle)
 	{
 		map_mgr_damage_castle(10.f);
 		add_uniform_vec4f(second_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
 	}
 
-	if (NULL != second_drawable && second->type == EntityType_Castle)
+	Collidable2D* second_collidable2D = NULL;
+	get_collidable2D(&second_collidable2D, second->collidable2D_handle);
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != second_collidable2D, "[game] Failed to fetch Collidable2D for the entity.");
+
+	if (NULL != second_drawable && second_collidable2D->collision_box.collision_layer & CollisionLayer_Castle)
 	{
 		map_mgr_damage_castle(10.f);
 		add_uniform_vec4f(first_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);

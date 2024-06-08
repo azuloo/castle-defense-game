@@ -5,7 +5,7 @@
 #include "global_decl.h"
 
 // TODO: Add to entity's state
-#define ENTITY_MOVEMENT_SPEED 250.f
+#define ENTITY_MOVEMENT_SPEED 350.f
 
 enum EntityState
 {
@@ -20,8 +20,7 @@ typedef enum EntityType
 	EntityType_None,
 	EntityType_Square,
 	EntityType_Circle,
-	EntityType_Triangle,
-	EntityType_Castle
+	EntityType_Triangle
 } EntityType;
 
 typedef struct EntityDef
