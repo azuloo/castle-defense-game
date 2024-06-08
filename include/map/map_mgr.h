@@ -9,6 +9,7 @@ typedef struct CastleDef
 	enum EntityType    type;
 	int                drawable_handle;
 	int                collidable2D_handle;
+	int                health_bar_handle;
 } CastleDef;
 
 typedef struct PathSegment
@@ -49,6 +50,7 @@ Vec2 map_mgr_get_path_start();
 int map_mgr_get_path_len();
 int map_mgr_add_castle();
 int map_mgr_get_castle(CastleDef** dest);
+int map_mgr_damage_castle(float amount);
 
 int map_mgr_init();
 int map_mgr_free_resources();

@@ -5,6 +5,8 @@
 #include "global_defs.h"
 #include "utils.h"
 
+#define HEALTH_VALUE_UNIFORM_NAME "uFilled"
+
 static const char* s_HealthBarOuterTexture = "/res/static/textures/health_bar.png";
 static const char* s_quad_vertex_shader_path = "/res/static/shaders/basic_vert.txt";
 static const char* s_quad_frag_shader_path = "/res/static/shaders/health_bar_frag.txt";
@@ -34,7 +36,8 @@ static int create_health_bar(HealthBarDef** dest)
 
 	HealthBarDef* health_bar = s_HealthBar + s_HealthBarCount;
 	health_bar->collision_box = NULL;
-	health_bar->value = HEALTH_BAR_DEFAULT_VALUE;
+	health_bar->value = 0;
+	health_bar->handle = s_HealthBarCount;
 	health_bar->drawable_handle = -1;
 
 	s_HealthBarCount++;
@@ -43,7 +46,7 @@ static int create_health_bar(HealthBarDef** dest)
 	return 0;
 }
 
-int add_health_bar(const Vec3* pos, const Vec3* scale)
+int add_health_bar(int* dest_handle, const Vec3* pos, const Vec3* scale)
 {
 	const Vec4 color = { { 1.f, 1.f, 1.f, 1.f } };
 	DrawableDef* drawable = NULL;
@@ -76,19 +79,54 @@ int add_health_bar(const Vec3* pos, const Vec3* scale)
 	drawable->init_transform.translation = *pos;
 	drawable->init_transform.scale = *scale;
 
-	drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
-
 	drawable->matrices.projection = COMMON_ORTHO_MAT;
 	add_uniform_mat4f(drawable->shader_prog, COMMON_PROJECTION_UNIFORM_NAME, &drawable->matrices.projection);
-
-	add_uniform_vec4f(drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color);
-	add_uniform_1f(drawable->shader_prog, "uFilled", 1.f);
 
 	HealthBarDef* health_bar = NULL;
 	create_health_bar(&health_bar);
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != health_bar, "[health_bar]: Failed to create a health bar.");
 
 	health_bar->drawable_handle = drawable->handle;
+	health_bar->value = HEALTH_BAR_DEFAULT_VALUE;
+
+	add_uniform_vec4f(drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color);
+	add_uniform_1f(drawable->shader_prog, HEALTH_VALUE_UNIFORM_NAME, health_bar->value);
+
+	drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
+	
+	*dest_handle = health_bar->handle;
+
+	return 0;
+}
+
+int get_health_bar(HealthBarDef** dest, int handle)
+{
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != s_HealthBar, "[health_bar]: The health bar arr has not been initialized.");
+	CHECK_EXPR_FAIL_RET_TERMINATE(handle >= 0 && handle < s_HealthBarCount, "[health_bar]: The handle value is out of bounds.");
+
+	HealthBarDef* health_bar = s_HealthBar + handle;
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != health_bar, "[health_bar]: Failed to fetch the health bar.");
+
+	*dest = health_bar;
+
+	return 0;
+}
+
+int change_health_bar_value(int handle, float amount)
+{
+	HealthBarDef* health_bar = NULL;
+	get_health_bar(&health_bar, handle);
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != health_bar, "[health_bar]: Failed to fetch a health bar.");
+
+	DrawableDef* drawable = NULL;
+	get_drawable_def(&drawable, health_bar->drawable_handle);
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[health_bar]: Failed to fetch a health bar drawable.");
+
+	float amount_normalized = amount / 100.f;
+	health_bar->value -= amount_normalized;
+	add_uniform_1f(drawable->shader_prog, HEALTH_VALUE_UNIFORM_NAME, health_bar->value);
+
+	drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
 
 	return 0;
 }

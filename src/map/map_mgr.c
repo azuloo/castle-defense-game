@@ -6,6 +6,7 @@
 #include "enemy_wave.h"
 #include "global_defs.h"
 #include "drawable_ops.h"
+#include "health_bar.h"
 
 extern int wWidth;
 extern int wHeight;
@@ -226,7 +227,12 @@ int map_mgr_add_castle()
 
 	const Vec3 hb_pos = { { castle_drawable->transform.translation.x, castle_drawable->transform.translation.y + (float)wHeight * 0.13f, castle_drawable->transform.translation.z } };
 	const Vec3 hb_scale = { { (float)wHeight * 0.11f, (float)wHeight * 0.01f, 1.f } };
-	add_health_bar(&hb_pos, &hb_scale);
+
+	int health_bar_handle = -1;
+	add_health_bar(&health_bar_handle, &hb_pos, &hb_scale);
+	CHECK_EXPR_FAIL_RET_TERMINATE(-1 != health_bar_handle, "[initial_map] Failed to fetch a health bar for the castle.");
+
+	s_Castle->health_bar_handle = health_bar_handle;
 
 	return 0;
 }
@@ -235,6 +241,14 @@ int map_mgr_get_castle(CastleDef** dest)
 {
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != s_Castle, "[map_mgr]: The castle has not been initialized.");
 	*dest = s_Castle;
+
+	return 0;
+}
+
+int map_mgr_damage_castle(float amount)
+{
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != s_Castle, "[map_mgr]: The castle has not been initialized.");
+	change_health_bar_value(s_Castle->health_bar_handle, amount);
 
 	return 0;
 }

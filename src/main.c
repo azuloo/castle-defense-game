@@ -109,11 +109,13 @@ static void resolve_entity_castle_collision(EntityDef* first, CastleDef* second)
 
 	if (NULL != first_drawable && first->type == EntityType_Castle)
 	{
+		map_mgr_damage_castle(10.f);
 		add_uniform_vec4f(second_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
 	}
 
 	if (NULL != second_drawable && second->type == EntityType_Castle)
 	{
+		map_mgr_damage_castle(10.f);
 		add_uniform_vec4f(first_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
 	}
 }
