@@ -9,6 +9,7 @@
 #include "global_defs.h"
 #include "drawable_ops.h"
 #include "health_bar.h"
+#include "tower.h"
 
 #include "map/map_mgr.h"
 #include "entity.h"
@@ -17,24 +18,17 @@
 #include <string.h>
 #include <stdbool.h>
 
-int xWOffset   = 0;
-int yWOffset   = 0;
-int wWidth     = WINDOW_DEFAULT_RES_W;
-int wHeight    = WINDOW_DEFAULT_RES_H;
+int xWOffset           = 0;
+int yWOffset           = 0;
+int wWidth             = WINDOW_DEFAULT_RES_W;
+int wHeight            = WINDOW_DEFAULT_RES_H;
+double s_CursorXPos    = 0.f;
+double s_CursorYPos    = 0.f;
 
-float dt       = 0.0f;  // delta time
-float lft      = 0.0f;  // last frame time
-
-static double s_CursorXPos = 0.f;
-static double s_CursorYPos = 0.f;
+float dt   = 0.0f;  // Delta time.
+float lft  = 0.0f;  // Last frame time.
 
 static int s_BuildingModeEnabled = 0;
-static int s_CurrentTowerIdx = 0;
-static EntityType s_CurrentTowerType = EntityType_None;
-
-#define TOWER_TYPES_AMOUNT 3
-// TODO: Use map here
-EntityDef* towers[TOWER_TYPES_AMOUNT];
 
 extern float get_window_scale_x();
 extern float get_window_scale_y();
@@ -65,26 +59,6 @@ static int find_enemy_with_collidable(EntityDef** dest, const Collidable2D* coll
 		}
 
 		*dest = enemy;
-		break;
-	}
-
-	return 0;
-}
-
-static int find_tower_with_collidable(EntityDef** dest, const Collidable2D* collidable)
-{
-	for (int i = 0; i < TOWER_TYPES_AMOUNT; i++)
-	{
-		Collidable2D* collidable2D = NULL;
-		get_collidable2D(&collidable2D, towers[i]->collidable2D_handle);
-		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[game] Failed to fetch Collidable2D for the entity.");
-
-		if (collidable2D->handle != collidable->handle)
-		{
-			continue;
-		}
-
-		*dest = towers[i];
 		break;
 	}
 
@@ -297,35 +271,23 @@ static void process_key_hook(GWindow* window, int key, int scancode, int action,
 	if (key == K_1 && action == KEY_PRESS)
 	{
 		key_pressed = true;
-		s_CurrentTowerIdx = 0;
-		s_CurrentTowerType = EntityType_Square;
+		set_current_tower_preset_idx(0);
 	}
 	if (key == K_2 && action == KEY_PRESS)
 	{
 		key_pressed = true;
-		s_CurrentTowerIdx = 1;
-		s_CurrentTowerType = EntityType_Circle;
+		set_current_tower_preset_idx(1);
 	}
 	if (key == K_3 && action == KEY_PRESS)
 	{
 		key_pressed = true;
-		s_CurrentTowerIdx = 2;
-		s_CurrentTowerType = EntityType_Triangle;
+		set_current_tower_preset_idx(2);
 	}
 
 	if (key_pressed)
 	{
 		s_BuildingModeEnabled = 1;
-		DrawableDef* tower_drawable = NULL;
-
-		for (int i = 0; i < TOWER_TYPES_AMOUNT; i++)
-		{
-			get_drawable_def(&tower_drawable, towers[i]->drawable_handle);
-			tower_drawable->visible = 0;
-		}
-
-		get_drawable_def(&tower_drawable, towers[s_CurrentTowerIdx]->drawable_handle);
-		tower_drawable->visible = 1;
+		on_select_tower_preset_pressed();
 	}
 }
 
@@ -333,69 +295,8 @@ static void process_mouse_button_hook(GWindow* window, int button, int action, i
 {
 	if (button == MOUSE_BUTTON_LEFT && action == KEY_PRESS && s_BuildingModeEnabled)
 	{
-		EntityDef* tower = towers[s_CurrentTowerIdx];
-		Collidable2D* collidable2D = NULL;
-		get_collidable2D(&collidable2D, tower->collidable2D_handle);
-		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[game] Failed to fetch Collidable2D for the tower.");
-
-		// Spawn a tower only if it's not colliding with anything.
-		if (collidable2D->collisions_detected == 0)
+		if (place_new_tower_at_cursor())
 		{
-			EntityDef* entity = NULL;
-
-			float tower_x_pos = (float)s_CursorXPos - xWOffset;
-			float tower_y_pos = (float)wHeight - (float)s_CursorYPos + yWOffset;
-
-			Vec3 tower_pos = { { tower_x_pos, tower_y_pos, Z_DEPTH_INITIAL_ENTITY } };
-			Vec4 tower_color = COLOR_VEC_GREEN;
-
-			EntityDef* tower_entity = towers[s_CurrentTowerIdx];
-			CHECK_EXPR_FAIL_RET_TERMINATE(NULL != tower_entity, "[game]: Tower entity is empty.");
-			DrawableDef* tower_drawable = NULL;
-
-			get_drawable_def(&tower_drawable, tower_entity->drawable_handle);
-			CHECK_EXPR_FAIL_RET(NULL != tower_drawable, "[game]: Failed to get tower drawable.");
-
-			switch (s_CurrentTowerType)
-			{
-			case EntityType_Square:
-			{
-				add_entity(EntityType_Square, &entity, &tower_pos, &tower_drawable->transform.scale, &tower_color);
-			}
-			break;
-
-			case EntityType_Circle:
-			{
-				add_entity(EntityType_Circle, &entity, &tower_pos, &tower_drawable->transform.scale, &tower_color);
-			}
-			break;
-
-			case EntityType_Triangle:
-			{
-				add_entity(EntityType_Triangle, &entity, &tower_pos, &tower_drawable->transform.scale, &tower_color);
-			}
-			break;
-			default:
-			{
-				PRINT_ERR("[game]: Unknown entity type.");
-			}
-			break;
-			}
-
-			if (NULL != entity)
-			{
-				DrawableDef* drawable = NULL;
-				get_drawable_def(&drawable, entity->drawable_handle);
-				CHECK_EXPR_FAIL_RET(drawable != NULL, "[game]: Failed to fetch tower drawable.");
-				add_collidable2D(&entity->collidable2D_handle, &drawable->transform.translation, &drawable->transform.scale);
-				CHECK_EXPR_FAIL_RET(-1 != entity->collidable2D_handle, "[game]: Failed to attach Collidable2D.");
-
-				Collidable2D* collidable2D = NULL;
-				get_collidable2D(&collidable2D, entity->collidable2D_handle);
-				CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[game] Failed to fetch Collidable2D for the entity.");
-				add_collision_layer2D(&collidable2D->collision_box, CollisionLayer_Tower);
-			}
-
 			s_BuildingModeEnabled = !s_BuildingModeEnabled;
 		}
 	}
@@ -404,30 +305,6 @@ static void process_mouse_button_hook(GWindow* window, int button, int action, i
 static int should_be_terminated()
 {
 	return graphics_should_be_terminated();
-}
-
-static int resize_towers()
-{
-	for (int i = 0; i < TOWER_TYPES_AMOUNT; i++)
-	{
-		EntityDef* tower_entity = towers[i];
-		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != tower_entity, "[game]: Tower entity is empty.");
-		DrawableDef* tower_drawable = NULL;
-
-		get_drawable_def(&tower_drawable, tower_entity->drawable_handle);
-
-		if (NULL != tower_drawable)
-		{
-			float scaleX = get_window_scale_x();
-			float scaleY = get_window_scale_y();
-			float tower_scale_x = tower_drawable->init_transform.scale.x * scaleX;
-			float tower_scale_y = tower_drawable->init_transform.scale.y * scaleY;
-
-			resize_entity(tower_entity, tower_scale_x, tower_scale_y);
-		}
-	}
-
-	return 0;
 }
 
 float get_window_scale_x()
@@ -494,52 +371,6 @@ int draw_circle_entity(EntityDef** circle)
 	return 0;
 }
 
-int create_tower_entities()
-{
-	static const tower_types[3] = { EntityType_Square, EntityType_Circle, EntityType_Triangle };
-	EntityDef* tower_entity = NULL;
-	DrawableDef* tower_drawable = NULL;
-
-	for (int i = 0; i < 3; i++)
-	{
-		switch (tower_types[i])
-		{
-		case EntityType_Square: 
-		{
-			draw_square_entity(&tower_entity);
-		} break;
-
-		case EntityType_Circle:
-		{
-			draw_circle_entity(&tower_entity);
-		} break;
-
-		case EntityType_Triangle:
-		{
-			draw_triangle_entity(&tower_entity);
-		} break;
-
-		default:
-			break;
-		}
-
-		towers[i] = tower_entity;
-
-		get_drawable_def(&tower_drawable, tower_entity->drawable_handle);
-		tower_drawable->visible = 0;
-
-		add_collidable2D(&tower_entity->collidable2D_handle, &tower_drawable->transform.translation, &tower_drawable->transform.scale);
-		
-		Collidable2D* collidable2D = NULL;
-		get_collidable2D(&collidable2D, tower_entity->collidable2D_handle);
-		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[game] Failed to fetch Collidable2D for the tower.");
-		add_collision_layer2D(&collidable2D->collision_box, CollisionLayer_Tower);
-		add_collision_mask2D(&collidable2D->collision_box, CollisionLayer_Road | CollisionLayer_Castle);
-	}
-
-	return 0;
-}
-
 int main(int argc, int* argv[])
 {
 	int init_graphics_res = init_graphics();
@@ -564,7 +395,7 @@ int main(int argc, int* argv[])
 		APP_EXIT(TERMINATE_ERR_CODE);
 	}
 
-	create_tower_entities();
+	create_build_tower_presets();
 
 	init_ft();
 	load_ascii_chars();
@@ -590,20 +421,7 @@ int main(int argc, int* argv[])
 		if (s_BuildingModeEnabled)
 		{
 			graphics_get_cursor_pos(&s_CursorXPos, &s_CursorYPos);
-			CHECK_EXPR_FAIL_RET_TERMINATE(s_CurrentTowerIdx < TOWER_TYPES_AMOUNT, "[game]: currentTowerIdx is greater than towers amount.");
-
-			EntityDef* tower_entity = towers[s_CurrentTowerIdx];
-			CHECK_EXPR_FAIL_RET_TERMINATE(NULL != tower_entity, "[game]: Tower entity is empty.");
-			DrawableDef* tower_drawable = NULL;
-
-			get_drawable_def(&tower_drawable, tower_entity->drawable_handle);
-
-			if (NULL != tower_drawable)
-			{
-				tower_x_pos = (float)s_CursorXPos - xWOffset;
-				tower_y_pos = (float)wHeight - (float)s_CursorYPos + yWOffset;
-				move_entity(tower_entity, tower_x_pos, tower_y_pos);
-			}
+			on_tower_building_mode_enabled();
 		}
 
 		physics_step();

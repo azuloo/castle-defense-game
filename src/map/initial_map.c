@@ -7,7 +7,6 @@
 #include "drawable_ops.h"
 #include "physics.h"
 #include "enemy_wave.h"
-#include "health_bar.h"
 
 #define INTIAL_MAP_PATH_LEN 5
 #define INITIAL_ENEMY_WAVES 5

@@ -25,4 +25,7 @@ typedef struct CastleDef CastleDef;
 // UI
 typedef struct HealthBarDef HealthBarDef;
 
+// Tower
+typedef struct TowerDef TowerDef;
+
 #endif // _GLOBAL_DECL_H

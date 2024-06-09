@@ -7,7 +7,7 @@ static PhysicsCollisionEventCbPtr s_CollisionBeginCbPtr = NULL;
 static PhysicsCollisionEventCbPtr s_CollisionEndCbPtr = NULL;
 
 static Collidable2D* s_Collidables2D = NULL;
-static int s_2DCollidablesCapacity = 64; // TODO: Towers' collidables mem realloc problem here
+static int s_2DCollidablesCapacity = 16;
 static int s_2DCollidablesCount  = 0;
 
 static int alloc_collidable2D_handles_arr()
