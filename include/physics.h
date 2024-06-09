@@ -47,8 +47,8 @@ typedef struct Collidable2D
 
 typedef void (*PhysicsCollisionEventCbPtr)(Collidable2D* first, Collidable2D* second);
 
-void physics_bind_collision_begind_cb(PhysicsCollisionEventCbPtr cb);
-void physics_bind_collision_end_cb(PhysicsCollisionEventCbPtr cb);
+void physics_add_collision_begind_cb(PhysicsCollisionEventCbPtr cb);
+void physics_add_collision_end_cb(PhysicsCollisionEventCbPtr cb);
 
 // ! Allocates memory on heap !
 int add_collidable2D(int* handle_dest, const Vec3* initial_pos, const Vec3* initial_size);

@@ -3,8 +3,13 @@
 #include "utils.h"
 #include "drawable_ops.h"
 
-static PhysicsCollisionEventCbPtr s_CollisionBeginCbPtr = NULL;
-static PhysicsCollisionEventCbPtr s_CollisionEndCbPtr = NULL;
+#define COLLISION_BEGIN_FUNC_PTRS_COUNT 16
+#define COLLISION_END_FUNC_PTRS_COUNT 16
+
+static PhysicsCollisionEventCbPtr s_CollisionBeginCbPtrs[COLLISION_BEGIN_FUNC_PTRS_COUNT];
+static PhysicsCollisionEventCbPtr s_CollisionEndCbPtrs[COLLISION_END_FUNC_PTRS_COUNT];
+static int s_CollisionBeginPtrsCount = 0;
+static int s_CollisionEndPtrsCount = 0;
 
 static Collidable2D* s_Collidables2D = NULL;
 static int s_2DCollidablesCapacity = 16;
@@ -20,6 +25,28 @@ static int alloc_collidable2D_handles_arr()
     s_Collidables2D = collidables_arr;
 
     return 0;
+}
+
+static void invoke_collision_begin_callbacks(Collidable2D* first, Collidable2D* second)
+{
+    for (int i = 0; i < s_CollisionBeginPtrsCount; i++)
+    {
+        if (NULL != s_CollisionBeginCbPtrs[i])
+        {
+            s_CollisionBeginCbPtrs[i](first, second);
+        }
+    }
+}
+
+static void invoke_collision_end_callbacks(Collidable2D* first, Collidable2D* second)
+{
+    for (int i = 0; i < s_CollisionEndPtrsCount; i++)
+    {
+        if (NULL != s_CollisionEndCbPtrs[i])
+        {
+            s_CollisionEndCbPtrs[i](first, second);
+        }
+    }
 }
 
 int is_collided_AABB(const CollisionBox2D* first, const CollisionBox2D* second)
@@ -43,14 +70,18 @@ int is_collided_AABB(const CollisionBox2D* first, const CollisionBox2D* second)
     return x_collided && y_collided;
 }
 
-void physics_bind_collision_begind_cb(PhysicsCollisionEventCbPtr cb)
+void physics_add_collision_begind_cb(PhysicsCollisionEventCbPtr cb)
 {
-    s_CollisionBeginCbPtr = cb;
+    CHECK_EXPR_FAIL_RET(s_CollisionBeginPtrsCount < COLLISION_BEGIN_FUNC_PTRS_COUNT, "[physics]: Cannot bind any more callbacks: max capacity is reached.");
+    s_CollisionBeginCbPtrs[s_CollisionBeginPtrsCount] = cb;
+    s_CollisionBeginPtrsCount++;
 }
 
-void physics_bind_collision_end_cb(PhysicsCollisionEventCbPtr cb)
+void physics_add_collision_end_cb(PhysicsCollisionEventCbPtr cb)
 {
-    s_CollisionEndCbPtr = cb;
+    CHECK_EXPR_FAIL_RET(s_CollisionEndPtrsCount < COLLISION_BEGIN_FUNC_PTRS_COUNT, "[physics]: Cannot bind any more callbacks: max capacity is reached.");
+    s_CollisionEndCbPtrs[s_CollisionEndPtrsCount] = cb;
+    s_CollisionEndPtrsCount++;
 }
 
 int add_collidable2D(int* handle_dest, const Vec3* initial_pos, const Vec3* initial_size)
@@ -235,9 +266,9 @@ int physics_step()
                         second_collidable->collision_handles[next_free_spot_second] = first_collidable->handle;
                         second_collidable->collisions_detected += 1;
                         
-                        if (NULL != s_CollisionBeginCbPtr)
+                        if (s_CollisionBeginPtrsCount > 0)
                         {
-                            (*s_CollisionBeginCbPtr)(first_collidable, second_collidable);
+                            invoke_collision_begin_callbacks(first_collidable, second_collidable);
                         }
                     }
                 }
@@ -276,9 +307,9 @@ int physics_step()
 
                 if (trigger_uncollided_first && trigger_uncollided_second)
                 {
-                    if (NULL != s_CollisionEndCbPtr)
+                    if (s_CollisionEndPtrsCount > 0)
                     {
-                        (*s_CollisionEndCbPtr)(first_collidable, second_collidable);
+                        invoke_collision_end_callbacks(first_collidable, second_collidable);
                     }
                 }
             }

@@ -383,8 +383,8 @@ int main(int argc, int* argv[])
 	bind_window_resize_fn(&window_resize_hook);
 	bind_key_pressed_cb(&process_key_hook);
 	bind_mouse_button_cb(&process_mouse_button_hook);
-	physics_bind_collision_begind_cb(&process_collision_begin_hook);
-	physics_bind_collision_end_cb(&process_collision_end_hook);
+	physics_add_collision_begind_cb(&process_collision_begin_hook);
+	physics_add_collision_end_cb(&process_collision_end_hook);
 
 	map_mgr_init();
 	map_mgr_add_castle();
