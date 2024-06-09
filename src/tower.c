@@ -183,6 +183,8 @@ int init_towers()
 	physics_add_collision_end_cb(&process_collision_end_hook);
 
 	create_build_tower_presets();
+
+	return 0;
 }
 
 int resize_towers()

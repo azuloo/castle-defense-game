@@ -38,6 +38,7 @@ typedef struct EntityDef
 	Vec2              direction;
 } EntityDef;
 
+int init_entity();
 int add_entity(enum EntityType type, EntityDef** dest, const Vec3* pos, const Vec3* scale, const Vec4* color);
 int add_entity_path(EntityDef* dest, const PathDef* path, int path_len);
 

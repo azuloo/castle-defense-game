@@ -33,180 +33,6 @@ static int s_BuildingModeEnabled = 0;
 extern float get_window_scale_x();
 extern float get_window_scale_y();
 
-static int find_enemy_with_collidable(EntityDef** dest, const Collidable2D* collidable)
-{
-	const EnemyWaveDef* enemy_wave = NULL;
-	get_enemy_wave(&enemy_wave);
-	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemy_wave, "[game]: Failed to get current enemy wave.");
-
-	EntityDef* enemies = enemy_wave->enemies;
-	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemies, "[game]: Enemies array is empty.");
-	int enemies_amount = enemy_wave->spawned_count;
-
-	EntityDef* enemy = NULL;
-	for (int i = 0; i < enemies_amount; i++)
-	{
-		enemy = enemies + i;
-		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemies, "[game]: Failed to retrieve an ememy from the enemies array.");
-
-		Collidable2D* collidable2D = NULL;
-		get_collidable2D(&collidable2D, enemy->collidable2D_handle);
-		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[game] Failed to fetch Collidable2D for the enemy.");
-
-		if (enemy->collidable2D_handle != collidable->handle)
-		{
-			continue;
-		}
-
-		*dest = enemy;
-		break;
-	}
-
-	return 0;
-}
-
-static void resolve_entity_castle_collision(EntityDef* first, CastleDef* second)
-{
-	DrawableDef* first_drawable = NULL;
-	get_drawable_def(&first_drawable, first->drawable_handle);
-
-	DrawableDef* second_drawable = NULL;
-	get_drawable_def(&second_drawable, second->drawable_handle);
-
-	Vec4 color_vec = COLOR_VEC_RED;
-
-	if (NULL == first_drawable || NULL == second_drawable)
-	{
-		PRINT_ERR("[game]: Failed to find one or both drawables for provided entities.");
-		return;
-	}
-
-	Collidable2D* first_collidable2D = NULL;
-	get_collidable2D(&first_collidable2D, first->collidable2D_handle);
-	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != first_collidable2D, "[game] Failed to fetch Collidable2D for the entity.");
-
-	if (NULL != first_drawable && first_collidable2D->collision_box.collision_layer & CollisionLayer_Castle)
-	{
-		map_mgr_damage_castle(10.f);
-		add_uniform_vec4f(second_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
-	}
-
-	Collidable2D* second_collidable2D = NULL;
-	get_collidable2D(&second_collidable2D, second->collidable2D_handle);
-	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != second_collidable2D, "[game] Failed to fetch Collidable2D for the entity.");
-
-	if (NULL != second_drawable && second_collidable2D->collision_box.collision_layer & CollisionLayer_Castle)
-	{
-		map_mgr_damage_castle(10.f);
-		add_uniform_vec4f(first_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
-	}
-}
-
-// TODO: Code duplication (function - process_collision_end_hook())
-static void process_collision_begin_hook(Collidable2D* first, Collidable2D* second)
-{
-	EntityDef* first_entity = NULL;
-	EntityDef* second_entity = NULL;
-	CastleDef* castle = NULL;
-
-	if (first->collision_box.collision_layer & CollisionLayer_Enemy)
-	{
-		find_enemy_with_collidable(&first_entity, first);
-	}
-
-	if (second->collision_box.collision_layer & CollisionLayer_Enemy)
-	{
-		find_enemy_with_collidable(&second_entity, second);
-	}
-
-	if (first->collision_box.collision_layer & CollisionLayer_Castle || second->collision_box.collision_layer & CollisionLayer_Castle)
-	{
-		map_mgr_get_castle(&castle);
-		CHECK_EXPR_FAIL_RET(castle != NULL, "[game]: Failed to get the castle.");
-	}
-
-	if (NULL != first_entity)
-	{
-		if (first->collision_box.collision_layer & ~CollisionLayer_Tower && NULL != castle)
-		{
-			resolve_entity_castle_collision(first_entity, castle);
-			return;
-		}
-	}
-	else if (NULL != second_entity)
-	{
-		if (second->collision_box.collision_layer & ~CollisionLayer_Tower && NULL != castle)
-		{
-			resolve_entity_castle_collision(second_entity, castle);
-			return;
-		}
-	}
-}
-
-// TODO: Code duplication (function - process_collision_begin_hook())
-static void process_collision_end_hook(Collidable2D* first, Collidable2D* second)
-{
-	EntityDef* first_entity = NULL;
-	EntityDef* second_entity = NULL;
-	CastleDef* castle = NULL;
-
-	if (first->collision_box.collision_layer & CollisionLayer_Enemy)
-	{
-		find_enemy_with_collidable(&first_entity, first);
-	}
-
-	if (second->collision_box.collision_layer & CollisionLayer_Enemy)
-	{
-		find_enemy_with_collidable(&second_entity, second);
-	}
-
-	if (first->collision_box.collision_layer & CollisionLayer_Castle || second->collision_box.collision_layer & CollisionLayer_Castle)
-	{
-		map_mgr_get_castle(&castle);
-		CHECK_EXPR_FAIL_RET(castle != NULL, "[game]: Failed to get the castle.");
-	}
-
-	if (NULL != first_entity)
-	{
-		Collidable2D* first_collidable2D = NULL;
-		get_collidable2D(&first_collidable2D, first_entity->collidable2D_handle);
-		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != first_collidable2D, "[game] Failed to fetch Collidable2D for the entity.");
-
-		if (NULL != castle && first_collidable2D->collision_box.collision_layer & ~CollisionLayer_Tower)
-		{
-			resolve_entity_castle_collision(first_entity, castle);
-			return;
-		}
-	}
-	if (NULL != second_entity)
-	{
-		Collidable2D* second_collidable2D = NULL;
-		get_collidable2D(&second_collidable2D, second_entity->collidable2D_handle);
-		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != second_collidable2D, "[game] Failed to fetch Collidable2D for the entity.");
-
-		if (NULL != castle && second_collidable2D->collision_box.collision_layer & ~CollisionLayer_Tower)
-		{
-			resolve_entity_castle_collision(second_entity, castle);
-			return;
-		}
-
-		if (second->collision_box.collision_layer & CollisionLayer_Tower)
-		{
-			bool road_collision_pred = first->collision_box.collision_layer & CollisionLayer_Road && second_collidable2D->collisions_detected == 0;
-			bool castle_collision_pred = first->collision_box.collision_layer & CollisionLayer_Castle && second_collidable2D->collisions_detected == 0;
-			if (road_collision_pred || castle_collision_pred)
-			{
-				DrawableDef* second_drawable = NULL;
-				get_drawable_def(&second_drawable, second_entity->drawable_handle);
-
-			    Vec4 color_vec = COLOR_VEC_GREEN;
-
-				add_uniform_vec4f(second_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
-			}
-		}
-	}
-}
-
 static void process_key_hook(GWindow* window, int key, int scancode, int action, int mods)
 {
 	bool key_pressed = false;
@@ -326,8 +152,6 @@ int main(int argc, int* argv[])
 	bind_window_resize_fn(&window_resize_hook);
 	bind_key_pressed_cb(&process_key_hook);
 	bind_mouse_button_cb(&process_mouse_button_hook);
-	physics_add_collision_begind_cb(&process_collision_begin_hook);
-	physics_add_collision_end_cb(&process_collision_end_hook);
 
 	map_mgr_init();
 	map_mgr_add_castle();
@@ -338,6 +162,7 @@ int main(int argc, int* argv[])
 		APP_EXIT(TERMINATE_ERR_CODE);
 	}
 
+	init_entity();
 	init_towers();
 
 	init_ft();
