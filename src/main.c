@@ -113,18 +113,10 @@ static void process_collision_begin_hook(Collidable2D* first, Collidable2D* seco
 	{
 		find_enemy_with_collidable(&first_entity, first);
 	}
-	else if (first->collision_box.collision_layer & CollisionLayer_Tower)
-	{
-		find_tower_with_collidable(&first_entity, first);
-	}
 
 	if (second->collision_box.collision_layer & CollisionLayer_Enemy)
 	{
 		find_enemy_with_collidable(&second_entity, second);
-	}
-	else if (second->collision_box.collision_layer & CollisionLayer_Tower)
-	{
-		find_tower_with_collidable(&second_entity, second);
 	}
 
 	if (first->collision_box.collision_layer & CollisionLayer_Castle || second->collision_box.collision_layer & CollisionLayer_Castle)
@@ -140,19 +132,6 @@ static void process_collision_begin_hook(Collidable2D* first, Collidable2D* seco
 			resolve_entity_castle_collision(first_entity, castle);
 			return;
 		}
-
-		if (first->collision_box.collision_layer & CollisionLayer_Tower)
-		{
-			if (second->collision_box.collision_layer & (CollisionLayer_Road | CollisionLayer_Castle))
-			{
-				DrawableDef* first_drawable = NULL;
-				get_drawable_def(&first_drawable, first_entity->drawable_handle);
-
-				Vec4 color_vec = COLOR_VEC_RED;
-
-				add_uniform_vec4f(first_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
-			}
-		}
 	}
 	else if (NULL != second_entity)
 	{
@@ -160,19 +139,6 @@ static void process_collision_begin_hook(Collidable2D* first, Collidable2D* seco
 		{
 			resolve_entity_castle_collision(second_entity, castle);
 			return;
-		}
-
-		if (second->collision_box.collision_layer & CollisionLayer_Tower)
-		{
-			if (first->collision_box.collision_layer & (CollisionLayer_Road | CollisionLayer_Castle))
-			{
-				DrawableDef* second_drawable = NULL;
-				get_drawable_def(&second_drawable, second_entity->drawable_handle);
-
-				Vec4 color_vec = COLOR_VEC_RED;
-
-				add_uniform_vec4f(second_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
-			}
 		}
 	}
 }
@@ -188,18 +154,10 @@ static void process_collision_end_hook(Collidable2D* first, Collidable2D* second
 	{
 		find_enemy_with_collidable(&first_entity, first);
 	}
-	else if (first->collision_box.collision_layer & CollisionLayer_Tower)
-	{
-		find_tower_with_collidable(&first_entity, first);
-	}
 
 	if (second->collision_box.collision_layer & CollisionLayer_Enemy)
 	{
 		find_enemy_with_collidable(&second_entity, second);
-	}
-	else if (second->collision_box.collision_layer & CollisionLayer_Tower)
-	{
-		find_tower_with_collidable(&second_entity, second);
 	}
 
 	if (first->collision_box.collision_layer & CollisionLayer_Castle || second->collision_box.collision_layer & CollisionLayer_Castle)
@@ -218,21 +176,6 @@ static void process_collision_end_hook(Collidable2D* first, Collidable2D* second
 		{
 			resolve_entity_castle_collision(first_entity, castle);
 			return;
-		}
-
-		if (first->collision_box.collision_layer & CollisionLayer_Tower)
-		{
-			bool road_collision_pred = second->collision_box.collision_layer & CollisionLayer_Road && first_collidable2D->collisions_detected == 0;
-			bool castle_collision_pred = second->collision_box.collision_layer & CollisionLayer_Castle && first_collidable2D->collisions_detected == 0;
-			if (road_collision_pred || castle_collision_pred)
-			{
-				DrawableDef* first_drawable = NULL;
-				get_drawable_def(&first_drawable, first_entity->drawable_handle);
-
-				Vec4 color_vec = COLOR_VEC_GREEN;
-
-				add_uniform_vec4f(first_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
-			}
 		}
 	}
 	if (NULL != second_entity)
@@ -395,7 +338,7 @@ int main(int argc, int* argv[])
 		APP_EXIT(TERMINATE_ERR_CODE);
 	}
 
-	create_build_tower_presets();
+	init_towers();
 
 	init_ft();
 	load_ascii_chars();

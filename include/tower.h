@@ -25,6 +25,7 @@ typedef enum TowerTypes
 	TowerType_Count
 } TowerTypes;
 
+int init_towers();
 int resize_towers();
 int place_new_tower_at_cursor();
 int add_tower(int* handle_dest);

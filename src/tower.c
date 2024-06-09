@@ -62,6 +62,129 @@ static int create_tower_preset(TowerDef** dest, const Vec3* pos, const Vec3* sca
 	return 0;
 }
 
+static int find_tower_with_collidable(TowerDef** dest, const Collidable2D* collidable)
+{
+	for (int i = 0; i < s_TowerCount; i++)
+	{
+		const TowerDef* tower = s_TowerData + i;
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != tower, "[tower] The tower with this idx has not been initialized.");
+
+		Collidable2D* collidable2D = NULL;
+		get_collidable2D(&collidable2D, tower->collidable2D_handle);
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[tower] Failed to fetch Collidable2D for the tower.");
+
+		if (collidable2D->handle != collidable->handle)
+		{
+			continue;
+		}
+
+		*dest = tower;
+		break;
+	}
+
+	return 0;
+}
+
+static void process_collision_begin_hook(Collidable2D* first, Collidable2D* second)
+{
+	TowerDef* tower = NULL;
+
+	if (first->collision_box.collision_layer & CollisionLayer_Tower)
+	{
+		find_tower_with_collidable(&tower, first);
+	}
+	else if (second->collision_box.collision_layer & CollisionLayer_Tower)
+	{
+		find_tower_with_collidable(&tower, second);
+	}
+
+	if (NULL != tower)
+	{
+		if (first->collision_box.collision_layer & CollisionLayer_Tower)
+		{
+			if (second->collision_box.collision_layer & (CollisionLayer_Road | CollisionLayer_Castle))
+			{
+				DrawableDef* first_drawable = NULL;
+				get_drawable_def(&first_drawable, tower->drawable_handle);
+
+				Vec4 color_vec = COLOR_VEC_RED;
+
+				add_uniform_vec4f(first_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
+			}
+		}
+		else if (second->collision_box.collision_layer & CollisionLayer_Tower)
+		{
+			if (first->collision_box.collision_layer & (CollisionLayer_Road | CollisionLayer_Castle))
+			{
+				DrawableDef* second_drawable = NULL;
+				get_drawable_def(&second_drawable, tower->drawable_handle);
+
+				Vec4 color_vec = COLOR_VEC_RED;
+
+				add_uniform_vec4f(second_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
+			}
+		}
+	}
+}
+
+static void process_collision_end_hook(Collidable2D* first, Collidable2D* second)
+{
+	TowerDef* tower = NULL;
+
+	if (first->collision_box.collision_layer & CollisionLayer_Tower)
+	{
+		find_tower_with_collidable(&tower, first);
+	}
+	else if (second->collision_box.collision_layer & CollisionLayer_Tower)
+	{
+		find_tower_with_collidable(&tower, second);
+	}
+
+	if (NULL != tower)
+	{
+		Collidable2D* collidable2D = NULL;
+		get_collidable2D(&collidable2D, tower->collidable2D_handle);
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[game] Failed to fetch Collidable2D for the tower.");
+
+		if (first->collision_box.collision_layer & CollisionLayer_Tower)
+		{
+			bool road_collision_pred = second->collision_box.collision_layer & CollisionLayer_Road && collidable2D->collisions_detected == 0;
+			bool castle_collision_pred = second->collision_box.collision_layer & CollisionLayer_Castle && collidable2D->collisions_detected == 0;
+			if (road_collision_pred || castle_collision_pred)
+			{
+				DrawableDef* first_drawable = NULL;
+				get_drawable_def(&first_drawable, tower->drawable_handle);
+
+				Vec4 color_vec = COLOR_VEC_GREEN;
+
+				add_uniform_vec4f(first_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
+			}
+		}
+		else if (second->collision_box.collision_layer & CollisionLayer_Tower)
+		{
+			bool road_collision_pred = first->collision_box.collision_layer & CollisionLayer_Road && collidable2D->collisions_detected == 0;
+			bool castle_collision_pred = first->collision_box.collision_layer & CollisionLayer_Castle && collidable2D->collisions_detected == 0;
+			if (road_collision_pred || castle_collision_pred)
+			{
+				DrawableDef* second_drawable = NULL;
+				get_drawable_def(&second_drawable, tower->drawable_handle);
+
+				Vec4 color_vec = COLOR_VEC_GREEN;
+
+				add_uniform_vec4f(second_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
+			}
+		}
+	}
+}
+
+int init_towers()
+{
+	physics_add_collision_begind_cb(&process_collision_begin_hook);
+	physics_add_collision_end_cb(&process_collision_end_hook);
+
+	create_build_tower_presets();
+}
+
 int resize_towers()
 {
 	for (int i = 0; i < TowerType_Count; i++)
@@ -260,29 +383,6 @@ int create_build_tower_presets()
 		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[game] Failed to fetch Collidable2D for the tower.");
 		add_collision_layer2D(&collidable2D->collision_box, CollisionLayer_Tower);
 		add_collision_mask2D(&collidable2D->collision_box, CollisionLayer_Road | CollisionLayer_Castle);
-	}
-
-	return 0;
-}
-
-int find_tower_with_collidable(TowerDef** dest, const Collidable2D* collidable)
-{
-	for (int i = 0; i < s_TowerCount; i++)
-	{
-		const TowerDef* tower = s_TowerData + i;
-		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != tower, "[tower] The tower with this idx has not been initialized.");
-
-		Collidable2D* collidable2D = NULL;
-		get_collidable2D(&collidable2D, tower->collidable2D_handle);
-		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[tower] Failed to fetch Collidable2D for the tower.");
-
-		if (collidable2D->handle != collidable->handle)
-		{
-			continue;
-		}
-
-		*dest = tower;
-		break;
 	}
 
 	return 0;
