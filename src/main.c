@@ -1,13 +1,10 @@
 #include "graphics.h"
-#include "physics.h"
-#include "file_reader.h"
 #include "utils.h"
 #include "lin_alg.h"
 #include "key_bindings.h"
 #include "freetype_text.h"
 #include "freetype_renderer.h"
 #include "global_defs.h"
-#include "drawable_ops.h"
 #include "health_bar.h"
 #include "tower.h"
 
@@ -105,39 +102,6 @@ void process_input(GWindow* window)
 	{
 		close_window(window);
 	}
-}
-
-int draw_triangle_entity(EntityDef** triangle)
-{
-	Vec3 tri_pos = { { 700.f, wHeight / 2.f + 200.f, Z_DEPTH_INITIAL_ENTITY } };
-	Vec3 tri_scale = { { (float)wHeight * 0.03f, (float)wHeight * 0.03f, 1.f } };
-	Vec4 tri_color = COLOR_VEC_GREEN;
-
-	add_entity(EntityType_Triangle, triangle, &tri_pos, &tri_scale, &tri_color);
-
-	return 0;
-}
-
-int draw_square_entity(EntityDef** square)
-{
-	Vec3 sq_pos = { { 900.f, wHeight / 2.f + 200.f, Z_DEPTH_INITIAL_ENTITY } };
-	Vec3 sq_scale = { { (float)wHeight * 0.03f, (float)wHeight * 0.03f, 1.f } };
-	Vec4 sq_color = COLOR_VEC_GREEN;
-
-	add_entity(EntityType_Square, square, &sq_pos, &sq_scale, &sq_color);
-
-	return 0;
-}
-
-int draw_circle_entity(EntityDef** circle)
-{
-	Vec3 circle_pos = { { 1100.f, wHeight / 2.f + 200.f, Z_DEPTH_INITIAL_ENTITY } };
-	Vec3 circle_scale = { { (float)wHeight * 0.03f, (float)wHeight * 0.03f, 1.f } };
-	Vec4 circle_color = COLOR_VEC_GREEN;
-
-	add_entity(EntityType_Circle, circle, &circle_pos, &circle_scale, &circle_color);
-
-	return 0;
 }
 
 int main(int argc, int* argv[])
