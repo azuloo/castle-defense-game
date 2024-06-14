@@ -82,7 +82,19 @@ void normaliz_vec4(Vec4* v)
 	v->m[2] *= invrt;
 }
 
-Vec4 sub(Vec4 v1, Vec4 v2)
+void normaliz_vec3(Vec3* v)
+{
+	float sqr = v->m[0] * v->m[0] + v->m[1] * v->m[1];
+	if (sqr == 1 || sqr == 0)
+	{
+		return;
+	}
+	float invrt = 1.f / (float)sqrt(sqr);
+	v->m[0] *= invrt;
+	v->m[1] *= invrt;
+}
+
+Vec4 sub_vec4(Vec4 v1, Vec4 v2)
 {
 	Vec4 out = { {0} };
 	out.m[0] = v1.m[0] - v2.m[0];
@@ -92,13 +104,31 @@ Vec4 sub(Vec4 v1, Vec4 v2)
 	return out;
 }
 
-Vec4 add(Vec4 v1, Vec4 v2)
+Vec4 add_vec4(Vec4 v1, Vec4 v2)
 {
 	Vec4 out = { {0} };
 	out.m[0] = v1.m[0] + v2.m[0];
 	out.m[1] = v1.m[1] + v2.m[1];
 	out.m[2] = v1.m[2] + v2.m[2];
 	out.m[3] = v1.m[3] + v2.m[3];
+	return out;
+}
+
+Vec3 sub_vec3(Vec3 v1, Vec3 v2)
+{
+	Vec3 out = { {0} };
+	out.m[0] = v1.m[0] - v2.m[0];
+	out.m[1] = v1.m[1] - v2.m[1];
+	out.m[2] = v1.m[2] - v2.m[2];
+	return out;
+}
+
+Vec3 add_vec3(Vec3 v1, Vec3 v2)
+{
+	Vec3 out = { {0} };
+	out.m[0] = v1.m[0] + v2.m[0];
+	out.m[1] = v1.m[1] + v2.m[1];
+	out.m[2] = v1.m[2] + v2.m[2];
 	return out;
 }
 
@@ -112,12 +142,12 @@ Vec4 multipty_by_scalar(Vec4 v, float s)
 	return out;
 }
 
-float dot(Vec4 v1, Vec4 v2)
+float dot_vec4(Vec4 v1, Vec4 v2)
 {
 	return v1.m[0] * v2.m[0] + v1.m[1] * v2.m[1] + v1.m[2] * v2.m[2] + v1.m[3] * v2.m[3];
 }
 
-Vec4 cross(Vec4 v1, Vec4 v2)
+Vec4 cross_vec4(Vec4 v1, Vec4 v2)
 {
 	Vec4 out = { {0} };
 	out.m[0] = v1.m[1] * v2.m[2] - v1.m[2] * v2.m[1];
@@ -255,11 +285,11 @@ Mat4 ortho(float left, float right, float bottom, float top, float near_plane, f
 
 Mat4 look_at(Vec4 pos, Vec4 dir, Vec4 up)
 {
-	Vec4 f = sub(dir, pos);
+	Vec4 f = sub_vec4(dir, pos);
 	normaliz_vec4(&f);
-	Vec4 s = cross(f, up);
+	Vec4 s = cross_vec4(f, up);
 	normaliz_vec4(&s);
-	Vec4 u = cross(s, f);
+	Vec4 u = cross_vec4(s, f);
 
 	Mat4 out = IdentityMat;
 	out.m[0] = s.x;
@@ -274,9 +304,9 @@ Mat4 look_at(Vec4 pos, Vec4 dir, Vec4 up)
 	out.m[6] = -f.y;
 	out.m[10] = -f.z;
 
-	out.m[12] = -dot(s, pos);
-	out.m[13] = -dot(u, pos);
-	out.m[14] = dot(f, pos);
+	out.m[12] = -dot_vec4(s, pos);
+	out.m[13] = -dot_vec4(u, pos);
+	out.m[14] = dot_vec4(f, pos);
 
 	return out;
 }
