@@ -93,7 +93,7 @@ static int fill_enemies_data()
 			CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[enemy_wave] Failed to fetch Collidable2D for the entity.");
 
 			add_collision_layer2D(&collidable2D->collision_box, CollisionLayer_Enemy);
-			add_collision_mask2D(&collidable2D->collision_box, CollisionLayer_Castle);
+			add_collision_mask2D(&collidable2D->collision_box, CollisionLayer_Castle | CollisionLayer_Projectile);
 
 			EntityDef* enemy_dest = enemy_wave->enemies + i;
 			memcpy(enemy_dest, enemy, sizeof(EntityDef));

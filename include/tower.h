@@ -2,19 +2,12 @@
 #define _TOWER_H
 
 #include "global_decl.h"
+#include <stdbool.h>
 
 #define DEFAULT_TOWER_ATTACK_POWER 10.f
-#define DEFAULT_TOWER_PROJECTILE_SPEED 400.f
-
-typedef struct TowerDef
-{
-	int handle;
-	int drawable_handle;
-	int collidable2D_handle;
-	int collidable2D_detect_handle;
-	float attack_power;
-	float projectile_speed;
-} TowerDef;
+#define DEFAULT_TOWER_PROJECTILE_SPEED 900.f
+#define TOWER_FIRE_DELAY 2.f
+#define PROJECTILES_PER_TOWER 3
 
 typedef enum TowerTypes
 {
@@ -25,7 +18,45 @@ typedef enum TowerTypes
 	TowerType_Count
 } TowerTypes;
 
+typedef enum TowerState
+{
+	TowerState_Idle,
+	TowerState_FireDelay,
+	TowerState_SpawnProjectile
+} TowerState;
+
+typedef enum ProjectileState
+{
+	ProjectileState_Init,
+	ProjectileState_Moving,
+	ProjectileState_Hit
+};
+
+typedef struct ProjectileDef
+{
+	int handle;
+	int drawable_handle;
+	int collidable2D_handle;
+	float projectile_speed;
+	float damage_on_hit;
+	int state;
+} ProjectileDef;
+
+typedef struct TowerDef
+{
+	int handle;
+	int drawable_handle;
+	int collidable2D_handle;
+	int collidable2D_detect_handle;
+	int state;
+	float attack_power;
+	float fire_delay;
+	bool spawned;
+	ProjectileDef projectiles[PROJECTILES_PER_TOWER];
+} TowerDef;
+
 int init_towers();
+int update_towers(float dt);
 int resize_towers();
 int place_new_tower_at_cursor();
 int add_tower(int* handle_dest);

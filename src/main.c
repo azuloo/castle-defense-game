@@ -1,4 +1,5 @@
 #include "graphics.h"
+#include "physics.h"
 #include "utils.h"
 #include "lin_alg.h"
 #include "key_bindings.h"
@@ -149,6 +150,7 @@ int main(int argc, int* argv[])
 		dt = math_clamp(dt, 0.f, MAX_FRAME_TIME);
 
 		enemy_waves_spawn(dt);
+		update_towers(dt);
 
 		if (s_BuildingModeEnabled)
 		{

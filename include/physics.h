@@ -8,14 +8,15 @@
 
 enum PhysicsCollisionLayer
 {
-	CollisionLayer_None       = 0,
-	CollisionLayer_Player     = (1U << 1),
-	CollisionLayer_Enemy      = (1U << 2),
-	CollisionLayer_Castle     = (1U << 3),
-	CollisionLayer_Road       = (1U << 4),
-	CollisionLayer_Tower      = (1U << 5),
+	CollisionLayer_None           = 0,
+	CollisionLayer_Player         = (1U << 1),
+	CollisionLayer_Enemy          = (1U << 2),
+	CollisionLayer_Castle         = (1U << 3),
+	CollisionLayer_Road           = (1U << 4),
+	CollisionLayer_Tower          = (1U << 5),
+	CollisionLayer_Projectile     = (1U << 6),
 
-	CollisionLayer_MAX        = (1U << 16)
+	CollisionLayer_MAX            = (1U << 16)
 };
 
 enum CollisionState

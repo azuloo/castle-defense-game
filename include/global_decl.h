@@ -27,5 +27,6 @@ typedef struct HealthBarDef HealthBarDef;
 
 // Tower
 typedef struct TowerDef TowerDef;
+typedef struct ProjectileDef ProjectileDef;
 
 #endif // _GLOBAL_DECL_H

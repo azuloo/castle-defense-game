@@ -4,6 +4,8 @@
 #include "utils.h"
 #include "drawable_ops.h"
 #include "global_defs.h"
+#include "enemy_wave.h" // TODO: Potentially, to be removed
+#include "entity.h" // TODO: Potentially, to be removed
 
 extern int wWidth;
 extern int wHeight;
@@ -12,9 +14,20 @@ extern int yWOffset;
 extern double s_CursorXPos;
 extern double s_CursorYPos;
 
-static TowerDef* s_TowerData;
-static int s_TowerCapacity = 16;
-static int s_TowerCount = 0;
+extern float get_window_scale_x();
+extern float get_window_scale_y();
+
+#define MAX_TOWER_CAPACITY 64
+static TowerDef s_TowersData[MAX_TOWER_CAPACITY];
+static int s_TowersCount = 0;
+static int s_SpawnedTowers[MAX_TOWER_CAPACITY];
+static int s_SpawnedTowersCount = 0;
+
+static int s_CurrentTowerIdx = 0;
+static TowerDef* tower_presets[TowerType_Count];
+
+#define MOVING_PROJECTILE_CAPACITY 64
+static ProjectileDef s_MovingProjectiles[MOVING_PROJECTILE_CAPACITY];
 
 static const char* first_texture_path = "/res/static/textures/triangle.png";
 static const char* second_texture_path = "/res/static/textures/square.png";
@@ -27,21 +40,20 @@ static const int tower_texture_params[DEFAULT_TEXTURE_PARAMS_COUNT] = {
 	GL_TEXTURE_MAG_FILTER, GL_LINEAR
 };
 
-static int s_CurrentTowerIdx = 0;
-static TowerDef* tower_presets[TowerType_Count];
-
-static int alloc_tower_data_arr()
+static void init_tower_projectiles(TowerDef* tower, float speed, float damage)
 {
-	s_TowerCapacity *= 2;
-	TowerDef* tower_data_arr = realloc(s_TowerData, s_TowerCapacity * sizeof *tower_data_arr);
-	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != tower_data_arr, "[tower]: Failed to allocate sufficient memory chunk for tower arr.");
-
-	s_TowerData = tower_data_arr;
-
-	return 0;
+	for (int i = 0; i < PROJECTILES_PER_TOWER; i++)
+	{
+		ProjectileDef* projectile          = &tower->projectiles[i];
+		projectile->drawable_handle        = -1;
+		projectile->collidable2D_handle    = -1;
+		projectile->projectile_speed       = speed;
+		projectile->damage_on_hit          = damage;
+		projectile->state                  = ProjectileState_Init;
+	}
 }
 
-static int create_tower_preset(TowerDef** dest, const Vec3* pos, const Vec3* scale, const Vec4* color, const char* texture_path)
+static int create_tower_at(TowerDef** dest, const Vec3* pos, const Vec3* scale, const Vec4* color, const char* texture_path)
 {
 	int tower_handle = -1;
 	add_tower(&tower_handle);
@@ -64,28 +76,43 @@ static int create_tower_preset(TowerDef** dest, const Vec3* pos, const Vec3* sca
 
 static int find_tower_with_collidable(TowerDef** dest, const Collidable2D* collidable)
 {
-	for (int i = 0; i < s_TowerCount; i++)
+	for (int i = 0; i < s_TowersCount; i++)
 	{
-		const TowerDef* tower = s_TowerData + i;
+		const TowerDef* tower = s_TowersData + i;
 		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != tower, "[tower] The tower with this idx has not been initialized.");
 
 		Collidable2D* collidable2D = NULL;
 		get_collidable2D(&collidable2D, tower->collidable2D_handle);
 		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[tower] Failed to fetch Collidable2D for the tower.");
 
-		if (collidable2D->handle != collidable->handle)
+		if (collidable2D->handle == collidable->handle)
 		{
-			continue;
+			*dest = tower;
+			break;
 		}
-
-		*dest = tower;
-		break;
 	}
 
 	return 0;
 }
 
-static void process_collision_begin_hook(Collidable2D* first, Collidable2D* second)
+static int find_projectile_with_collidable(ProjectileDef** dest, const Collidable2D* collidalbe)
+{
+	for (int i = 0; i < MOVING_PROJECTILE_CAPACITY; i++)
+	{
+		ProjectileDef* projectile = s_MovingProjectiles + i;
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != projectile, "[tower] The projectile with this idx has not been initialized.");
+
+		if (projectile->collidable2D_handle == collidalbe->handle)
+		{
+			*dest = projectile;
+			break;
+		}
+	}
+
+	return 0;
+}
+
+static void process_tower_collidable(Collidable2D* first, Collidable2D* second)
 {
 	TowerDef* tower = NULL;
 
@@ -125,6 +152,54 @@ static void process_collision_begin_hook(Collidable2D* first, Collidable2D* seco
 			}
 		}
 	}
+}
+
+static void process_projectile_collidable(Collidable2D* first, Collidable2D* second)
+{
+	ProjectileDef* projectile = NULL;
+
+	if (first->collision_box.collision_layer & CollisionLayer_Projectile)
+	{
+		find_projectile_with_collidable(&projectile, first);
+	}
+	else if (second->collision_box.collision_layer & CollisionLayer_Projectile)
+	{
+		find_projectile_with_collidable(&projectile, second);
+	}
+
+	if (NULL != projectile)
+	{
+		if (first->collision_box.collision_layer & CollisionLayer_Projectile)
+		{
+			if (second->collision_box.collision_layer & CollisionLayer_Enemy)
+			{
+				DrawableDef* first_drawable = NULL;
+				get_drawable_def(&first_drawable, projectile->drawable_handle);
+
+				Vec4 color_vec = COLOR_VEC_BLUE;
+
+				add_uniform_vec4f(first_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
+			}
+		}
+		else if (second->collision_box.collision_layer & CollisionLayer_Projectile)
+		{
+			if (first->collision_box.collision_layer & CollisionLayer_Enemy)
+			{
+				DrawableDef* second_drawable = NULL;
+				get_drawable_def(&second_drawable, projectile->drawable_handle);
+
+				Vec4 color_vec = COLOR_VEC_BLUE;
+
+				add_uniform_vec4f(second_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
+			}
+		}
+	}
+}
+
+static void process_collision_begin_hook(Collidable2D* first, Collidable2D* second)
+{
+	process_tower_collidable(first, second);
+	process_projectile_collidable(first, second);
 }
 
 static void process_collision_end_hook(Collidable2D* first, Collidable2D* second)
@@ -177,12 +252,204 @@ static void process_collision_end_hook(Collidable2D* first, Collidable2D* second
 	}
 }
 
+// TODO: To be reworked
+static int get_enemy_to_attack(EntityDef** dest)
+{
+	const EnemyWaveDef* enemy_wave = NULL;
+	get_enemy_wave(&enemy_wave);
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemy_wave, "[tower]: Failed to get current enemy wave.");
+
+	EntityDef* enemies = enemy_wave->enemies;
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemies, "[tower]: Enemies array is empty.");
+	int enemies_amount = enemy_wave->spawned_count;
+
+	EntityDef* enemy = NULL;
+	for (int i = 0; i < enemies_amount; i++)
+	{
+		enemy = enemies + i;
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemies, "[tower]: Failed to retrieve an ememy from the enemies array.");
+		*dest = enemy;
+		break;
+	}
+}
+
+static int add_moving_projectile(const ProjectileDef* projectile)
+{
+	bool found = false;
+	for (int i = 0; i < MOVING_PROJECTILE_CAPACITY; i++)
+	{
+		if (-1 == s_MovingProjectiles[i].handle)
+		{
+			memcpy(&s_MovingProjectiles[i], projectile, sizeof(ProjectileDef));
+			found = true;
+			break;
+		}
+	}
+
+	if (!found)
+	{
+		PRINT_ERR("[tower]: Failed to find available slot in moving projectiles arr.");
+	}
+
+	return 0;
+}
+
 int init_towers()
 {
 	physics_add_collision_begind_cb(&process_collision_begin_hook);
 	physics_add_collision_end_cb(&process_collision_end_hook);
 
 	create_build_tower_presets();
+
+	memset(s_MovingProjectiles, -1, MOVING_PROJECTILE_CAPACITY * sizeof(ProjectileDef));
+
+	return 0;
+}
+
+int update_towers(float dt)
+{
+	for (int i = 0; i < s_SpawnedTowersCount; i++)
+	{
+		TowerDef* tower = s_TowersData + s_SpawnedTowers[i];
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != tower, "[tower]: The tower ptr is empty.");
+
+		switch (tower->state)
+		{
+		case TowerState_Idle:
+		{
+			// TODO: Check for tower-entity collision here
+			EntityDef* entity = NULL;
+			get_enemy_to_attack(&entity);
+			if (NULL != entity)
+			{
+				tower->state = TowerState_SpawnProjectile;
+			}
+		} break;
+
+		case TowerState_SpawnProjectile:
+		{
+			// TODO: Check for collision end here
+			ProjectileDef* projectile = NULL;
+			for (int j = 0; j < PROJECTILES_PER_TOWER; j++)
+			{
+				projectile = &tower->projectiles[j];
+				if (projectile->state == ProjectileState_Init)
+				{
+					break;
+				}
+				projectile = NULL;
+			}
+
+			if (NULL != projectile)
+			{
+				DrawableDef* tower_drawable = NULL;
+				get_drawable_def(&tower_drawable, tower->drawable_handle);
+
+				Vec3 projectile_scale = { { 10.f, 10.f, 1.f } };
+				Vec4 projectile_color = COLOR_VEC_RED;
+
+				Vec3 projectile_pos = tower_drawable->transform.translation;
+				projectile_pos.z = 0.89f;
+
+				DrawableDef* projectile_drawable = NULL;
+				draw_quad(&projectile_drawable, &projectile_pos, &projectile_scale, &projectile_color, first_texture_path, TexType_RGBA, tower_texture_params, DEFAULT_TEXTURE_PARAMS_COUNT);
+
+				projectile->drawable_handle = projectile_drawable->handle;
+				projectile->state = ProjectileState_Moving;
+
+				projectile_drawable->transform.translation = projectile_pos;
+				projectile_drawable->transform.scale = projectile_scale;
+
+				add_collidable2D(&projectile->collidable2D_handle, &projectile_drawable->transform.translation, &projectile_drawable->transform.scale);
+				Collidable2D* collidable2D = NULL;
+				get_collidable2D(&collidable2D, projectile->collidable2D_handle);
+				CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[tower]: Failed to fetch Collidable2D for a projectile.");
+
+				add_collision_layer2D(&collidable2D->collision_box, CollisionLayer_Projectile);
+				add_collision_mask2D(&collidable2D->collision_box, CollisionLayer_Enemy);
+
+				add_moving_projectile(projectile);
+
+				drawable_transform_ts(projectile_drawable, COMMON_MODEL_UNIFORM_NAME);
+
+				tower->state = TowerState_FireDelay;
+			}
+
+		} break;
+
+		case TowerState_FireDelay:
+		{
+			if (tower->fire_delay <= 0.f)
+			{
+				tower->state = TowerState_Idle;
+				tower->fire_delay = TOWER_FIRE_DELAY;
+			}
+			else
+			{
+				tower->fire_delay -= dt;
+			}
+
+		} break;
+		}
+
+		ProjectileDef* projectile = NULL;
+		for (int j = 0; j < PROJECTILES_PER_TOWER; j++)
+		{
+			projectile = &tower->projectiles[j];
+
+			if (NULL == projectile)
+			{
+				continue;
+			}
+
+			switch (projectile->state)
+			{
+			case ProjectileState_Init:
+			{
+			} break;
+
+			case ProjectileState_Moving:
+			{
+				EntityDef* entity = NULL;
+				get_enemy_to_attack(&entity);
+
+				DrawableDef* entity_drawable = NULL;
+				get_drawable_def(&entity_drawable, entity->drawable_handle);
+
+				Vec3 entity_pos = entity_drawable->transform.translation;
+
+				DrawableDef* drawable = NULL;
+				get_drawable_def(&drawable, projectile->drawable_handle);
+
+				Vec3 tower_pos = drawable->transform.translation;
+
+				Vec3 projectile_dir = sub_vec3(entity_pos, tower_pos);
+				normaliz_vec3(&projectile_dir);
+
+				float new_pos_x = drawable->transform.translation.x + projectile->projectile_speed * dt * projectile_dir.x;
+				float new_pos_y = drawable->transform.translation.y + projectile->projectile_speed * dt * projectile_dir.y;
+
+				Vec3 new_projectile_pos = { { new_pos_x, new_pos_y, 0.87f } };
+
+				drawable->transform.translation = new_projectile_pos;
+
+				Collidable2D* collidable2D = NULL;
+				get_collidable2D(&collidable2D, projectile->collidable2D_handle);
+				CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[tower]: Failed to fetch Collidable2D for a projectile.");
+
+				move_collision_box2D(&collidable2D->collision_box, new_pos_x, new_pos_y);
+
+				drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
+
+			} break;
+
+			case ProjectileState_Hit:
+			{
+			} break;
+
+			}
+		}
+	}
 
 	return 0;
 }
@@ -244,25 +511,25 @@ int place_new_tower_at_cursor()
 
 		DrawableDef* tower_drawable = NULL;
 		get_drawable_def(&tower_drawable, tower_preset->drawable_handle);
-		CHECK_EXPR_FAIL_RET(NULL != tower_drawable, "[game]: Failed to get tower drawable.");
+		CHECK_EXPR_FAIL_RET(NULL != tower_drawable, "[tower]: Failed to get tower drawable.");
 
 		switch (s_CurrentTowerIdx)
 		{
 		case TowerType_First:
 		{
-			create_tower_preset(&tower, &pos, &tower_drawable->transform.scale, &color, first_texture_path);
+			create_tower_at(&tower, &pos, &tower_drawable->transform.scale, &color, first_texture_path);
 		}
 		break;
 
 		case TowerType_Second:
 		{
-			create_tower_preset(&tower_preset, &pos, &tower_drawable->transform.scale, &color, second_texture_path);
+			create_tower_at(&tower, &pos, &tower_drawable->transform.scale, &color, second_texture_path);
 		}
 		break;
 
 		case TowerType_Third:
 		{
-			create_tower_preset(&tower_preset, &pos, &tower_drawable->transform.scale, &color, third_texture_path);
+			create_tower_at(&tower, &pos, &tower_drawable->transform.scale, &color, third_texture_path);
 		}
 		break;
 		default:
@@ -284,6 +551,10 @@ int place_new_tower_at_cursor()
 			get_collidable2D(&collidable2D, tower->collidable2D_handle);
 			CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[tower] Failed to fetch Collidable2D for the tower.");
 			add_collision_layer2D(&collidable2D->collision_box, CollisionLayer_Tower);
+
+			tower->spawned = true;
+			s_SpawnedTowers[s_SpawnedTowersCount] = tower->handle;
+			s_SpawnedTowersCount++;
 		}
 
 		return 1;
@@ -294,33 +565,32 @@ int place_new_tower_at_cursor()
 
 int add_tower(int* handle_dest)
 {
-	if (NULL == s_TowerData || s_TowerCount >= s_TowerCapacity)
-	{
-		int alloc_tower_data_arr_res = alloc_tower_data_arr();
-		CHECK_EXPR_FAIL_RET_TERMINATE(TERMINATE_SUCCESS_CODE == alloc_tower_data_arr_res, "[tower]: Failed to create a tower arr.");
-	}
+	CHECK_EXPR_FAIL_RET_TERMINATE(s_TowersCount < MAX_TOWER_CAPACITY, "[tower]: Max tower capacity has been reached.");
 
-	TowerDef* tower                      = s_TowerData + s_TowerCount;
-	tower->handle                        = s_TowerCount;
+	TowerDef* tower                      = s_TowersData + s_TowersCount;
+	tower->handle                        = s_TowersCount;
 	tower->drawable_handle               = -1;
 	tower->collidable2D_handle           = -1;
 	tower->collidable2D_detect_handle    = -1;
+	tower->state                         = TowerState_Idle;
 	tower->attack_power                  = DEFAULT_TOWER_ATTACK_POWER;
-	tower->projectile_speed              = DEFAULT_TOWER_PROJECTILE_SPEED;
+	tower->fire_delay                    = TOWER_FIRE_DELAY;
+	tower->spawned                       = false;
 
-	*handle_dest = s_TowerCount;
+	init_tower_projectiles(tower, DEFAULT_TOWER_PROJECTILE_SPEED, tower->attack_power);
+	
+	*handle_dest = tower->handle;
 
-	s_TowerCount++;
+	s_TowersCount++;
 
 	return 0;
 }
 
 int get_tower(TowerDef** dest, int tower_handle)
 {
-	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != s_TowerData, "[tower]: Tower data arr has not been initialized.");
-	CHECK_EXPR_FAIL_RET_TERMINATE(tower_handle >= 0 && tower_handle < s_TowerCount, "[tower]: Tower handle is out of bounds.");
+	CHECK_EXPR_FAIL_RET_TERMINATE(tower_handle >= 0 && tower_handle < s_TowersCount, "[tower]: Tower handle is out of bounds.");
 
-	TowerDef* tower = s_TowerData + tower_handle;
+	TowerDef* tower = s_TowersData + tower_handle;
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != tower, "[tower]: The requested tower is non-existent.");
 
 	*dest = tower;
@@ -350,7 +620,7 @@ int create_build_tower_presets()
 			Vec3 pos = { { 700.f, wHeight / 2.f + 200.f, Z_DEPTH_INITIAL_TOWER } };
 			Vec3 scale = { { (float)wHeight * 0.03f, (float)wHeight * 0.03f, 1.f } };
 
-			create_tower_preset(&tower_preset, &pos, &scale, &color, first_texture_path);
+			create_tower_at(&tower_preset, &pos, &scale, &color, first_texture_path);
 		} break;
 
 		case TowerType_Second:
@@ -358,7 +628,7 @@ int create_build_tower_presets()
 			Vec3 pos = { { 900.f, wHeight / 2.f + 200.f, Z_DEPTH_INITIAL_ENTITY } };
 			Vec3 scale = { { (float)wHeight * 0.03f, (float)wHeight * 0.03f, 1.f } };
 
-			create_tower_preset(&tower_preset, &pos, &scale, &color, second_texture_path);
+			create_tower_at(&tower_preset, &pos, &scale, &color, second_texture_path);
 		} break;
 
 		case TowerType_Third:
@@ -366,7 +636,7 @@ int create_build_tower_presets()
 			Vec3 pos = { { 1100.f, wHeight / 2.f + 200.f, Z_DEPTH_INITIAL_ENTITY } };
 			Vec3 scale = { { (float)wHeight * 0.03f, (float)wHeight * 0.03f, 1.f } };
 
-			create_tower_preset(&tower_preset, &pos, &scale, &color, third_texture_path);
+			create_tower_at(&tower_preset, &pos, &scale, &color, third_texture_path);
 		} break;
 
 		default:
@@ -382,9 +652,11 @@ int create_build_tower_presets()
 
 		Collidable2D* collidable2D = NULL;
 		get_collidable2D(&collidable2D, tower_preset->collidable2D_handle);
-		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[game] Failed to fetch Collidable2D for the tower.");
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[tower] Failed to fetch Collidable2D for the tower.");
 		add_collision_layer2D(&collidable2D->collision_box, CollisionLayer_Tower);
 		add_collision_mask2D(&collidable2D->collision_box, CollisionLayer_Road | CollisionLayer_Castle);
+
+		tower_preset = NULL;
 	}
 
 	return 0;
