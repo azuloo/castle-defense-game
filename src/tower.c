@@ -7,6 +7,11 @@
 #include "enemy_wave.h" // TODO: Potentially, to be removed
 #include "entity.h" // TODO: Potentially, to be removed
 
+#define MAX_TOWER_CAPACITY 64
+#define MOVING_PROJECTILE_CAPACITY 64
+#define DEFAULT_PROJECTILE_POS_X 0.f
+#define DEFAULT_PROJECTILE_POS_Y 0.f
+
 extern int wWidth;
 extern int wHeight;
 extern int xWOffset;
@@ -17,7 +22,6 @@ extern double s_CursorYPos;
 extern float get_window_scale_x();
 extern float get_window_scale_y();
 
-#define MAX_TOWER_CAPACITY 64
 static TowerDef s_TowersData[MAX_TOWER_CAPACITY];
 static int s_TowersCount = 0;
 static int s_SpawnedTowers[MAX_TOWER_CAPACITY];
@@ -26,8 +30,7 @@ static int s_SpawnedTowersCount = 0;
 static int s_CurrentTowerIdx = 0;
 static TowerDef* tower_presets[TowerType_Count];
 
-#define MOVING_PROJECTILE_CAPACITY 64
-static ProjectileDef s_MovingProjectiles[MOVING_PROJECTILE_CAPACITY];
+static ProjectileDef* s_MovingProjectiles[MOVING_PROJECTILE_CAPACITY];
 
 static const char* first_texture_path = "/res/static/textures/triangle.png";
 static const char* second_texture_path = "/res/static/textures/square.png";
@@ -95,23 +98,6 @@ static int find_tower_with_collidable(TowerDef** dest, const Collidable2D* colli
 	return 0;
 }
 
-static int find_projectile_with_collidable(ProjectileDef** dest, const Collidable2D* collidalbe)
-{
-	for (int i = 0; i < MOVING_PROJECTILE_CAPACITY; i++)
-	{
-		ProjectileDef* projectile = s_MovingProjectiles + i;
-		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != projectile, "[tower] The projectile with this idx has not been initialized.");
-
-		if (projectile->collidable2D_handle == collidalbe->handle)
-		{
-			*dest = projectile;
-			break;
-		}
-	}
-
-	return 0;
-}
-
 static void process_tower_collidable(Collidable2D* first, Collidable2D* second)
 {
 	TowerDef* tower = NULL;
@@ -129,7 +115,7 @@ static void process_tower_collidable(Collidable2D* first, Collidable2D* second)
 	{
 		if (first->collision_box.collision_layer & CollisionLayer_Tower)
 		{
-			if (second->collision_box.collision_layer & (CollisionLayer_Road | CollisionLayer_Castle))
+			if (second->collision_box.collision_layer & (CollisionLayer_Road | CollisionLayer_Castle | CollisionLayer_Tower))
 			{
 				DrawableDef* first_drawable = NULL;
 				get_drawable_def(&first_drawable, tower->drawable_handle);
@@ -141,7 +127,7 @@ static void process_tower_collidable(Collidable2D* first, Collidable2D* second)
 		}
 		else if (second->collision_box.collision_layer & CollisionLayer_Tower)
 		{
-			if (first->collision_box.collision_layer & (CollisionLayer_Road | CollisionLayer_Castle))
+			if (first->collision_box.collision_layer & (CollisionLayer_Road | CollisionLayer_Castle | CollisionLayer_Tower))
 			{
 				DrawableDef* second_drawable = NULL;
 				get_drawable_def(&second_drawable, tower->drawable_handle);
@@ -169,30 +155,8 @@ static void process_projectile_collidable(Collidable2D* first, Collidable2D* sec
 
 	if (NULL != projectile)
 	{
-		if (first->collision_box.collision_layer & CollisionLayer_Projectile)
-		{
-			if (second->collision_box.collision_layer & CollisionLayer_Enemy)
-			{
-				DrawableDef* first_drawable = NULL;
-				get_drawable_def(&first_drawable, projectile->drawable_handle);
-
-				Vec4 color_vec = COLOR_VEC_BLUE;
-
-				add_uniform_vec4f(first_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
-			}
-		}
-		else if (second->collision_box.collision_layer & CollisionLayer_Projectile)
-		{
-			if (first->collision_box.collision_layer & CollisionLayer_Enemy)
-			{
-				DrawableDef* second_drawable = NULL;
-				get_drawable_def(&second_drawable, projectile->drawable_handle);
-
-				Vec4 color_vec = COLOR_VEC_BLUE;
-
-				add_uniform_vec4f(second_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
-			}
-		}
+		projectile->alive = false;
+		projectile->state = ProjectileState_Hit;
 	}
 }
 
@@ -219,13 +183,14 @@ static void process_collision_end_hook(Collidable2D* first, Collidable2D* second
 	{
 		Collidable2D* collidable2D = NULL;
 		get_collidable2D(&collidable2D, tower->collidable2D_handle);
-		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[game] Failed to fetch Collidable2D for the tower.");
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[tower] Failed to fetch Collidable2D for the tower.");
 
 		if (first->collision_box.collision_layer & CollisionLayer_Tower)
 		{
 			bool road_collision_pred = second->collision_box.collision_layer & CollisionLayer_Road && collidable2D->collisions_detected == 0;
 			bool castle_collision_pred = second->collision_box.collision_layer & CollisionLayer_Castle && collidable2D->collisions_detected == 0;
-			if (road_collision_pred || castle_collision_pred)
+			bool tower_collision_pred = second->collision_box.collision_layer & CollisionLayer_Tower && collidable2D->collisions_detected == 0;
+			if (road_collision_pred || castle_collision_pred || tower_collision_pred)
 			{
 				DrawableDef* first_drawable = NULL;
 				get_drawable_def(&first_drawable, tower->drawable_handle);
@@ -239,7 +204,8 @@ static void process_collision_end_hook(Collidable2D* first, Collidable2D* second
 		{
 			bool road_collision_pred = first->collision_box.collision_layer & CollisionLayer_Road && collidable2D->collisions_detected == 0;
 			bool castle_collision_pred = first->collision_box.collision_layer & CollisionLayer_Castle && collidable2D->collisions_detected == 0;
-			if (road_collision_pred || castle_collision_pred)
+			bool tower_collision_pred = first->collision_box.collision_layer & CollisionLayer_Tower && collidable2D->collisions_detected == 0;
+			if (road_collision_pred || castle_collision_pred || tower_collision_pred)
 			{
 				DrawableDef* second_drawable = NULL;
 				get_drawable_def(&second_drawable, tower->drawable_handle);
@@ -278,9 +244,9 @@ static int add_moving_projectile(const ProjectileDef* projectile)
 	bool found = false;
 	for (int i = 0; i < MOVING_PROJECTILE_CAPACITY; i++)
 	{
-		if (-1 == s_MovingProjectiles[i].handle)
+		if (NULL == s_MovingProjectiles[i])
 		{
-			memcpy(&s_MovingProjectiles[i], projectile, sizeof(ProjectileDef));
+			s_MovingProjectiles[i] = projectile;
 			found = true;
 			break;
 		}
@@ -294,6 +260,25 @@ static int add_moving_projectile(const ProjectileDef* projectile)
 	return 0;
 }
 
+static int removed_moving_projectile(const ProjectileDef* projectile)
+{
+	bool found = false;
+	for (int i = 0; i < MOVING_PROJECTILE_CAPACITY; i++)
+	{
+		if (s_MovingProjectiles[i] == projectile)
+		{
+			s_MovingProjectiles[i] = NULL;
+			found = true;
+			break;
+		}
+	}
+
+	if (!found)
+	{
+		PRINT_ERR("[tower]: Failed to find a projectile to remove.");
+	}
+}
+
 int init_towers()
 {
 	physics_add_collision_begind_cb(&process_collision_begin_hook);
@@ -301,7 +286,10 @@ int init_towers()
 
 	create_build_tower_presets();
 
-	memset(s_MovingProjectiles, -1, MOVING_PROJECTILE_CAPACITY * sizeof(ProjectileDef));
+	for (int i = 0; i < MOVING_PROJECTILE_CAPACITY; i++)
+	{
+		s_MovingProjectiles[i] = NULL;
+	}
 
 	return 0;
 }
@@ -332,11 +320,13 @@ int update_towers(float dt)
 			ProjectileDef* projectile = NULL;
 			for (int j = 0; j < PROJECTILES_PER_TOWER; j++)
 			{
+				// TODO: Select the first free projectile
 				projectile = &tower->projectiles[j];
 				if (projectile->state == ProjectileState_Init)
 				{
 					break;
 				}
+
 				projectile = NULL;
 			}
 
@@ -352,15 +342,30 @@ int update_towers(float dt)
 				projectile_pos.z = 0.89f;
 
 				DrawableDef* projectile_drawable = NULL;
-				draw_quad(&projectile_drawable, &projectile_pos, &projectile_scale, &projectile_color, first_texture_path, TexType_RGBA, tower_texture_params, DEFAULT_TEXTURE_PARAMS_COUNT);
 
-				projectile->drawable_handle = projectile_drawable->handle;
+				if (-1 == projectile->drawable_handle)
+				{
+					draw_quad(&projectile_drawable, &projectile_pos, &projectile_scale, &projectile_color, first_texture_path, TexType_RGBA, tower_texture_params, DEFAULT_TEXTURE_PARAMS_COUNT);
+					projectile->drawable_handle = projectile_drawable->handle;
+				}
+				else
+				{
+					get_drawable_def(&projectile_drawable, projectile->drawable_handle);
+				}
+
 				projectile->state = ProjectileState_Moving;
+				projectile->alive = true;
 
 				projectile_drawable->transform.translation = projectile_pos;
 				projectile_drawable->transform.scale = projectile_scale;
 
-				add_collidable2D(&projectile->collidable2D_handle, &projectile_drawable->transform.translation, &projectile_drawable->transform.scale);
+				projectile_drawable->visible = 1;
+
+				if (-1 == projectile->collidable2D_handle)
+				{
+					add_collidable2D(&projectile->collidable2D_handle, &projectile_drawable->transform.translation, &projectile_drawable->transform.scale);
+				}
+				
 				Collidable2D* collidable2D = NULL;
 				get_collidable2D(&collidable2D, projectile->collidable2D_handle);
 				CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[tower]: Failed to fetch Collidable2D for a projectile.");
@@ -368,9 +373,9 @@ int update_towers(float dt)
 				add_collision_layer2D(&collidable2D->collision_box, CollisionLayer_Projectile);
 				add_collision_mask2D(&collidable2D->collision_box, CollisionLayer_Enemy);
 
-				add_moving_projectile(projectile);
-
 				drawable_transform_ts(projectile_drawable, COMMON_MODEL_UNIFORM_NAME);
+
+				add_moving_projectile(projectile);
 
 				tower->state = TowerState_FireDelay;
 			}
@@ -429,6 +434,7 @@ int update_towers(float dt)
 				float new_pos_x = drawable->transform.translation.x + projectile->projectile_speed * dt * projectile_dir.x;
 				float new_pos_y = drawable->transform.translation.y + projectile->projectile_speed * dt * projectile_dir.y;
 
+				// TODO: Change zdepth for const
 				Vec3 new_projectile_pos = { { new_pos_x, new_pos_y, 0.87f } };
 
 				drawable->transform.translation = new_projectile_pos;
@@ -445,6 +451,27 @@ int update_towers(float dt)
 
 			case ProjectileState_Hit:
 			{
+				DrawableDef* projectile_drawable = NULL;
+				get_drawable_def(&projectile_drawable, projectile->drawable_handle);
+				CHECK_EXPR_FAIL_RET_TERMINATE(NULL != projectile_drawable, "[tower]: Failed to find a drawable for the projectile.");
+
+				projectile_drawable->visible = 0;
+				projectile_drawable->transform.translation = (Vec3){ DEFAULT_PROJECTILE_POS_X, DEFAULT_PROJECTILE_POS_Y, projectile_drawable->transform.translation.z };
+
+				Collidable2D* collidable2D = NULL;
+				get_collidable2D(&collidable2D, projectile->collidable2D_handle);
+				CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[tower] Failed to fetch Collidable2D for the tower.");
+
+				add_collision_layer2D(&collidable2D->collision_box, CollisionLayer_None);
+				add_collision_mask2D(&collidable2D->collision_box, CollisionLayer_None);
+
+				move_collision_box2D(&collidable2D->collision_box, DEFAULT_PROJECTILE_POS_X, DEFAULT_PROJECTILE_POS_Y);
+
+				drawable_transform_ts(projectile_drawable, COMMON_MODEL_UNIFORM_NAME);
+
+				removed_moving_projectile(projectile);
+
+				projectile->state = ProjectileState_Init;
 			} break;
 
 			}
@@ -471,7 +498,7 @@ int resize_towers()
 			float tower_scale_x = tower_drawable->init_transform.scale.x * scaleX;
 			float tower_scale_y = tower_drawable->init_transform.scale.y * scaleY;
 
-			// TODO: Can be replaced with common merhod in Physics
+			// TODO: Can be replaced with common method in Physics
 			tower_drawable->transform.scale.x = tower_scale_x;
 			tower_drawable->transform.scale.y = tower_scale_y;
 
@@ -544,13 +571,23 @@ int place_new_tower_at_cursor()
 			DrawableDef* drawable = NULL;
 			get_drawable_def(&drawable, tower->drawable_handle);
 			CHECK_EXPR_FAIL_RET(drawable != NULL, "[tower]: Failed to fetch a tower drawable.");
+
 			add_collidable2D(&tower->collidable2D_handle, &drawable->transform.translation, &drawable->transform.scale);
 			CHECK_EXPR_FAIL_RET(-1 != tower->collidable2D_handle, "[tower]: Failed to attach Collidable2D.");
+
+			Vec3 detect_collidable_scale = multipty_by_scalar_vec3(drawable->transform.scale, 10);
+
+			add_collidable2D(&tower->collidable2D_detect_handle, &drawable->transform.translation, &detect_collidable_scale);
+			CHECK_EXPR_FAIL_RET(-1 != tower->collidable2D_detect_handle, "[tower]: Failed to attach detection Collidable2D.");
 
 			Collidable2D* collidable2D = NULL;
 			get_collidable2D(&collidable2D, tower->collidable2D_handle);
 			CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[tower] Failed to fetch Collidable2D for the tower.");
 			add_collision_layer2D(&collidable2D->collision_box, CollisionLayer_Tower);
+
+			Collidable2D* detection_collidable2D = NULL;
+			get_collidable2D(&detection_collidable2D, tower->collidable2D_detect_handle);
+			CHECK_EXPR_FAIL_RET_TERMINATE(NULL != detection_collidable2D, "[tower]: Failed to get detection Collidable2D for the tower.");
 
 			tower->spawned = true;
 			s_SpawnedTowers[s_SpawnedTowersCount] = tower->handle;
@@ -654,7 +691,7 @@ int create_build_tower_presets()
 		get_collidable2D(&collidable2D, tower_preset->collidable2D_handle);
 		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[tower] Failed to fetch Collidable2D for the tower.");
 		add_collision_layer2D(&collidable2D->collision_box, CollisionLayer_Tower);
-		add_collision_mask2D(&collidable2D->collision_box, CollisionLayer_Road | CollisionLayer_Castle);
+		add_collision_mask2D(&collidable2D->collision_box, CollisionLayer_Road | CollisionLayer_Castle | CollisionLayer_Tower);
 
 		tower_preset = NULL;
 	}
@@ -706,6 +743,22 @@ int on_tower_building_mode_enabled()
 		}
 
 		drawable_transform_ts(tower_drawable, COMMON_MODEL_UNIFORM_NAME);
+	}
+
+	return 0;
+}
+
+int find_projectile_with_collidable(ProjectileDef** dest, const Collidable2D* collidalbe)
+{
+	for (int i = 0; i < MOVING_PROJECTILE_CAPACITY; i++)
+	{
+		ProjectileDef* projectile = s_MovingProjectiles[i];
+
+		if (NULL != projectile && projectile->collidable2D_handle == collidalbe->handle)
+		{
+			*dest = projectile;
+			break;
+		}
 	}
 
 	return 0;

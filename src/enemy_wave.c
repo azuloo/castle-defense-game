@@ -95,6 +95,9 @@ static int fill_enemies_data()
 			add_collision_layer2D(&collidable2D->collision_box, CollisionLayer_Enemy);
 			add_collision_mask2D(&collidable2D->collision_box, CollisionLayer_Castle | CollisionLayer_Projectile);
 
+			enemy->health = 300.f;
+			enemy->alive = 1;
+
 			EntityDef* enemy_dest = enemy_wave->enemies + i;
 			memcpy(enemy_dest, enemy, sizeof(EntityDef));
 		}

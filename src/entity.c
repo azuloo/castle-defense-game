@@ -7,6 +7,7 @@
 #include "file_reader.h"
 #include "map/map_mgr.h"
 #include "enemy_wave.h"
+#include "tower.h"
 
 #include <stdlib.h>
 #include <stdbool.h>
@@ -67,6 +68,8 @@ static int create_entity_def(EntityDef** dest, enum EntityType type)
 	entity_def->state                 = EntityState_Setup;
 	entity_def->initial_speed         = ENTITY_MOVEMENT_SPEED;
 	entity_def->speed                 = ENTITY_MOVEMENT_SPEED;
+	entity_def->health                = 0;
+	entity_def->alive                 = 0;
 	entity_def->drawable_handle       = -1;
 	entity_def->collidable2D_handle   = -1;
 
@@ -150,6 +153,22 @@ static int find_enemy_with_collidable(EntityDef** dest, const Collidable2D* coll
 	return 0;
 }
 
+static int damage_entity(EntityDef* entity, float amount)
+{
+	CHECK_EXPR_FAIL_RET_TERMINATE(amount > 0, "[entity]: Damage amount must be > 0");
+
+	if (entity->alive)
+	{
+		entity->health -= amount;
+		if (entity->health <= 0)
+		{
+			entity->alive = 0;
+		}
+	}
+
+	return 0;
+}
+
 static void resolve_entity_castle_collision(EntityDef* first, CastleDef* second)
 {
 	DrawableDef* first_drawable = NULL;
@@ -172,7 +191,6 @@ static void resolve_entity_castle_collision(EntityDef* first, CastleDef* second)
 
 	if (NULL != first_drawable && first_collidable2D->collision_box.collision_layer & CollisionLayer_Castle)
 	{
-		map_mgr_damage_castle(10.f);
 		add_uniform_vec4f(second_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
 	}
 
@@ -182,25 +200,62 @@ static void resolve_entity_castle_collision(EntityDef* first, CastleDef* second)
 
 	if (NULL != second_drawable && second_collidable2D->collision_box.collision_layer & CollisionLayer_Castle)
 	{
-		map_mgr_damage_castle(10.f);
 		add_uniform_vec4f(first_drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color_vec);
+	}
+}
+
+static void process_projectile_collision(Collidable2D* first, Collidable2D* second)
+{
+	EntityDef* entity = NULL;
+	ProjectileDef* projectile = NULL;
+
+	if (first->collision_box.collision_layer & CollisionLayer_Enemy)
+	{
+		find_enemy_with_collidable(&entity, first);
+	}
+	else if (second->collision_box.collision_layer & CollisionLayer_Enemy)
+	{
+		find_enemy_with_collidable(&entity, second);
+	}
+
+	if (first->collision_box.collision_layer & CollisionLayer_Projectile)
+	{
+		find_projectile_with_collidable(&projectile, first);
+	}
+	else if (second->collision_box.collision_layer & CollisionLayer_Projectile)
+	{
+		find_projectile_with_collidable(&projectile, second);
+	}
+
+	if (NULL != entity && NULL != projectile)
+	{
+		damage_entity(entity, projectile->damage_on_hit);
+
+		DrawableDef* entity_drawable = NULL;
+		get_drawable_def(&entity_drawable, entity->drawable_handle);
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != entity_drawable, "[entity] Failed to fetch drawable for the entity.");
+
+		if (!entity->alive)
+		{
+			entity_drawable->visible = 0;
+			move_entity(entity, 0.f, 0.f);
+		}
+		// TODO: Need to remove collidalbe here, maybe anything else, too
 	}
 }
 
 static void process_collision_begin_hook(Collidable2D* first, Collidable2D* second)
 {
-	EntityDef* first_entity = NULL;
-	EntityDef* second_entity = NULL;
+	EntityDef* entity = NULL;
 	CastleDef* castle = NULL;
 
 	if (first->collision_box.collision_layer & CollisionLayer_Enemy)
 	{
-		find_enemy_with_collidable(&first_entity, first);
+		find_enemy_with_collidable(&entity, first);
 	}
-
-	if (second->collision_box.collision_layer & CollisionLayer_Enemy)
+	else if (second->collision_box.collision_layer & CollisionLayer_Enemy)
 	{
-		find_enemy_with_collidable(&second_entity, second);
+		find_enemy_with_collidable(&entity, second);
 	}
 
 	if (first->collision_box.collision_layer & CollisionLayer_Castle || second->collision_box.collision_layer & CollisionLayer_Castle)
@@ -209,38 +264,27 @@ static void process_collision_begin_hook(Collidable2D* first, Collidable2D* seco
 		CHECK_EXPR_FAIL_RET(castle != NULL, "[entity]: Failed to get the castle.");
 	}
 
-	if (NULL != first_entity)
+	if (NULL != entity && NULL != castle)
 	{
-		if (first->collision_box.collision_layer & ~CollisionLayer_Tower && NULL != castle)
-		{
-			resolve_entity_castle_collision(first_entity, castle);
-			return;
-		}
+		resolve_entity_castle_collision(entity, castle);
+		map_mgr_damage_castle(10.f);
 	}
-	else if (NULL != second_entity)
-	{
-		if (second->collision_box.collision_layer & ~CollisionLayer_Tower && NULL != castle)
-		{
-			resolve_entity_castle_collision(second_entity, castle);
-			return;
-		}
-	}
+
+	process_projectile_collision(first, second);
 }
 
 static void process_collision_end_hook(Collidable2D* first, Collidable2D* second)
 {
-	EntityDef* first_entity = NULL;
-	EntityDef* second_entity = NULL;
+	EntityDef* entity = NULL;
 	CastleDef* castle = NULL;
 
 	if (first->collision_box.collision_layer & CollisionLayer_Enemy)
 	{
-		find_enemy_with_collidable(&first_entity, first);
+		find_enemy_with_collidable(&entity, first);
 	}
-
-	if (second->collision_box.collision_layer & CollisionLayer_Enemy)
+	else if (second->collision_box.collision_layer & CollisionLayer_Enemy)
 	{
-		find_enemy_with_collidable(&second_entity, second);
+		find_enemy_with_collidable(&entity, second);
 	}
 
 	if (first->collision_box.collision_layer & CollisionLayer_Castle || second->collision_box.collision_layer & CollisionLayer_Castle)
@@ -249,29 +293,9 @@ static void process_collision_end_hook(Collidable2D* first, Collidable2D* second
 		CHECK_EXPR_FAIL_RET(castle != NULL, "[entity]: Failed to get the castle.");
 	}
 
-	if (NULL != first_entity)
+	if (NULL != entity && NULL != castle)
 	{
-		Collidable2D* first_collidable2D = NULL;
-		get_collidable2D(&first_collidable2D, first_entity->collidable2D_handle);
-		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != first_collidable2D, "[entity] Failed to fetch Collidable2D for the entity.");
-
-		if (NULL != castle && first_collidable2D->collision_box.collision_layer & CollisionLayer_Enemy)
-		{
-			resolve_entity_castle_collision(first_entity, castle);
-			return;
-		}
-	}
-	if (NULL != second_entity)
-	{
-		Collidable2D* second_collidable2D = NULL;
-		get_collidable2D(&second_collidable2D, second_entity->collidable2D_handle);
-		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != second_collidable2D, "[entity] Failed to fetch Collidable2D for the entity.");
-
-		if (NULL != castle && second_collidable2D->collision_box.collision_layer & CollisionLayer_Enemy)
-		{
-			resolve_entity_castle_collision(second_entity, castle);
-			return;
-		}
+		resolve_entity_castle_collision(entity, castle);
 	}
 }
 
@@ -388,14 +412,14 @@ int resize_entity(EntityDef* dest, float scale_x, float scale_y)
 
 int entity_follow_path(EntityDef* entity)
 {
-	if (NULL == entity->path || 0 == entity->path_len)
+	if (NULL == entity->path || 0 == entity->path_len || !entity->alive)
 	{
 		return 0;
 	}
 
 	DrawableDef* drawable = NULL;
 	get_drawable_def(&drawable, entity->drawable_handle);
-	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[entity]: DrawableDef was not found in Registry.");
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[entity]: DrawableDef was not found for the entity.");
 
 	// TODO: If we later need to separate 'visible' (graphics) from 'active' (physics) - switch it here
 	if (!drawable->visible)

@@ -108,7 +108,7 @@ int add_collidable2D(int* handle_dest, const Vec3* initial_pos, const Vec3* init
     DrawableDef* debug_drawable = NULL;
 
     Vec4 debug_color = { { 1.f, 0.f, 0.f, 1.f } };
-    draw_quad(&debug_drawable, debug_quad_texture_path, TexType_RGBA, &collidable2D->collision_box.position, &collidable2D->collision_box.size, &debug_color);
+    draw_quad(&debug_drawable, &collidable2D->collision_box.position, &collidable2D->collision_box.size, &debug_color, debug_quad_texture_path, TexType_RGBA, default_texture_params, DEFAULT_TEXTURE_PARAMS_COUNT);
     CHECK_EXPR_FAIL_RET_TERMINATE(NULL != debug_drawable, "[physics] Failed to create drawable for debug quad.");
 
     collidable2D->collision_box.DEBUG_bounds_drawable = debug_drawable;

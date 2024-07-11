@@ -4,7 +4,7 @@
 #include "global_decl.h"
 #include <stdbool.h>
 
-#define DEFAULT_TOWER_ATTACK_POWER 10.f
+#define DEFAULT_TOWER_ATTACK_POWER 25.f
 #define DEFAULT_TOWER_PROJECTILE_SPEED 900.f
 #define TOWER_FIRE_DELAY 2.f
 #define PROJECTILES_PER_TOWER 3
@@ -34,12 +34,12 @@ typedef enum ProjectileState
 
 typedef struct ProjectileDef
 {
-	int handle;
 	int drawable_handle;
 	int collidable2D_handle;
 	float projectile_speed;
 	float damage_on_hit;
 	int state;
+	bool alive;
 } ProjectileDef;
 
 typedef struct TowerDef
@@ -66,5 +66,6 @@ int create_build_tower_presets();
 int find_tower_with_collidable(TowerDef** dest, const Collidable2D* collidable);
 int on_select_tower_preset_pressed();
 int on_tower_building_mode_enabled();
+int find_projectile_with_collidable(ProjectileDef** dest, const Collidable2D* collidalbe);
 
 #endif // _TOWER_H

@@ -35,6 +35,8 @@ typedef struct EntityDef
 	int               collidable2D_handle;
 	int               initial_speed;
 	int               speed;
+	float             health;
+	int               alive;
 	Vec2              direction;
 } EntityDef;
 
@@ -45,9 +47,11 @@ int add_entity_path(EntityDef* dest, const PathDef* path, int path_len);
 int move_entity(EntityDef* dest, float pos_x, float pos_y);
 int resize_entity(EntityDef* dest, float scale_x, float scale_y);
 
+
 int entity_follow_path(EntityDef* entity);
 void get_entities(EntityDef** dest);
 int get_entities_num();
+int get_entity_pos(const EntityDef* entity, Vec3* dest);
 
 void entity_free_resources();
 
