@@ -132,13 +132,22 @@ Vec3 add_vec3(Vec3 v1, Vec3 v2)
 	return out;
 }
 
-Vec4 multipty_by_scalar(Vec4 v, float s)
+Vec4 multipty_by_scalar_vec4(Vec4 v, float s)
 {
 	Vec4 out = { {0} };
 	out.m[0] = s * v.m[0];
 	out.m[1] = s * v.m[1];
 	out.m[2] = s * v.m[2];
 	out.m[3] = s * v.m[3];
+	return out;
+}
+
+Vec3 multipty_by_scalar_vec3(Vec3 v, float s)
+{
+	Vec3 out = { {0} };
+	out.m[0] = s * v.m[0];
+	out.m[1] = s * v.m[1];
+	out.m[2] = s * v.m[2];
 	return out;
 }
 
