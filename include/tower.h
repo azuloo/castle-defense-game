@@ -30,7 +30,7 @@ typedef enum ProjectileState
 	ProjectileState_Init,
 	ProjectileState_Moving,
 	ProjectileState_Hit
-};
+} ProjectileState;
 
 typedef struct ProjectileDef
 {

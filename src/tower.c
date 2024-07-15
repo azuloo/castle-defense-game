@@ -183,7 +183,7 @@ static void process_collision_end_hook(Collidable2D* first, Collidable2D* second
 	{
 		Collidable2D* collidable2D = NULL;
 		get_collidable2D(&collidable2D, tower->collidable2D_handle);
-		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[tower] Failed to fetch Collidable2D for the tower.");
+		CHECK_EXPR_FAIL_RET(NULL != collidable2D, "[tower] Failed to fetch Collidable2D for the tower.");
 
 		if (first->collision_box.collision_layer & CollisionLayer_Tower)
 		{
@@ -237,6 +237,8 @@ static int get_enemy_to_attack(EntityDef** dest)
 		*dest = enemy;
 		break;
 	}
+
+	return 0;
 }
 
 static int add_moving_projectile(const ProjectileDef* projectile)
@@ -277,6 +279,8 @@ static int removed_moving_projectile(const ProjectileDef* projectile)
 	{
 		PRINT_ERR("[tower]: Failed to find a projectile to remove.");
 	}
+
+	return 0;
 }
 
 int init_towers()
@@ -536,27 +540,27 @@ int place_new_tower_at_cursor()
 		Vec3 pos = { { tower_x_pos, tower_y_pos, Z_DEPTH_INITIAL_ENTITY } };
 		Vec4 color = COLOR_VEC_GREEN;
 
-		DrawableDef* tower_drawable = NULL;
-		get_drawable_def(&tower_drawable, tower_preset->drawable_handle);
-		CHECK_EXPR_FAIL_RET(NULL != tower_drawable, "[tower]: Failed to get tower drawable.");
+		DrawableDef* tower_preset_drawable = NULL;
+		get_drawable_def(&tower_preset_drawable, tower_preset->drawable_handle);
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != tower_preset_drawable, "[tower]: Failed to get tower drawable.");
 
 		switch (s_CurrentTowerIdx)
 		{
 		case TowerType_First:
 		{
-			create_tower_at(&tower, &pos, &tower_drawable->transform.scale, &color, first_texture_path);
+			create_tower_at(&tower, &pos, &tower_preset_drawable->transform.scale, &color, first_texture_path);
 		}
 		break;
 
 		case TowerType_Second:
 		{
-			create_tower_at(&tower, &pos, &tower_drawable->transform.scale, &color, second_texture_path);
+			create_tower_at(&tower, &pos, &tower_preset_drawable->transform.scale, &color, second_texture_path);
 		}
 		break;
 
 		case TowerType_Third:
 		{
-			create_tower_at(&tower, &pos, &tower_drawable->transform.scale, &color, third_texture_path);
+			create_tower_at(&tower, &pos, &tower_preset_drawable->transform.scale, &color, third_texture_path);
 		}
 		break;
 		default:
@@ -570,15 +574,15 @@ int place_new_tower_at_cursor()
 		{
 			DrawableDef* drawable = NULL;
 			get_drawable_def(&drawable, tower->drawable_handle);
-			CHECK_EXPR_FAIL_RET(drawable != NULL, "[tower]: Failed to fetch a tower drawable.");
+			CHECK_EXPR_FAIL_RET_TERMINATE(drawable != NULL, "[tower]: Failed to fetch a tower drawable.");
 
 			add_collidable2D(&tower->collidable2D_handle, &drawable->transform.translation, &drawable->transform.scale);
-			CHECK_EXPR_FAIL_RET(-1 != tower->collidable2D_handle, "[tower]: Failed to attach Collidable2D.");
+			CHECK_EXPR_FAIL_RET_TERMINATE(-1 != tower->collidable2D_handle, "[tower]: Failed to attach Collidable2D.");
 
 			Vec3 detect_collidable_scale = multipty_by_scalar_vec3(drawable->transform.scale, 10);
 
 			add_collidable2D(&tower->collidable2D_detect_handle, &drawable->transform.translation, &detect_collidable_scale);
-			CHECK_EXPR_FAIL_RET(-1 != tower->collidable2D_detect_handle, "[tower]: Failed to attach detection Collidable2D.");
+			CHECK_EXPR_FAIL_RET_TERMINATE(-1 != tower->collidable2D_detect_handle, "[tower]: Failed to attach detection Collidable2D.");
 
 			Collidable2D* collidable2D = NULL;
 			get_collidable2D(&collidable2D, tower->collidable2D_handle);
@@ -592,6 +596,8 @@ int place_new_tower_at_cursor()
 			tower->spawned = true;
 			s_SpawnedTowers[s_SpawnedTowersCount] = tower->handle;
 			s_SpawnedTowersCount++;
+
+			tower_preset_drawable->visible = 0;
 		}
 
 		return 1;
