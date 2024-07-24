@@ -29,4 +29,8 @@ typedef struct HealthBarDef HealthBarDef;
 typedef struct TowerDef TowerDef;
 typedef struct ProjectileDef ProjectileDef;
 
+// Containers
+typedef struct ListNode ListNode;
+typedef struct List List;
+
 #endif // _GLOBAL_DECL_H
