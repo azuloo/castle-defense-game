@@ -18,7 +18,8 @@ typedef struct List
 } List;
 
 int create_list(List** dest);
-int add_element_to_list(List* list, void* data, int data_len);
+int add_to_list(List* list, void* data, int data_len);
+int copy_to_list(List* list, void* data, int data_len);
 int free_list(List* list);
 
 #endif // _LIST_H

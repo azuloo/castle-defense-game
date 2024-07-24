@@ -15,7 +15,32 @@ int create_list(List** dest)
 	return 0;
 }
 
-int add_element_to_list(List* list, void* data, int data_len)
+int add_to_list(List* list, void* data, int data_len)
+{
+	ListNode* new_node = malloc(sizeof * new_node);
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != new_node, "[list]: Failed to allocate sufficient memory for the list.");
+
+	new_node->next = NULL;
+	new_node->prev = NULL;
+	new_node->data = data;
+
+	if (NULL == list->head)
+	{
+		list->head = new_node;
+		list->tail = new_node;
+	}
+	else
+	{
+		list->tail->next = new_node;
+		list->tail = new_node;
+	}
+
+	list->length++;
+
+	return 0;
+}
+
+int copy_to_list(List* list, void* data, int data_len)
 {
 	ListNode* new_node = malloc(sizeof *new_node);
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != new_node, "[list]: Failed to allocate sufficient memory for the list.");
