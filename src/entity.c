@@ -121,38 +121,6 @@ static int add_circle(EntityDef** dest, const Vec3* pos, const Vec3* scale, cons
 	return 0;
 }
 
-static int find_enemy_with_collidable(EntityDef** dest, const Collidable2D* collidable)
-{
-	const EnemyWaveDef* enemy_wave = NULL;
-	get_enemy_wave(&enemy_wave);
-	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemy_wave, "[entity]: Failed to get current enemy wave.");
-
-	EntityDef* enemies = enemy_wave->enemies;
-	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemies, "[entity]: Enemies array is empty.");
-	int enemies_amount = enemy_wave->spawned_count;
-
-	EntityDef* enemy = NULL;
-	for (int i = 0; i < enemies_amount; i++)
-	{
-		enemy = enemies + i;
-		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemies, "[entity]: Failed to retrieve an ememy from the enemies array.");
-
-		Collidable2D* collidable2D = NULL;
-		get_collidable2D(&collidable2D, enemy->collidable2D_handle);
-		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[entity] Failed to fetch Collidable2D for the enemy.");
-
-		if (enemy->collidable2D_handle != collidable->handle)
-		{
-			continue;
-		}
-
-		*dest = enemy;
-		break;
-	}
-
-	return 0;
-}
-
 static int damage_entity(EntityDef* entity, float amount)
 {
 	CHECK_EXPR_FAIL_RET_TERMINATE(amount > 0, "[entity]: Damage amount must be > 0");
@@ -359,6 +327,38 @@ int add_entity_path(EntityDef* dest, const PathDef* path, int path_len)
 	if (dest->path_idx == -1)
 	{
 		dest->path_idx = 0;
+	}
+
+	return 0;
+}
+
+int find_enemy_with_collidable(EntityDef** dest, const Collidable2D* collidable)
+{
+	const EnemyWaveDef* enemy_wave = NULL;
+	get_enemy_wave(&enemy_wave);
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemy_wave, "[entity]: Failed to get current enemy wave.");
+
+	EntityDef* enemies = enemy_wave->enemies;
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemies, "[entity]: Enemies array is empty.");
+	int enemies_amount = enemy_wave->spawned_count;
+
+	EntityDef* enemy = NULL;
+	for (int i = 0; i < enemies_amount; i++)
+	{
+		enemy = enemies + i;
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemies, "[entity]: Failed to retrieve an ememy from the enemies array.");
+
+		Collidable2D* collidable2D = NULL;
+		get_collidable2D(&collidable2D, enemy->collidable2D_handle);
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[entity] Failed to fetch Collidable2D for the enemy.");
+
+		if (enemy->collidable2D_handle != collidable->handle)
+		{
+			continue;
+		}
+
+		*dest = enemy;
+		break;
 	}
 
 	return 0;

@@ -5,7 +5,7 @@
 #include "global_decl.h"
 
 // TODO: Add to entity's state
-#define ENTITY_MOVEMENT_SPEED 350.f
+#define ENTITY_MOVEMENT_SPEED 150.f
 
 enum EntityState
 {
@@ -44,6 +44,7 @@ int init_entity();
 int add_entity(enum EntityType type, EntityDef** dest, const Vec3* pos, const Vec3* scale, const Vec4* color);
 int add_entity_path(EntityDef* dest, const PathDef* path, int path_len);
 
+int find_enemy_with_collidable(EntityDef** dest, const Collidable2D* collidable);
 int move_entity(EntityDef* dest, float pos_x, float pos_y);
 int resize_entity(EntityDef* dest, float scale_x, float scale_y);
 
