@@ -6,6 +6,7 @@
 #include "global_defs.h"
 #include "enemy_wave.h" // TODO: Potentially, to be removed
 #include "entity.h" // TODO: Potentially, to be removed
+#include "container/list.h"
 
 #define MAX_TOWER_CAPACITY 64
 #define MOVING_PROJECTILE_CAPACITY 64
@@ -98,6 +99,32 @@ static int find_tower_with_collidable(TowerDef** dest, const Collidable2D* colli
 	return 0;
 }
 
+static int find_tower_by_detection_collidable(TowerDef** dest, const Collidable2D* collidable)
+{
+	for (int i = 0; i < s_TowersCount; i++)
+	{
+		const TowerDef* tower = s_TowersData + i;
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != tower, "[tower] The tower with this idx has not been initialized.");
+
+		if (-1 == tower->collidable2D_detect_handle)
+		{
+			continue;
+		}
+
+		Collidable2D* collidable2D = NULL;
+		get_collidable2D(&collidable2D, tower->collidable2D_detect_handle);
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[tower] Failed to fetch Collidable2D for the tower.");
+
+		if (collidable2D->handle == collidable->handle)
+		{
+			*dest = tower;
+			break;
+		}
+	}
+
+	return 0;
+}
+
 static void process_tower_collidable(Collidable2D* first, Collidable2D* second)
 {
 	TowerDef* tower = NULL;
@@ -160,10 +187,48 @@ static void process_projectile_collidable(Collidable2D* first, Collidable2D* sec
 	}
 }
 
+static void process_detection_collidable_begin_hook(Collidable2D* first, Collidable2D* second)
+{
+	EntityDef* enemy = NULL;
+	TowerDef* tower = NULL;
+
+	if (first->collision_box.collision_layer & CollisionLayer_Detection && second->collision_box.collision_layer & CollisionLayer_Enemy)
+	{
+		find_enemy_with_collidable(&enemy, second);
+		if (NULL == enemy) {
+			int test = 0;
+		}
+		CHECK_EXPR_FAIL_RET(NULL != enemy, "[tower]: Failed to find the enemy with collidable.");
+		find_tower_by_detection_collidable(&tower, first);
+		CHECK_EXPR_FAIL_RET(NULL != tower, "[tower]: Failed to find the tower with collidable.");
+	}
+	if (second->collision_box.collision_layer & CollisionLayer_Detection && first->collision_box.collision_layer & CollisionLayer_Enemy)
+	{
+		find_enemy_with_collidable(&enemy, first);
+		if (NULL == enemy) {
+			int test = 0;
+		}
+		CHECK_EXPR_FAIL_RET(NULL != enemy, "[tower]: Failed to find the enemy with collidable.");
+		find_tower_by_detection_collidable(&tower, second);
+		CHECK_EXPR_FAIL_RET(NULL != tower, "[tower]: Failed to find the tower with collidable.");
+	}
+
+	if (NULL != tower && NULL != enemy)
+	{
+		add_to_list(tower->targets, (void*)enemy, sizeof *enemy);
+	}
+}
+
+static void process_detection_collidable_end_hook(Collidable2D* first, Collidable2D* second)
+{
+	
+}
+
 static void process_collision_begin_hook(Collidable2D* first, Collidable2D* second)
 {
 	process_tower_collidable(first, second);
 	process_projectile_collidable(first, second);
+	process_detection_collidable_begin_hook(first, second);
 }
 
 static void process_collision_end_hook(Collidable2D* first, Collidable2D* second)
@@ -218,24 +283,29 @@ static void process_collision_end_hook(Collidable2D* first, Collidable2D* second
 	}
 }
 
-// TODO: To be reworked
-static int get_enemy_to_attack(EntityDef** dest)
+static int get_enemy_to_attack(const TowerDef* tower, EntityDef** dest)
 {
-	const EnemyWaveDef* enemy_wave = NULL;
-	get_enemy_wave(&enemy_wave);
-	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemy_wave, "[tower]: Failed to get current enemy wave.");
-
-	EntityDef* enemies = enemy_wave->enemies;
-	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemies, "[tower]: Enemies array is empty.");
-	int enemies_amount = enemy_wave->spawned_count;
-
-	EntityDef* enemy = NULL;
-	for (int i = 0; i < enemies_amount; i++)
+	if (tower->targets->length > 0)
 	{
-		enemy = enemies + i;
-		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemies, "[tower]: Failed to retrieve an ememy from the enemies array.");
-		*dest = enemy;
-		break;
+		ListNode* enemy_node = tower->targets->head;
+		EntityDef* enemy = (EntityDef*)enemy_node->data;
+		if (enemy != NULL && enemy->alive)
+		{
+			*dest = enemy;
+		}
+		else
+		{
+			for (int i = 0; i < tower->targets->length-1; i++)
+			{
+				enemy_node = enemy_node->next;
+				enemy = (EntityDef*)enemy_node->data;
+				if (enemy != NULL && enemy->alive)
+				{
+					*dest = enemy;
+					break;
+				}
+			}
+		}
 	}
 
 	return 0;
@@ -309,9 +379,8 @@ int update_towers(float dt)
 		{
 		case TowerState_Idle:
 		{
-			// TODO: Check for tower-entity collision here
 			EntityDef* entity = NULL;
-			get_enemy_to_attack(&entity);
+			get_enemy_to_attack(tower, &entity);
 			if (NULL != entity)
 			{
 				tower->state = TowerState_SpawnProjectile;
@@ -343,6 +412,7 @@ int update_towers(float dt)
 				Vec4 projectile_color = COLOR_VEC_RED;
 
 				Vec3 projectile_pos = tower_drawable->transform.translation;
+				// TODO: Change to const
 				projectile_pos.z = 0.89f;
 
 				DrawableDef* projectile_drawable = NULL;
@@ -419,11 +489,18 @@ int update_towers(float dt)
 
 			case ProjectileState_Moving:
 			{
-				EntityDef* entity = NULL;
-				get_enemy_to_attack(&entity);
+				EntityDef* enemy = NULL;
+				get_enemy_to_attack(tower, &enemy);
+
+				// TODO: Do we have to do something additional here?
+				if (NULL == enemy)
+				{
+					projectile->state = ProjectileState_Hit;
+					continue;
+				}
 
 				DrawableDef* entity_drawable = NULL;
-				get_drawable_def(&entity_drawable, entity->drawable_handle);
+				get_drawable_def(&entity_drawable, enemy->drawable_handle);
 
 				Vec3 entity_pos = entity_drawable->transform.translation;
 
@@ -593,6 +670,9 @@ int place_new_tower_at_cursor()
 			get_collidable2D(&detection_collidable2D, tower->collidable2D_detect_handle);
 			CHECK_EXPR_FAIL_RET_TERMINATE(NULL != detection_collidable2D, "[tower]: Failed to get detection Collidable2D for the tower.");
 
+			add_collision_layer2D(&detection_collidable2D->collision_box, CollisionLayer_Detection);
+			add_collision_mask2D(&detection_collidable2D->collision_box, CollisionLayer_Enemy);
+
 			tower->spawned = true;
 			s_SpawnedTowers[s_SpawnedTowersCount] = tower->handle;
 			s_SpawnedTowersCount++;
@@ -619,8 +699,11 @@ int add_tower(int* handle_dest)
 	tower->attack_power                  = DEFAULT_TOWER_ATTACK_POWER;
 	tower->fire_delay                    = TOWER_FIRE_DELAY;
 	tower->spawned                       = false;
+	tower->targets                       = NULL;
 
 	init_tower_projectiles(tower, DEFAULT_TOWER_PROJECTILE_SPEED, tower->attack_power);
+	create_list(&tower->targets);
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != tower->targets, "[tower]: Failed to create targets list for the tower.");
 	
 	*handle_dest = tower->handle;
 

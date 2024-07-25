@@ -53,6 +53,7 @@ typedef struct TowerDef
 	float fire_delay;
 	bool spawned;
 	ProjectileDef projectiles[PROJECTILES_PER_TOWER];
+	List* targets;
 } TowerDef;
 
 int init_towers();
