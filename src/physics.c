@@ -115,6 +115,7 @@ int add_collidable2D(int* handle_dest, const Vec3* initial_pos, const Vec3* init
 #endif // DRAW_COLLISION_BOX_BOUNDS
 
     collidable2D->handle = s_2DCollidablesCount;
+    collidable2D->active = 1;
     collidable2D->collisions_detected = 0;
 
     memset(collidable2D->collision_handles, -1, MAX_COLLISION_HANDLES * sizeof(int));
@@ -215,6 +216,11 @@ int physics_step()
                 
             Collidable2D* second_collidable = s_Collidables2D + j;
             if (NULL == second_collidable || second_collidable->collision_box.collision_layer == CollisionLayer_None)
+            {
+                continue;
+            }
+
+            if (!first_collidable->active || !second_collidable->active)
             {
                 continue;
             }

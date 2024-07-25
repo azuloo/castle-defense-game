@@ -15,6 +15,7 @@ enum PhysicsCollisionLayer
 	CollisionLayer_Road           = (1U << 4),
 	CollisionLayer_Tower          = (1U << 5),
 	CollisionLayer_Projectile     = (1U << 6),
+	CollisionLayer_Detection      = (1U << 7),
 
 	CollisionLayer_MAX            = (1U << 16)
 };
@@ -41,6 +42,7 @@ typedef struct CollisionBox2D
 typedef struct Collidable2D
 {
 	int               handle;
+	int               active;
 	CollisionBox2D    collision_box;
 	int               collision_handles[MAX_COLLISION_HANDLES];
 	int               collisions_detected;
