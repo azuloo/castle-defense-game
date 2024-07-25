@@ -195,9 +195,6 @@ static void process_detection_collidable_begin_hook(Collidable2D* first, Collida
 	if (first->collision_box.collision_layer & CollisionLayer_Detection && second->collision_box.collision_layer & CollisionLayer_Enemy)
 	{
 		find_enemy_with_collidable(&enemy, second);
-		if (NULL == enemy) {
-			int test = 0;
-		}
 		CHECK_EXPR_FAIL_RET(NULL != enemy, "[tower]: Failed to find the enemy with collidable.");
 		find_tower_by_detection_collidable(&tower, first);
 		CHECK_EXPR_FAIL_RET(NULL != tower, "[tower]: Failed to find the tower with collidable.");
@@ -205,9 +202,6 @@ static void process_detection_collidable_begin_hook(Collidable2D* first, Collida
 	if (second->collision_box.collision_layer & CollisionLayer_Detection && first->collision_box.collision_layer & CollisionLayer_Enemy)
 	{
 		find_enemy_with_collidable(&enemy, first);
-		if (NULL == enemy) {
-			int test = 0;
-		}
 		CHECK_EXPR_FAIL_RET(NULL != enemy, "[tower]: Failed to find the enemy with collidable.");
 		find_tower_by_detection_collidable(&tower, second);
 		CHECK_EXPR_FAIL_RET(NULL != tower, "[tower]: Failed to find the tower with collidable.");
