@@ -95,6 +95,7 @@ static int fill_enemies_data()
 			add_collision_layer2D(&collidable2D->collision_box, CollisionLayer_Enemy);
 			add_collision_mask2D(&collidable2D->collision_box, CollisionLayer_Castle | CollisionLayer_Projectile);
 
+			collidable2D->active = 0;
 			enemy->health = 300.f;
 			enemy->alive = 1;
 
@@ -234,6 +235,12 @@ int enemy_waves_spawn(float frameTime)
 		enemy_drawable->visible = 1;
 		enemy_wave->spawned_count += 1;
 		enemy_wave->state = EnemyWaveState_InterDelay;
+
+		Collidable2D* collidable2D = NULL;
+		get_collidable2D(&collidable2D, enemy->collidable2D_handle);
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[enemy_wave] Failed to fetch Collidable2D for the entity.");
+
+		collidable2D->active = 1;
 	}
 	break;
 
