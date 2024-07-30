@@ -263,6 +263,8 @@ int enemy_waves_spawn(float frameTime)
 		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemy, "[enemy_wave]: No enemy found with idx: %d", i);
 		entity_follow_path(enemy);
 	}
+
+	return 0;
 }
 
 void reset_enemy_waves()
@@ -274,20 +276,20 @@ void enemy_wave_on_window_resize()
 {
 	EnemyWaveDef* enemy_wave = NULL;
 	int get_enemy_wave_res = get_enemy_wave(&enemy_wave);
-	CHECK_EXPR_FAIL_RET_TERMINATE(TERMINATE_ERR_CODE != get_enemy_wave_res, "[enemy_wave]: Failed to fetch enemy wave def.");
+	CHECK_EXPR_FAIL_RET(TERMINATE_ERR_CODE != get_enemy_wave_res, "[enemy_wave]: Failed to fetch enemy wave def.");
 
 	const PathDef* path = map_mgr_get_path();
 	int path_len = map_mgr_get_path_len();
-	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != path && 0 != path_len, "[enemy_wave]: Path has not been determined for the current map.");
+	CHECK_EXPR_FAIL_RET(NULL != path && 0 != path_len, "[enemy_wave]: Path has not been determined for the current map.");
 
 	for (int i = 0; i < enemy_wave->enemies_left; i++)
 	{
 		EntityDef* enemy = enemy_wave->enemies + i;
-		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemy, "[enemy_wave]: Enemy entity is empty.");
+		CHECK_EXPR_FAIL_RET(NULL != enemy, "[enemy_wave]: Enemy entity is empty.");
 		DrawableDef* enemy_drawable = NULL;
 
 		get_drawable_def(&enemy_drawable, enemy->drawable_handle);
-		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != enemy_drawable, "[enemy_wave]: Enemy drawable is empty.");
+		CHECK_EXPR_FAIL_RET(NULL != enemy_drawable, "[enemy_wave]: Enemy drawable is empty.");
 
 		if (NULL != enemy_drawable)
 		{
