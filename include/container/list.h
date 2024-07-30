@@ -19,7 +19,7 @@ typedef struct List
 
 int create_list(List** dest);
 int add_to_list(List* list, void* data, int data_len);
-int copy_to_list(List* list, void* data, int data_len);
+int remove_from_list(List* list, ListNode* node);
 int free_list(List* list);
 
 #endif // _LIST_H

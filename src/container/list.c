@@ -31,6 +31,7 @@ int add_to_list(List* list, void* data, int data_len)
 	}
 	else
 	{
+		new_node->prev = list->tail;
 		list->tail->next = new_node;
 		list->tail = new_node;
 	}
@@ -40,31 +41,42 @@ int add_to_list(List* list, void* data, int data_len)
 	return 0;
 }
 
-int copy_to_list(List* list, void* data, int data_len)
+int remove_from_list(List* list, ListNode* node)
 {
-	ListNode* new_node = malloc(sizeof *new_node);
-	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != new_node, "[list]: Failed to allocate sufficient memory for the list.");
-	void* data_ptr = malloc(data_len);
-	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != new_node, "[list]: Failed to allocate sufficient memory for the list data.");
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != list && list->length > 0, "[list]: The list is empty.");
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != node, "[list]: The node is empty.");
 
-	new_node->next = NULL;
-	new_node->prev = NULL;
-	new_node->data = data_ptr;
-
-	memcpy(new_node->data, data, data_len);
-
-	if (NULL == list->head)
+	// List contains one element.
+	if (list->head == list->tail)
 	{
-		list->head = new_node;
-		list->tail = new_node;
+		list->head = NULL;
+		list->tail = NULL;
+		list->length = 0;
 	}
 	else
 	{
-		list->tail->next = new_node;
-		list->tail = new_node;
+		CHECK_EXPR_FAIL_RET_TERMINATE(list->length > 1, "[list]: The list is malformed.");
+		list->length -= 1;
+
+		if (list->head == node)
+		{
+			list->head->next->prev = NULL;
+			list->head = list->head->next;
+			
+		}
+		else if (list->tail == node)
+		{
+			list->tail->prev->next = NULL;
+			list->tail = list->tail->prev;
+		}
+		else
+		{
+			node->prev->next = node->next;
+			node->next->prev = node->prev;
+		}
 	}
 
-	list->length++;
+	free(node);
 
 	return 0;
 }
