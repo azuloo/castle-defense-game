@@ -125,7 +125,7 @@ static int find_tower_by_detection_collidable(TowerDef** dest, const Collidable2
 	return 0;
 }
 
-static void process_tower_collidable(Collidable2D* first, Collidable2D* second)
+static void process_tower_collision_begin(Collidable2D* first, Collidable2D* second)
 {
 	TowerDef* tower = NULL;
 
@@ -167,7 +167,7 @@ static void process_tower_collidable(Collidable2D* first, Collidable2D* second)
 	}
 }
 
-static void process_projectile_collidable(Collidable2D* first, Collidable2D* second)
+static void process_projectile_collision_begin(Collidable2D* first, Collidable2D* second)
 {
 	ProjectileDef* projectile = NULL;
 
@@ -187,7 +187,7 @@ static void process_projectile_collidable(Collidable2D* first, Collidable2D* sec
 	}
 }
 
-static void process_detection_collidable_begin_hook(Collidable2D* first, Collidable2D* second)
+static void process_detection_collision_begin(Collidable2D* first, Collidable2D* second)
 {
 	EntityDef* enemy = NULL;
 	TowerDef* tower = NULL;
@@ -213,19 +213,14 @@ static void process_detection_collidable_begin_hook(Collidable2D* first, Collida
 	}
 }
 
-static void process_detection_collidable_end_hook(Collidable2D* first, Collidable2D* second)
-{
-	
-}
-
 static void process_collision_begin_hook(Collidable2D* first, Collidable2D* second)
 {
-	process_tower_collidable(first, second);
-	process_projectile_collidable(first, second);
-	process_detection_collidable_begin_hook(first, second);
+	process_tower_collision_begin(first, second);
+	process_projectile_collision_begin(first, second);
+	process_detection_collision_begin(first, second);
 }
 
-static void process_collision_end_hook(Collidable2D* first, Collidable2D* second)
+static void process_tower_collision_end(Collidable2D* first, Collidable2D* second)
 {
 	TowerDef* tower = NULL;
 
@@ -277,6 +272,53 @@ static void process_collision_end_hook(Collidable2D* first, Collidable2D* second
 	}
 }
 
+static void process_detection_collision_end(Collidable2D* first, Collidable2D* second)
+{
+	TowerDef* tower = NULL;
+	EntityDef* enemy = NULL;
+
+	if (first->collision_box.collision_layer & CollisionLayer_Detection && second->collision_box.collision_layer & CollisionLayer_Enemy)
+	{
+		find_enemy_with_collidable(&enemy, second);
+		CHECK_EXPR_FAIL_RET(NULL != enemy, "[tower]: Failed to find the enemy with collidable.");
+		find_tower_by_detection_collidable(&tower, first);
+		CHECK_EXPR_FAIL_RET(NULL != tower, "[tower]: Failed to find the tower with collidable.");
+	}
+	else if (second->collision_box.collision_layer & CollisionLayer_Detection && first->collision_box.collision_layer & CollisionLayer_Enemy)
+	{
+		find_enemy_with_collidable(&enemy, first);
+		CHECK_EXPR_FAIL_RET(NULL != enemy, "[tower]: Failed to find the enemy with collidable.");
+		find_tower_by_detection_collidable(&tower, second);
+		CHECK_EXPR_FAIL_RET(NULL != tower, "[tower]: Failed to find the tower with collidable.");
+	}
+
+	if (NULL != tower && NULL != enemy)
+	{
+		if (tower->targets->length > 0)
+		{
+			ListNode* enemy_node = tower->targets->head;
+			EntityDef* enemy_data = NULL;
+			while (NULL != enemy_node)
+			{
+				enemy_data = (EntityDef*)enemy_node->data;
+				if (enemy_data->collidable2D_handle == enemy->collidable2D_handle)
+				{
+					remove_from_list(tower->targets, enemy_node);
+					break;
+				}
+
+				enemy_node = enemy_node->next;
+			}
+		}
+	}
+}
+
+static void process_collision_end_hook(Collidable2D* first, Collidable2D* second)
+{
+	process_tower_collision_end(first, second);
+	process_detection_collision_end(first, second);
+}
+
 static int get_enemy_to_attack(const TowerDef* tower, EntityDef** dest)
 {
 	if (tower->targets->length > 0)
@@ -289,15 +331,17 @@ static int get_enemy_to_attack(const TowerDef* tower, EntityDef** dest)
 		}
 		else
 		{
-			for (int i = 0; i < tower->targets->length-1; i++)
+			enemy_node = enemy_node->next;
+			while (NULL != enemy_node)
 			{
-				enemy_node = enemy_node->next;
 				enemy = (EntityDef*)enemy_node->data;
 				if (enemy != NULL && enemy->alive)
 				{
 					*dest = enemy;
 					break;
 				}
+
+				enemy_node = enemy_node->next;
 			}
 		}
 	}
