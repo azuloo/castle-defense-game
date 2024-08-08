@@ -69,6 +69,7 @@ static int create_entity_def(EntityDef** dest, enum EntityType type)
 	entity_def->initial_speed         = ENTITY_MOVEMENT_SPEED;
 	entity_def->speed                 = ENTITY_MOVEMENT_SPEED;
 	entity_def->health                = 0;
+	entity_def->damage                = ENTITY_DEFAULT_DAMAGE;
 	entity_def->alive                 = 0;
 	entity_def->drawable_handle       = -1;
 	entity_def->collidable2D_handle   = -1;
@@ -235,7 +236,7 @@ static void process_collision_begin_hook(Collidable2D* first, Collidable2D* seco
 	if (NULL != entity && NULL != castle)
 	{
 		resolve_entity_castle_collision(entity, castle);
-		map_mgr_damage_castle(10.f);
+		map_mgr_damage_castle(entity->damage);
 	}
 
 	process_projectile_collision(first, second);

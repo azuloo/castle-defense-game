@@ -6,6 +6,7 @@
 
 // TODO: Add to entity's state
 #define ENTITY_MOVEMENT_SPEED 150.f
+#define ENTITY_DEFAULT_DAMAGE 10.f
 
 enum EntityState
 {
@@ -36,6 +37,7 @@ typedef struct EntityDef
 	int               initial_speed;
 	int               speed;
 	float             health;
+	float             damage;
 	int               alive;
 	Vec2              direction;
 } EntityDef;
