@@ -28,6 +28,7 @@ typedef enum TowerState
 typedef enum ProjectileState
 {
 	ProjectileState_Init,
+	ProjectileState_PostInit,
 	ProjectileState_Moving,
 	ProjectileState_Hit
 } ProjectileState;
@@ -39,6 +40,7 @@ typedef struct ProjectileDef
 	float projectile_speed;
 	float damage_on_hit;
 	int state;
+	EntityDef* target;
 	bool alive;
 } ProjectileDef;
 

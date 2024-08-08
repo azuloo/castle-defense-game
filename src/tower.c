@@ -48,12 +48,14 @@ static void init_tower_projectiles(TowerDef* tower, float speed, float damage)
 {
 	for (int i = 0; i < PROJECTILES_PER_TOWER; i++)
 	{
-		ProjectileDef* projectile          = &tower->projectiles[i];
-		projectile->drawable_handle        = -1;
-		projectile->collidable2D_handle    = -1;
-		projectile->projectile_speed       = speed;
-		projectile->damage_on_hit          = damage;
-		projectile->state                  = ProjectileState_Init;
+		ProjectileDef* projectile              = &tower->projectiles[i];
+		projectile->drawable_handle            = -1;
+		projectile->collidable2D_handle        = -1;
+		projectile->projectile_speed           = speed;
+		projectile->damage_on_hit              = damage;
+		projectile->state                      = ProjectileState_Init;
+		projectile->target                     = NULL;
+		projectile->alive                      = false;
 	}
 }
 
@@ -170,20 +172,26 @@ static void process_tower_collision_begin(Collidable2D* first, Collidable2D* sec
 static void process_projectile_collision_begin(Collidable2D* first, Collidable2D* second)
 {
 	ProjectileDef* projectile = NULL;
+	EntityDef* enemy = NULL;
 
 	if (first->collision_box.collision_layer & CollisionLayer_Projectile)
 	{
 		find_projectile_with_collidable(&projectile, first);
+		find_enemy_with_collidable(&enemy, second);
 	}
 	else if (second->collision_box.collision_layer & CollisionLayer_Projectile)
 	{
 		find_projectile_with_collidable(&projectile, second);
+		find_enemy_with_collidable(&enemy, first);
 	}
 
-	if (NULL != projectile)
+	if (NULL != projectile && NULL != enemy)
 	{
-		projectile->alive = false;
-		projectile->state = ProjectileState_Hit;
+		if (projectile->target == enemy)
+		{
+			projectile->alive = false;
+			projectile->state = ProjectileState_Hit;
+		}
 	}
 }
 
@@ -465,7 +473,7 @@ int update_towers(float dt)
 					get_drawable_def(&projectile_drawable, projectile->drawable_handle);
 				}
 
-				projectile->state = ProjectileState_Moving;
+				projectile->state = ProjectileState_PostInit;
 				projectile->alive = true;
 
 				projectile_drawable->transform.translation = projectile_pos;
@@ -514,6 +522,9 @@ int update_towers(float dt)
 		{
 			projectile = &tower->projectiles[j];
 
+			EntityDef* enemy = NULL;
+			get_enemy_to_attack(tower, &enemy);
+
 			if (NULL == projectile)
 			{
 				continue;
@@ -523,22 +534,32 @@ int update_towers(float dt)
 			{
 			case ProjectileState_Init:
 			{
+
+			} break;
+
+			case ProjectileState_PostInit:
+			{
+				// TODO: Do we have to do something additional here?
+				if (NULL == enemy)
+				{
+					break;
+				}
+				
+				projectile->target = enemy;
+				projectile->state = ProjectileState_Moving;
 			} break;
 
 			case ProjectileState_Moving:
 			{
-				EntityDef* enemy = NULL;
-				get_enemy_to_attack(tower, &enemy);
-
 				// TODO: Do we have to do something additional here?
-				if (NULL == enemy)
+				if (NULL == projectile->target || !projectile->target->alive)
 				{
 					projectile->state = ProjectileState_Hit;
 					continue;
 				}
 
 				DrawableDef* entity_drawable = NULL;
-				get_drawable_def(&entity_drawable, enemy->drawable_handle);
+				get_drawable_def(&entity_drawable, projectile->target->drawable_handle);
 
 				Vec3 entity_pos = entity_drawable->transform.translation;
 
@@ -591,6 +612,7 @@ int update_towers(float dt)
 				removed_moving_projectile(projectile);
 
 				projectile->state = ProjectileState_Init;
+				projectile->target = NULL;
 			} break;
 
 			}
@@ -694,7 +716,7 @@ int place_new_tower_at_cursor()
 			add_collidable2D(&tower->collidable2D_handle, &drawable->transform.translation, &drawable->transform.scale);
 			CHECK_EXPR_FAIL_RET_TERMINATE(-1 != tower->collidable2D_handle, "[tower]: Failed to attach Collidable2D.");
 
-			Vec3 detect_collidable_scale = multipty_by_scalar_vec3(drawable->transform.scale, 10);
+			Vec3 detect_collidable_scale = multipty_by_scalar_vec3(drawable->transform.scale, 20);
 
 			add_collidable2D(&tower->collidable2D_detect_handle, &drawable->transform.translation, &detect_collidable_scale);
 			CHECK_EXPR_FAIL_RET_TERMINATE(-1 != tower->collidable2D_detect_handle, "[tower]: Failed to attach detection Collidable2D.");
