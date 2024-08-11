@@ -47,16 +47,13 @@ int get_quad_draw_buffer_data(DrawBufferData** dest)
 	return 0;
 }
 
-// TODO: Remove required texture_path and texture_type and move it into separate func?
-int draw_quad(DrawableDef** dest, const Vec3* new_pos, const Vec3* new_scale, const Vec4* new_color, const char* texture_path, int texture_type, int texture_params[], int texture_params_count)
+int draw_quad(DrawableDef** dest, const Vec3* new_pos, const Vec3* new_scale, const Vec4* new_color)
 {
 	DrawableDef* drawable = NULL;
 	create_drawable(&drawable);
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[drawable_ops]: Drawable is not defined.");
 
 	*dest = drawable;
-
-	add_texture_2D(drawable, texture_path, texture_type, texture_params, texture_params_count);
 
 	DrawBufferData* draw_buf_data = NULL;
 	get_quad_draw_buffer_data(&draw_buf_data);

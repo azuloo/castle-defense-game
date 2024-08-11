@@ -88,8 +88,9 @@ static int add_triangle(EntityDef** dest, const Vec3* pos, const Vec3* scale, co
 	create_entity_def(dest, EntityType_Triangle);
 
 	DrawableDef* drawable = NULL;
-	draw_quad(&drawable, pos, scale, color, triangle_texture_path, TexType_RGBA, entity_texture_params, DEFAULT_TEXTURE_PARAMS_COUNT);
+	draw_quad(&drawable, pos, scale, color);
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[entity]: Failed to draw triangle entity (empty quad drawable).");
+	add_texture_2D(drawable, triangle_texture_path, TexType_RGBA, entity_texture_params, DEFAULT_TEXTURE_PARAMS_COUNT);
 
 	(*dest)->drawable_handle = drawable->handle;
 
@@ -101,8 +102,9 @@ static int add_square(EntityDef** dest, const Vec3* pos, const Vec3* scale, cons
 	create_entity_def(dest, EntityType_Square);
 
 	DrawableDef* drawable = NULL;
-	draw_quad(&drawable, pos, scale, color, square_texture_path, TexType_RGBA, entity_texture_params, DEFAULT_TEXTURE_PARAMS_COUNT);
+	draw_quad(&drawable, pos, scale, color);
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[entity]: Failed to draw square entity (empty quad drawable).");
+	add_texture_2D(drawable, square_texture_path, TexType_RGBA, entity_texture_params, DEFAULT_TEXTURE_PARAMS_COUNT);
 
 	(*dest)->drawable_handle = drawable->handle;
 
@@ -114,8 +116,9 @@ static int add_circle(EntityDef** dest, const Vec3* pos, const Vec3* scale, cons
 	create_entity_def(dest, EntityType_Circle);
 
 	DrawableDef* drawable = NULL;
-	draw_quad(&drawable, pos, scale, color, circle_texture_path, TexType_RGBA, entity_texture_params, DEFAULT_TEXTURE_PARAMS_COUNT);
+	draw_quad(&drawable, pos, scale, color, circle_texture_path);
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[entity]: Failed to draw circle entity (empty quad drawable).");
+	add_texture_2D(drawable, circle_texture_path, TexType_RGBA, entity_texture_params, DEFAULT_TEXTURE_PARAMS_COUNT);
 
 	(*dest)->drawable_handle = drawable->handle;
 

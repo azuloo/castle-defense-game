@@ -210,8 +210,9 @@ int map_mgr_add_castle()
 	Vec4 castle_color = COLOR_VEC_WHITE;
 
 	DrawableDef* castle_drawable = NULL;
-	draw_quad(&castle_drawable, &castle_pos, &castle_scale, &castle_color, castle_texture_path, TexType_RGBA, default_texture_params, DEFAULT_TEXTURE_PARAMS_COUNT);
+	draw_quad(&castle_drawable, &castle_pos, &castle_scale, &castle_color);
 	CHECK_EXPR_FAIL_RET_TERMINATE(castle_drawable != NULL, "[initial_map]: Failed to draw the castle.");
+	add_texture_2D(castle_drawable, castle_texture_path, TexType_RGBA, default_texture_params, DEFAULT_TEXTURE_PARAMS_COUNT);
 
 	s_Castle->drawable_handle = castle_drawable->handle;
 

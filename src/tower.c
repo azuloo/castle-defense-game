@@ -70,8 +70,9 @@ static int create_tower_at(TowerDef** dest, const Vec3* pos, const Vec3* scale, 
 	CHECK_EXPR_FAIL_RET_TERMINATE(-1 != tower_handle, "[tower]: Failed to fetch a tower.");
 
 	DrawableDef* drawable = NULL;
-	draw_quad(&drawable, pos, scale, color, texture_path, TexType_RGBA, tower_texture_params, DEFAULT_TEXTURE_PARAMS_COUNT);
+	draw_quad(&drawable, pos, scale, color);
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[tower]: Failed to create a first tower preset (empty quad drawable).");
+	add_texture_2D(drawable, texture_path, TexType_RGBA, tower_texture_params, DEFAULT_TEXTURE_PARAMS_COUNT);
 
 	tower->drawable_handle = drawable->handle;
 
@@ -465,7 +466,9 @@ int update_towers(float dt)
 
 				if (-1 == projectile->drawable_handle)
 				{
-					draw_quad(&projectile_drawable, &projectile_pos, &projectile_scale, &projectile_color, first_texture_path, TexType_RGBA, tower_texture_params, DEFAULT_TEXTURE_PARAMS_COUNT);
+					draw_quad(&projectile_drawable, &projectile_pos, &projectile_scale, &projectile_color);
+					CHECK_EXPR_FAIL_RET_TERMINATE(NULL != projectile_drawable, "[tower]: Failed to create a projectile drawable.");
+					add_texture_2D(projectile_drawable, first_texture_path, TexType_RGBA, tower_texture_params, DEFAULT_TEXTURE_PARAMS_COUNT);
 					projectile->drawable_handle = projectile_drawable->handle;
 				}
 				else
