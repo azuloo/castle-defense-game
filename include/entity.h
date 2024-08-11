@@ -7,6 +7,7 @@
 // TODO: Add to entity's state
 #define ENTITY_MOVEMENT_SPEED 150.f
 #define ENTITY_DEFAULT_DAMAGE 10.f
+#define KILL_ENTITY_DAMAGE 99999
 
 enum EntityState
 {

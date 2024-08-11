@@ -209,7 +209,7 @@ static void process_projectile_collision(Collidable2D* first, Collidable2D* seco
 			entity_drawable->visible = 0;
 			move_entity(entity, 0.f, 0.f);
 		}
-		// TODO: Need to remove collidalbe here, maybe anything else, too
+		// TODO: Need to remove collidalbe here, maybe something else, too
 	}
 }
 
@@ -237,6 +237,18 @@ static void process_collision_begin_hook(Collidable2D* first, Collidable2D* seco
 	{
 		resolve_entity_castle_collision(entity, castle);
 		map_mgr_damage_castle(entity->damage);
+
+		damage_entity(entity, KILL_ENTITY_DAMAGE);
+
+		DrawableDef* entity_drawable = NULL;
+		get_drawable_def(&entity_drawable, entity->drawable_handle);
+		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != entity_drawable, "[entity] Failed to fetch drawable for the entity.");
+
+		if (!entity->alive)
+		{
+			entity_drawable->visible = 0;
+			move_entity(entity, 0.f, 0.f);
+		}
 	}
 
 	process_projectile_collision(first, second);
