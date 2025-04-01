@@ -181,7 +181,7 @@ static int add_path()
 		calculate_segment_scale(path_segment, &scale);
 
 		DrawableDef* drawable = NULL;
-		draw_quad(&drawable, &translation, &scale, &color, road_texture_path, TexType_RGB, default_texture_params, DEFAULT_TEXTURE_PARAMS_COUNT);
+		draw_quad(&drawable, &translation, &scale, &color);
 		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[initial_map]: Failed to draw triangle entity (empty quad drawable).");
 		add_texture_2D(drawable, road_texture_path, TexType_RGB, default_texture_params, DEFAULT_TEXTURE_PARAMS_COUNT);
 

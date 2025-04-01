@@ -116,7 +116,7 @@ static int add_circle(EntityDef** dest, const Vec3* pos, const Vec3* scale, cons
 	create_entity_def(dest, EntityType_Circle);
 
 	DrawableDef* drawable = NULL;
-	draw_quad(&drawable, pos, scale, color, circle_texture_path);
+	draw_quad(&drawable, pos, scale, color);
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[entity]: Failed to draw circle entity (empty quad drawable).");
 	add_texture_2D(drawable, circle_texture_path, TexType_RGBA, entity_texture_params, DEFAULT_TEXTURE_PARAMS_COUNT);
 
