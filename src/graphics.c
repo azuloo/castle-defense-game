@@ -362,8 +362,6 @@ static void free_drawable_data()
 	free(s_DrawableData);
 }
 
-// ----------------------- PUBLIC FUNCTIONS ----------------------- //
-
 int graphics_get_cursor_pos(double* xpos, double* ypos)
 {
 	ASSERT_GRAPHICS_INITIALIZED
@@ -666,14 +664,6 @@ void sort_drawables()
 	qsort(s_DrawableData, s_DrawableNum, sizeof(DrawableDef), compare_drawables);
 }
 
-void print_drawable_order()
-{
-	for (int i = 0; i < s_DrawableNum; i++)
-	{
-		printf("%d\n", s_DrawableData[i].draw_layer);
-	}
-}
-
 int graphics_draw()
 {
 	ASSERT_GRAPHICS_INITIALIZED
@@ -721,5 +711,3 @@ int graphics_draw()
 	
 	return 0;
 }
-
-// ----------------------- PUBLIC FUNCTIONS END ----------------------- //
