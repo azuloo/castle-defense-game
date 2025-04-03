@@ -16,6 +16,6 @@ int drawable_transform_ts(DrawableDef* drawable, const char* uniform_name);
 
 int get_quad_draw_buffer_data(DrawBufferData** dest);
 
-int draw_quad(DrawableDef** dest, const Vec3* new_pos, const Vec3* new_scale, const Vec4* new_color);
+int draw_quad(DrawableDef** dest, const Vec3* new_pos, const Vec3* new_scale, const Vec4* new_color, int render_layer);
 
 #endif // _DRAWABLE_OPS_H

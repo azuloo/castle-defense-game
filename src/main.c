@@ -139,6 +139,7 @@ int main(int argc, int* argv[])
 	float tower_x_pos = 0.f;
 	float tower_y_pos = 0.f;
 
+	sort_drawables();
 	// TODO: Handle Windows window drag (other events?)
 	while (!should_be_terminated())
 	{

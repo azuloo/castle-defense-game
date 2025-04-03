@@ -70,7 +70,7 @@ static int create_tower_at(TowerDef** dest, const Vec3* pos, const Vec3* scale, 
 	CHECK_EXPR_FAIL_RET_TERMINATE(-1 != tower_handle, "[tower]: Failed to fetch a tower.");
 
 	DrawableDef* drawable = NULL;
-	draw_quad(&drawable, pos, scale, color);
+	draw_quad(&drawable, pos, scale, color, DrawLayer_Background);
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[tower]: Failed to create a first tower preset (empty quad drawable).");
 	add_texture_2D(drawable, texture_path, TexType_RGBA, tower_texture_params, DEFAULT_TEXTURE_PARAMS_COUNT);
 
@@ -466,7 +466,7 @@ int update_towers(float dt)
 
 				if (-1 == projectile->drawable_handle)
 				{
-					draw_quad(&projectile_drawable, &projectile_pos, &projectile_scale, &projectile_color);
+					draw_quad(&projectile_drawable, &projectile_pos, &projectile_scale, &projectile_color, DrawLayer_Projectile);
 					CHECK_EXPR_FAIL_RET_TERMINATE(NULL != projectile_drawable, "[tower]: Failed to create a projectile drawable.");
 					add_texture_2D(projectile_drawable, first_texture_path, TexType_RGBA, tower_texture_params, DEFAULT_TEXTURE_PARAMS_COUNT);
 					projectile->drawable_handle = projectile_drawable->handle;
@@ -677,7 +677,7 @@ int place_new_tower_at_cursor()
 		float tower_x_pos = (float)s_CursorXPos - xWOffset;
 		float tower_y_pos = (float)wHeight - (float)s_CursorYPos + yWOffset;
 
-		Vec3 pos = { { tower_x_pos, tower_y_pos, Z_DEPTH_INITIAL_ENTITY } };
+		Vec3 pos = { { tower_x_pos, tower_y_pos, 0.f } };
 		Vec4 color = COLOR_VEC_GREEN;
 
 		DrawableDef* tower_preset_drawable = NULL;
@@ -806,7 +806,7 @@ int create_build_tower_presets()
 		{
 		case TowerType_First:
 		{
-			Vec3 pos = { { 700.f, wHeight / 2.f + 200.f, Z_DEPTH_INITIAL_TOWER } };
+			Vec3 pos = { { 700.f, wHeight / 2.f + 200.f } };
 			Vec3 scale = { { (float)wHeight * 0.03f, (float)wHeight * 0.03f, 1.f } };
 
 			create_tower_at(&tower_preset, &pos, &scale, &color, first_texture_path);
@@ -814,7 +814,7 @@ int create_build_tower_presets()
 
 		case TowerType_Second:
 		{
-			Vec3 pos = { { 900.f, wHeight / 2.f + 200.f, Z_DEPTH_INITIAL_ENTITY } };
+			Vec3 pos = { { 900.f, wHeight / 2.f + 200.f, 0.f } };
 			Vec3 scale = { { (float)wHeight * 0.03f, (float)wHeight * 0.03f, 1.f } };
 
 			create_tower_at(&tower_preset, &pos, &scale, &color, second_texture_path);
@@ -822,7 +822,7 @@ int create_build_tower_presets()
 
 		case TowerType_Third:
 		{
-			Vec3 pos = { { 1100.f, wHeight / 2.f + 200.f, Z_DEPTH_INITIAL_ENTITY } };
+			Vec3 pos = { { 1100.f, wHeight / 2.f + 200.f, 0.f } };
 			Vec3 scale = { { (float)wHeight * 0.03f, (float)wHeight * 0.03f, 1.f } };
 
 			create_tower_at(&tower_preset, &pos, &scale, &color, third_texture_path);

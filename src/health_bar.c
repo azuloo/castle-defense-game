@@ -46,6 +46,7 @@ static int create_health_bar(HealthBarDef** dest)
 	return 0;
 }
 
+// TODO: Can be replaced by draw_quad() + add_texture2D()?
 int add_health_bar(int* dest_handle, const Vec3* pos, const Vec3* scale)
 {
 	const Vec4 color = { { 1.f, 1.f, 1.f, 1.f } };
@@ -78,6 +79,8 @@ int add_health_bar(int* dest_handle, const Vec3* pos, const Vec3* scale)
 
 	drawable->init_transform.translation = *pos;
 	drawable->init_transform.scale = *scale;
+
+	drawable->draw_layer = DrawLayer_Castle;
 
 	drawable->matrices.projection = COMMON_ORTHO_MAT;
 	add_uniform_mat4f(drawable->shader_prog, COMMON_PROJECTION_UNIFORM_NAME, &drawable->matrices.projection);

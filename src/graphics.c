@@ -297,6 +297,8 @@ static DrawableDef* create_drawable_def()
 	drawable->visible                 = 1;
 	drawable->draw_mode               = DRAW_MODE_STATIC;
 
+	drawable->draw_layer              = 0;
+
 	memset(&drawable->buffers, 0, sizeof * &drawable->buffers);
 	memset(&drawable->matrices, 0, sizeof * &drawable->matrices);
 	memset(&drawable->transform, 0, sizeof * &drawable->transform);
@@ -653,6 +655,25 @@ int get_drawable_def(DrawableDef** dest, int handle)
 	return 0;
 }
 
+static int compare_drawables(const DrawableDef* f, const DrawableDef* s)
+{
+	return f->draw_layer - s->draw_layer;
+}
+
+// TODO: It changes container contents and messes up tower building (at least)
+void sort_drawables()
+{
+	qsort(s_DrawableData, s_DrawableNum, sizeof(DrawableDef), compare_drawables);
+}
+
+void print_drawable_order()
+{
+	for (int i = 0; i < s_DrawableNum; i++)
+	{
+		printf("%d\n", s_DrawableData[i].draw_layer);
+	}
+}
+
 int graphics_draw()
 {
 	ASSERT_GRAPHICS_INITIALIZED
@@ -662,7 +683,7 @@ int graphics_draw()
 		(*input_fn_ptr)(s_Window);
 	}
 
-	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
 
 	glClearColor(s_BColor.R, s_BColor.G, s_BColor.B, s_BColor.A);

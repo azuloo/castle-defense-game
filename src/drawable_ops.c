@@ -47,7 +47,7 @@ int get_quad_draw_buffer_data(DrawBufferData** dest)
 	return 0;
 }
 
-int draw_quad(DrawableDef** dest, const Vec3* new_pos, const Vec3* new_scale, const Vec4* new_color)
+int draw_quad(DrawableDef** dest, const Vec3* new_pos, const Vec3* new_scale, const Vec4* new_color, int draw_layer)
 {
 	DrawableDef* drawable = NULL;
 	create_drawable(&drawable);
@@ -74,6 +74,8 @@ int draw_quad(DrawableDef** dest, const Vec3* new_pos, const Vec3* new_scale, co
 	drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
 
 	add_uniform_vec4f(drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, new_color);
+
+	drawable->draw_layer = draw_layer;
 
 	return 0;
 }

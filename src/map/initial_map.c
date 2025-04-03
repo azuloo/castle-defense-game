@@ -41,12 +41,12 @@ static int map_init()
 
 static int add_background()
 {
-	Vec3 translation = { { wWidth / 2.f, wHeight / 2.f, Z_DEPTH_INITIAL_MAP_BACKGROUND } };
+	Vec3 translation = { { wWidth / 2.f, wHeight / 2.f, 0.f } };
 	Vec3 scale = { { wWidth / 2.f, wHeight / 2.f, 1.f } };
 	Vec4 color = COLOR_VEC_WHITE;
 
 	DrawableDef* drawable = NULL;
-	draw_quad(&drawable, &translation, &scale, &color);
+	draw_quad(&drawable, &translation, &scale, &color, DrawLayer_Background);
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[initial_map]: Failed to draw triangle entity (empty quad drawable).");
 	add_texture_2D(drawable, field_texture_path, TexType_RGB, default_texture_params, DEFAULT_TEXTURE_PARAMS_COUNT);
 
@@ -74,7 +74,7 @@ static int calculate_segment_translation(const PathSegment* path_segment, Vec3* 
 	float pos_x = (path_segment->start.x + path_segment->end.x) / 2.f;
 	float pos_y = (path_segment->start.y + path_segment->end.y) / 2.f;
 
-	Vec3 new_translation = { { pos_x, pos_y, Z_DEPTH_INITIAL_MAP_PATH } };
+	Vec3 new_translation = { { pos_x, pos_y, 0.f } };
 	*translation = new_translation;
 
 	return 0;
@@ -181,7 +181,7 @@ static int add_path()
 		calculate_segment_scale(path_segment, &scale);
 
 		DrawableDef* drawable = NULL;
-		draw_quad(&drawable, &translation, &scale, &color);
+		draw_quad(&drawable, &translation, &scale, &color, DrawLayer_MapPath);
 		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[initial_map]: Failed to draw triangle entity (empty quad drawable).");
 		add_texture_2D(drawable, road_texture_path, TexType_RGB, default_texture_params, DEFAULT_TEXTURE_PARAMS_COUNT);
 

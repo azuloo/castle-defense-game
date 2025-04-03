@@ -111,6 +111,8 @@ typedef struct DrawableDef
 	int               handle;
 	int               visible;
 	int               draw_mode;
+	
+	int               draw_layer;
 } DrawableDef;
 
 typedef struct GLFWwindow GWindow;
@@ -157,6 +159,8 @@ int add_texture_2D(DrawableDef* drawable, const char* texture_path, int texture_
 int setup_drawable(DrawableDef* drawable, const DrawBufferData* buf_data, const char* vertex_shader_path, const char* fragment_shader_path);
 int register_drawable_attribute(DrawableDef* drawable, unsigned int size);
 int process_drawable_attributes(DrawableDef* drawable);
+
+void sort_drawables();
 int graphics_draw();
 
 #endif // _GRAPHICS_H

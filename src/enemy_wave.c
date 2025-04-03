@@ -61,7 +61,7 @@ static int fill_enemies_data()
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != path && 0 != path_len, "[enemy_wave]: Path has not been determined for the current map.");
 	Vec2 path_start = map_mgr_get_path_start();
 
-	Vec3 enemy_pos = { { path_start.x, path_start.y, Z_DEPTH_INITIAL_ENTITY } };
+	Vec3 enemy_pos = { { path_start.x, path_start.y, 0.f } };
 	Vec3 enemy_scale = { { (float)wHeight * 0.03f, (float)wHeight * 0.03f, 1.f } };
 	Vec4 enemy_color = COLOR_VEC_GREEN;
 

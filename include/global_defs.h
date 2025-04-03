@@ -10,13 +10,18 @@
 #define COMMON_PROJECTION_UNIFORM_NAME    "projection"
 #define COMMON_COLOR_UNIFORM_NAME         "UColor"
 
-// Depths
-#define Z_DEPTH_INITIAL_MAP_BACKGROUND    0.001f
-#define Z_DEPTH_INITIAL_MAP_PATH          0.002f
-#define Z_DEPTH_INITIAL_CASTLE            0.01f
-#define Z_DEPTH_INITIAL_ENTITY            0.07f
-#define Z_DEPTH_INITIAL_TOWER             0.08f
-#define Z_DEPTH_DEBUG_QUAD                0.99f
+enum DrawLayer
+{
+	DrawLayer_Background = 0,
+	DrawLayer_MapPath,
+	DrawLayer_Castle,
+	DrawLayer_Entity,
+	DrawLayer_Tower,
+	DrawLayer_Projectile,
+	DrawLayer_TextBackground,
+
+	DrawLayer_Text = 100,
+};
 
 #define POS_TEXTURE_ATTRIBUTE_SIZE 4
 

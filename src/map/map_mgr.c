@@ -65,7 +65,7 @@ static int resize_castle()
 		return TERMINATE_ERR_CODE;
 	}
 
-	Vec3 castle_pos = { { (float)wWidth * 0.8f, (float)wHeight * 0.5f, Z_DEPTH_INITIAL_CASTLE } };
+	Vec3 castle_pos = { { (float)wWidth * 0.8f, (float)wHeight * 0.5f, 0.f } };
 	Vec3 castle_scale = { { (float)wHeight * 0.11f, (float)wHeight * 0.11f, 1.f } };
 
 	DrawableDef* castle_drawable = NULL;
@@ -205,12 +205,12 @@ int map_mgr_add_castle()
 		CHECK_EXPR_FAIL_RET_TERMINATE(TERMINATE_SUCCESS_CODE == create_castle_res, "[initial_map]: Castle creation function failed.");
 	}
 
-	Vec3 castle_pos = { { (float)wWidth * 0.8f, (float)wHeight * 0.5f, Z_DEPTH_INITIAL_CASTLE } };
+	Vec3 castle_pos = { { (float)wWidth * 0.8f, (float)wHeight * 0.5f, 0.f } };
 	Vec3 castle_scale = { { (float)wHeight * 0.11f, (float)wHeight * 0.11f, 1.f } };
 	Vec4 castle_color = COLOR_VEC_WHITE;
 
 	DrawableDef* castle_drawable = NULL;
-	draw_quad(&castle_drawable, &castle_pos, &castle_scale, &castle_color);
+	draw_quad(&castle_drawable, &castle_pos, &castle_scale, &castle_color, DrawLayer_Castle);
 	CHECK_EXPR_FAIL_RET_TERMINATE(castle_drawable != NULL, "[initial_map]: Failed to draw the castle.");
 	add_texture_2D(castle_drawable, castle_texture_path, TexType_RGBA, default_texture_params, DEFAULT_TEXTURE_PARAMS_COUNT);
 

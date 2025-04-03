@@ -64,7 +64,7 @@ int render_text(const char* text, int font_size, float x, float y, Vec3 color)
 			drawable->texture = char_def->tex_id;
 			drawable->draw_mode = DRAW_MODE_DYNAMIC;
 
-			drawable->draw_layer = RenderLayer_Text;
+			drawable->draw_layer = DrawLayer_Text;
 
 			compile_shaders(&drawable->shader_prog, vertex_shader_src, fragment_shader_src);
 
