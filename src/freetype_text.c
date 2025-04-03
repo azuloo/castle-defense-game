@@ -6,11 +6,13 @@
 #include "utils.h"
 #include "file_reader.h"
 
-static FT_Library      s_FTLib;
-static FT_Face         s_Face; // TODO: Different faces for different fonts
-static CharacterDef    s_Chars[128]; // TODO: Use c map impl here
+#define FT_FACE_SIZE 16
 
-#define FT_DEFAULT_FONT_SIZE 26
+static FT_Library      s_FTLib;
+static FT_Face         s_Face[FT_FACE_SIZE]; // TODO: Different faces for different fonts
+static int             s_FaceFontMap[FT_FACE_SIZE];
+static int             s_FaceCount = 0;
+static CharacterDef    s_Chars[FT_FACE_SIZE][128]; // TODO: Use c map impl here
 
 int init_ft()
 {
@@ -23,7 +25,13 @@ int init_ft()
 
 	s_FTLib = ft;
 
-	// TODO: Move to other func
+	return 0;
+}
+
+int add_font(int font_size)
+{
+	CHECK_EXPR_FAIL_RET_TERMINATE(s_FaceCount < FT_FACE_SIZE, "[freetype_text]: Reached the max font capacity.");
+
 	static const char* futura_font = "/res/fonts/16020_FUTURAM.ttf";
 	char buf[256];
 	get_file_path(futura_font, &buf, 256);
@@ -36,10 +44,12 @@ int init_ft()
 		return TERMINATE_ERR_CODE;
 	}
 
-	s_Face = face;
+	s_Face[s_FaceCount] = face;
+	s_FaceFontMap[s_FaceCount] = font_size;
 
-	// TODO: Add different sized glyphs support
-	FT_Set_Pixel_Sizes(s_Face, 0, FT_DEFAULT_FONT_SIZE);
+	FT_Set_Pixel_Sizes(s_Face[s_FaceCount], 0, font_size);
+
+	s_FaceCount++;
 
 	return 0;
 }
@@ -61,30 +71,33 @@ int load_ascii_chars()
 		GL_TEXTURE_MAG_FILTER, GL_LINEAR
 	};
 	set_unpack_alignment(1);
-	// TODO: Take into account window resizing
-	for (unsigned char c = 0; c < 128; c++)
+
+	for (int i = 0; i < s_FaceCount; i++)
 	{
-		if (FT_Load_Char(s_Face, c, FT_LOAD_RENDER))
+		for (unsigned char c = 0; c < 128; c++)
 		{
-			// TODO: Free fr resources here?
-			PRINT_ERR("[freetype_text]: Failed to load char.");
-			return TERMINATE_ERR_CODE;
+			if (FT_Load_Char(s_Face[i], c, FT_LOAD_RENDER))
+			{
+				// TODO: Free fr resources here?
+				PRINT_ERR("[freetype_text]: Failed to load char.");
+				return TERMINATE_ERR_CODE;
+			}
+
+			unsigned int texture;
+			create_texture_2D(s_Face[i]->glyph->bitmap.buffer, s_Face[i]->glyph->bitmap.width, s_Face[i]->glyph->bitmap.rows, &texture, TexType_RED, tex_params, sizeof(tex_params) / sizeof(tex_params[0]));
+
+			Vec2i size = { { s_Face[i]->glyph->bitmap.width, s_Face[i]->glyph->bitmap.rows } };
+			Vec2i bearing = { { s_Face[i]->glyph->bitmap_left, s_Face[i]->glyph->bitmap_top } };
+			CharacterDef character = {
+				c,
+				texture,
+				s_Face[i]->glyph->advance.x,
+				size,
+				bearing,
+			};
+
+			s_Chars[i][c] = character;
 		}
-
-		unsigned int texture;
-		create_texture_2D(s_Face->glyph->bitmap.buffer, s_Face->glyph->bitmap.width, s_Face->glyph->bitmap.rows, &texture, TexType_RED, tex_params, sizeof(tex_params) / sizeof(tex_params[0]));
-
-		Vec2i size = { { s_Face->glyph->bitmap.width, s_Face->glyph->bitmap.rows } };
-		Vec2i bearing = { { s_Face->glyph->bitmap_left, s_Face->glyph->bitmap_top } };
-		CharacterDef character = {
-			c,
-			texture,
-			s_Face->glyph->advance.x,
-			size,
-			bearing
-		};
-
-		s_Chars[c] = character;
 	}
 
 	set_unpack_alignment(DEFAULT_UNPACK_ALIGNMENT);
@@ -92,13 +105,25 @@ int load_ascii_chars()
 	return 0;
 }
 
-int find_char_def(char ch, CharacterDef** dest)
+int find_char_def(char ch, int font_size, CharacterDef** dest)
 {
+	int face_font_idx = -1;
+	// TODO: Use map here.
+	for (int i = 0; i < FT_FACE_SIZE; i++)
+	{
+		if (s_FaceFontMap[i] == font_size)
+		{
+			face_font_idx = i;
+			break;
+		}
+	}
+	CHECK_EXPR_FAIL_RET_TERMINATE(-1 != face_font_idx, "[freetype_text]: Failed to find the corresponding face idx for this font.");
+
 	for (int i = 0; i < 128; i++)
 	{
-		if (s_Chars[i].ch == ch)
+		if (s_Chars[face_font_idx][i].ch == ch)
 		{
-			*dest = &s_Chars[i];
+			*dest = &s_Chars[face_font_idx][i];
 			return 1;
 		}
 	}
