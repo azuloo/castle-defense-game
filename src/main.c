@@ -133,7 +133,6 @@ int main(int argc, int* argv[])
 	init_ft();
 	load_ascii_chars();
 
-	ft_renderer_init();
 	Vec3 color = { 1.f, 1.f, 1.f };
 	render_text("Press 1, 2 or 3 to select Towers", wWidth - 400.f, wHeight - 50.f, color);
 
