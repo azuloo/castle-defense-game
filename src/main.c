@@ -105,6 +105,15 @@ void process_input(GWindow* window)
 	}
 }
 
+void free_sub_systems_resources()
+{
+	enemy_waves_free_resources();
+	map_mgr_free_resources();
+	entity_free_resources();
+	graphics_free_resources();
+	physics_free_resources();
+}
+
 int main(int argc, int* argv[])
 {
 	int init_graphics_res = init_graphics();
@@ -165,11 +174,7 @@ int main(int argc, int* argv[])
 		graphics_draw();
 	}
 
-	enemy_waves_free_resources();
-	map_mgr_free_resources();
-	entity_free_resources();
-	graphics_free_resources();
-	physics_free_resources();
+	free_sub_systems_resources();
 
 	return 0;
 }
