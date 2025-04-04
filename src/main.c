@@ -141,7 +141,6 @@ int main(int argc, int* argv[])
 	float tower_x_pos = 0.f;
 	float tower_y_pos = 0.f;
 
-	sort_drawables();
 	// TODO: Handle Windows window drag (other events?)
 	while (!should_be_terminated())
 	{
@@ -159,6 +158,8 @@ int main(int argc, int* argv[])
 			graphics_get_cursor_pos(&s_CursorXPos, &s_CursorYPos);
 			on_tower_building_mode_enabled();
 		}
+
+		sort_drawables();
 
 		physics_step();
 		graphics_draw();

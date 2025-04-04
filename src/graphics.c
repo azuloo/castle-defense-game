@@ -10,13 +10,18 @@
 
 static int s_Initialized                        = 0;
 
-static GLFWwindow* s_Window                       = NULL;
+static GLFWwindow* s_Window                     = NULL;
 static InputFnPtr input_fn_ptr                  = NULL;
 static WindowResizeFnPtr window_resize_fn_ptr   = NULL;
 
 static int s_DrawableDataCapacity       = 32;
 static int s_DrawableNum                = 0;
 static DrawableDef* s_DrawableData      = NULL;
+
+// For DrawableDef handlers mapping
+static int* s_HandleToIdx               = NULL;
+static int* s_IdxToHandle               = NULL;
+
 static BackgroundColor s_BColor         = { 0.f, 0.f, 0.f, 1.f };
 
 static void graphics_terminate(int code)
@@ -240,6 +245,16 @@ static int alloc_drawable_arr()
 
 	s_DrawableData = drawable_arr;
 
+	int* handle_to_idx_arr = realloc(s_HandleToIdx, s_DrawableDataCapacity * sizeof *handle_to_idx_arr);
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != handle_to_idx_arr, "[graphics]: Failed to allocate memory for s_HandleToIdx arr.");
+	
+	s_HandleToIdx = handle_to_idx_arr;
+
+	int* idx_to_handle_arr = realloc(s_IdxToHandle, s_DrawableDataCapacity * sizeof *idx_to_handle_arr);
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != idx_to_handle_arr, "[graphics]: Failed to allocate memory for s_IdxToHandle arr.");
+	
+	s_IdxToHandle = idx_to_handle_arr;
+
 	return 0;
 }
 
@@ -307,6 +322,9 @@ static DrawableDef* create_drawable_def()
 	int create_drawable_attributes_res = create_drawable_attributes(drawable);
 	CHECK_EXPR_FAIL_RET_NULL(TERMINATE_ERR_CODE != create_drawable_attributes_res, "[graphics]: Failed to create drawable attibutes.");
 
+	s_HandleToIdx[s_DrawableNum] = s_DrawableNum;
+	s_IdxToHandle[s_DrawableNum] = s_DrawableNum;
+
 	s_DrawableNum++;
 
 	return drawable;
@@ -360,6 +378,8 @@ static void free_drawable_data()
 	free_drawable_attributes_cnf();
 	free_drawable_buffer_data();
 	free(s_DrawableData);
+	free(s_HandleToIdx);
+	free(s_IdxToHandle);
 }
 
 int graphics_get_cursor_pos(double* xpos, double* ypos)
@@ -645,7 +665,8 @@ int get_drawable_def(DrawableDef** dest, int handle)
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != s_DrawableData, "[graphics]: Drawable arr has not been initialized.");
 	CHECK_EXPR_FAIL_RET_TERMINATE(handle >= 0 && handle < s_DrawableNum, "[graphics]: Drawable handle is out of bounds.");
 
-	DrawableDef* drawable = s_DrawableData + handle;
+	int idx = s_HandleToIdx[handle];
+	DrawableDef* drawable = s_DrawableData + idx;
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[graphics]: Drawable has not been set.");
 
 	*dest = drawable;
@@ -653,15 +674,54 @@ int get_drawable_def(DrawableDef** dest, int handle)
 	return 0;
 }
 
-static int compare_drawables(const DrawableDef* f, const DrawableDef* s)
+static void swap_drawables(int f, int s)
 {
-	return f->draw_layer - s->draw_layer;
+	DrawableDef f_tmp = s_DrawableData[f];
+
+	s_DrawableData[f] = s_DrawableData[s];
+	s_DrawableData[s] = f_tmp;
+
+	int handle_f = s_IdxToHandle[f];
+	int handle_s = s_IdxToHandle[s];
+
+	s_IdxToHandle[f] = handle_s;
+	s_IdxToHandle[s] = handle_f;
+
+	s_HandleToIdx[handle_f] = s;
+	s_HandleToIdx[handle_s] = f;
 }
 
-// TODO: It changes container contents and messes up tower building (at least)
+static int partition_drawables(int low, int high)
+{
+	int pivot = s_DrawableData[high].draw_layer;
+	int i = low - 1;
+
+	for (int j = low; j < high; j++)
+	{
+		if (s_DrawableData[j].draw_layer <= pivot)
+		{
+			i++;
+			swap_drawables(i, j);
+		}
+	}
+
+	swap_drawables(i + 1, high);
+	return i + 1;
+}
+
+static void quicksort_drawables(int low, int high)
+{
+	if (low < high)
+	{
+		int p = partition_drawables(low, high);
+		quicksort_drawables(low, p - 1);
+		quicksort_drawables(p + 1, high);
+	}
+}
+
 void sort_drawables()
 {
-	qsort(s_DrawableData, s_DrawableNum, sizeof(DrawableDef), compare_drawables);
+	quicksort_drawables(0, s_DrawableNum - 1);
 }
 
 int graphics_draw()
@@ -674,12 +734,13 @@ int graphics_draw()
 	}
 
 	glDisable(GL_DEPTH_TEST);
+	glDepthMask(GL_FALSE);
+
 	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glClearColor(s_BColor.R, s_BColor.G, s_BColor.B, s_BColor.A);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	// TODO: Sort Drawables by z-val, because of alpha-blending issues
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	for (int i = 0; i < s_DrawableNum; i++)
 	{
