@@ -8,6 +8,7 @@
 #include "global_defs.h"
 #include "health_bar.h"
 #include "tower.h"
+#include "hud.h"
 
 #include "map/map_mgr.h"
 #include "entity.h"
@@ -144,8 +145,7 @@ int main(int argc, int* argv[])
 	add_font(48);
 	load_ascii_chars();
 
-	Vec3 color = { 1.f, 1.f, 1.f };
-	render_text("Press 1, 2 or 3 to select Towers", FT_DEFAULT_FONT_SIZE, wWidth - 400.f, wHeight - 50.f, color);
+	render_player_controls();
 
 	float tower_x_pos = 0.f;
 	float tower_y_pos = 0.f;
