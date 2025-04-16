@@ -1,7 +1,7 @@
 #ifndef _KEY_BINDINGS_H
 #define _KEY_BINDINGS_H
 
-#include "GLFW/glfw3.h"
+#include "graphics.h"
 
 #define KEY_PRESS         GLFW_PRESS
 #define KEY_RELEASE       GLFW_RELEASE
