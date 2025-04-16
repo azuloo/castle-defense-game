@@ -9,6 +9,7 @@
 #include "health_bar.h"
 #include "tower.h"
 #include "hud.h"
+#include "player_controls.h"
 
 #include "map/map_mgr.h"
 #include "entity.h"
@@ -21,54 +22,12 @@ int xWOffset           = 0;
 int yWOffset           = 0;
 int wWidth             = WINDOW_DEFAULT_RES_W;
 int wHeight            = WINDOW_DEFAULT_RES_H;
-double s_CursorXPos    = 0.f;
-double s_CursorYPos    = 0.f;
 
 float dt   = 0.0f;  // Delta time.
 float lft  = 0.0f;  // Last frame time.
 
-static int s_BuildingModeEnabled = 0;
-
 extern float get_window_scale_x();
 extern float get_window_scale_y();
-
-static void process_key_hook(GWindow* window, int key, int scancode, int action, int mods)
-{
-	bool key_pressed = false;
-
-	if (key == K_1 && action == KEY_PRESS)
-	{
-		key_pressed = true;
-		set_current_tower_preset_idx(0);
-	}
-	if (key == K_2 && action == KEY_PRESS)
-	{
-		key_pressed = true;
-		set_current_tower_preset_idx(1);
-	}
-	if (key == K_3 && action == KEY_PRESS)
-	{
-		key_pressed = true;
-		set_current_tower_preset_idx(2);
-	}
-
-	if (key_pressed)
-	{
-		s_BuildingModeEnabled = 1;
-		on_select_tower_preset_pressed();
-	}
-}
-
-static void process_mouse_button_hook(GWindow* window, int button, int action, int mods)
-{
-	if (button == MOUSE_BUTTON_LEFT && action == KEY_PRESS && s_BuildingModeEnabled)
-	{
-		if (place_new_tower_at_cursor())
-		{
-			s_BuildingModeEnabled = !s_BuildingModeEnabled;
-		}
-	}
-}
 
 static int should_be_terminated()
 {
@@ -125,8 +84,7 @@ int main(int argc, int* argv[])
 
 	bind_input_fn(&process_input);
 	bind_window_resize_fn(&window_resize_hook);
-	bind_key_pressed_cb(&process_key_hook);
-	bind_mouse_button_cb(&process_mouse_button_hook);
+	bind_player_controls();
 
 	map_mgr_init();
 	map_mgr_add_castle();
@@ -162,11 +120,7 @@ int main(int argc, int* argv[])
 		enemy_waves_spawn(dt);
 		update_towers(dt);
 
-		if (s_BuildingModeEnabled)
-		{
-			graphics_get_cursor_pos(&s_CursorXPos, &s_CursorYPos);
-			on_tower_building_mode_enabled();
-		}
+		process_player_controls();
 
 		sort_drawables();
 
