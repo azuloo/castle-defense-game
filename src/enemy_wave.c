@@ -20,6 +20,8 @@ static EntityType s_EnemyTypes[]       = {
 	EntityType_Triangle,
 };
 
+static int s_EnemyWaveState = EnemyWaveState_Suspend;
+
 extern int xWOffset;
 extern int yWOffset;
 
@@ -148,6 +150,8 @@ int init_enemy_waves(int amount)
 	reset_data();
 	srand(time(NULL));
 
+	s_EnemyWaveState = EnemyWaveState_Init;
+
 	return 0;
 }
 
@@ -180,6 +184,12 @@ int get_enemy_wave(EnemyWaveDef** dest)
 
 int enemy_waves_spawn(float frameTime)
 {
+	// If we get something other than EnemyWaveControls_Stop - considering it as good to go.
+	if (EnemyWaveState_Suspend == s_EnemyWaveState)
+	{
+		return 0;
+	}
+
 	EnemyWaveDef* enemy_wave = NULL;
 	int get_enemy_wave_res = get_enemy_wave(&enemy_wave);
 	CHECK_EXPR_FAIL_RET_TERMINATE(TERMINATE_ERR_CODE != get_enemy_wave_res, "[enemy_wave]: Failed to fetch enemy wave def.");
@@ -265,6 +275,11 @@ int enemy_waves_spawn(float frameTime)
 	}
 
 	return 0;
+}
+
+void set_enemy_wave_state(int state)
+{
+	s_EnemyWaveState = state;
 }
 
 void reset_enemy_waves()

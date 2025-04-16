@@ -419,6 +419,7 @@ int update_towers(float dt)
 {
 	for (int i = 0; i < s_SpawnedTowersCount; i++)
 	{
+		// Tower processing
 		TowerDef* tower = s_TowersData + s_SpawnedTowers[i];
 		CHECK_EXPR_FAIL_RET_TERMINATE(NULL != tower, "[tower]: The tower ptr is empty.");
 
@@ -518,8 +519,14 @@ int update_towers(float dt)
 			}
 
 		} break;
+
+		case TowerState_Suspend:
+		{
+		} break;
+
 		}
 
+		// Projectiles processing
 		ProjectileDef* projectile = NULL;
 		for (int j = 0; j < PROJECTILES_PER_TOWER; j++)
 		{
@@ -616,6 +623,10 @@ int update_towers(float dt)
 
 				projectile->state = ProjectileState_Init;
 				projectile->target = NULL;
+			} break;
+
+			case ProjectileState_Suspend:
+			{
 			} break;
 
 			}
@@ -785,6 +796,28 @@ int get_tower(TowerDef** dest, int tower_handle)
 	*dest = tower;
 
 	return 0;
+}
+
+void set_tower_state(int state)
+{
+	// Here, we stop launcing new projectiles as well as stopping current projectiles' movement
+	if (TowerState_Suspend == state)
+	{
+		for (int i = 0; i < s_SpawnedTowersCount; i++)
+		{
+			TowerDef* tower = s_TowersData + s_SpawnedTowers[i];
+			CHECK_EXPR_FAIL_RET_TERMINATE(NULL != tower, "[tower]: The tower ptr is empty.");
+			tower->state = TowerState_Suspend;
+
+			ProjectileDef* projectile = NULL;
+			for (int j = 0; j < PROJECTILES_PER_TOWER; j++)
+			{
+				projectile = &tower->projectiles[j];
+				CHECK_EXPR_FAIL_RET_TERMINATE(NULL != projectile, "[tower]: The projectile ptr is empty.");
+				projectile->state = ProjectileState_Suspend;
+			}
+		}
+	}
 }
 
 void set_current_tower_preset_idx(int idx)

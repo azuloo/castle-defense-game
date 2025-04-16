@@ -7,6 +7,8 @@
 #include "global_defs.h"
 #include "drawable_ops.h"
 #include "health_bar.h"
+#include "hud.h"
+#include "game_control.h"
 
 extern int wWidth;
 extern int wHeight;
@@ -248,6 +250,16 @@ int map_mgr_damage_castle(float amount)
 {
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != s_Castle, "[map_mgr]: The castle has not been initialized.");
 	change_health_bar_value(s_Castle->health_bar_handle, amount);
+
+	// TODO: Until we have an event system, it would be here
+	float castle_health_left = 0.f;
+	get_health_bar_value(s_Castle->health_bar_handle, &castle_health_left);
+
+	if (castle_health_left <= 0.f)
+	{
+		render_game_over();
+		stop_game();
+	}
 
 	return 0;
 }

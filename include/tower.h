@@ -22,7 +22,8 @@ typedef enum TowerState
 {
 	TowerState_Idle,
 	TowerState_FireDelay,
-	TowerState_SpawnProjectile
+	TowerState_SpawnProjectile,
+	TowerState_Suspend
 } TowerState;
 
 typedef enum ProjectileState
@@ -30,7 +31,8 @@ typedef enum ProjectileState
 	ProjectileState_Init,
 	ProjectileState_PostInit,
 	ProjectileState_Moving,
-	ProjectileState_Hit
+	ProjectileState_Hit,
+	ProjectileState_Suspend
 } ProjectileState;
 
 typedef struct ProjectileDef
@@ -64,6 +66,7 @@ int resize_towers();
 int place_new_tower_at_cursor();
 int add_tower(int* handle_dest);
 int get_tower(TowerDef** dest, int tower_handle);
+void set_tower_state(int state);
 void set_current_tower_preset_idx(int idx);
 int create_build_tower_presets();
 int find_tower_with_collidable(TowerDef** dest, const Collidable2D* collidable);

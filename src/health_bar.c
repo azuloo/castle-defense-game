@@ -90,6 +90,7 @@ int add_health_bar(int* dest_handle, const Vec3* pos, const Vec3* scale)
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != health_bar, "[health_bar]: Failed to create a health bar.");
 
 	health_bar->drawable_handle = drawable->handle;
+	// TODO: Make health scale depending on this parameter
 	health_bar->value = HEALTH_BAR_DEFAULT_VALUE;
 
 	add_uniform_vec4f(drawable->shader_prog, COMMON_COLOR_UNIFORM_NAME, &color);
@@ -130,6 +131,17 @@ int change_health_bar_value(int handle, float amount)
 	add_uniform_1f(drawable->shader_prog, HEALTH_VALUE_UNIFORM_NAME, health_bar->value);
 
 	drawable_transform_ts(drawable, COMMON_MODEL_UNIFORM_NAME);
+
+	return 0;
+}
+
+int get_health_bar_value(int handle, float* value)
+{
+	HealthBarDef* health_bar = NULL;
+	get_health_bar(&health_bar, handle);
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != health_bar, "[health_bar]: Failed to fetch a health bar.");
+
+	*value = health_bar->value;
 
 	return 0;
 }
