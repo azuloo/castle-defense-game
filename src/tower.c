@@ -70,7 +70,7 @@ static int create_tower_at(TowerDef** dest, const Vec3* pos, const Vec3* scale, 
 	CHECK_EXPR_FAIL_RET_TERMINATE(-1 != tower_handle, "[tower]: Failed to fetch a tower.");
 
 	DrawableDef* drawable = NULL;
-	draw_quad(&drawable, pos, scale, color, DrawLayer_Background);
+	draw_quad(&drawable, pos, scale, color, DrawLayer_Tower);
 	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[tower]: Failed to create a first tower preset (empty quad drawable).");
 	add_texture_2D(drawable, texture_path, TexType_RGBA, tower_texture_params, DEFAULT_TEXTURE_PARAMS_COUNT);
 
