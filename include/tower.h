@@ -64,6 +64,7 @@ int init_towers();
 int update_towers(float dt);
 int resize_towers();
 int place_new_tower_at_cursor();
+int hide_tower_preset();
 int add_tower(int* handle_dest);
 int get_tower(TowerDef** dest, int tower_handle);
 void set_tower_state(int state);

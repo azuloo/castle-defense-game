@@ -760,6 +760,22 @@ int place_new_tower_at_cursor()
 	return 0;
 }
 
+int hide_tower_preset()
+{
+	TowerDef* tower_preset = tower_presets[s_CurrentTowerIdx];
+	Collidable2D* collidable2D = NULL;
+	get_collidable2D(&collidable2D, tower_preset->collidable2D_handle);
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != collidable2D, "[tower] Failed to fetch Collidable2D for the tower.");
+
+	DrawableDef* tower_preset_drawable = NULL;
+	get_drawable_def(&tower_preset_drawable, tower_preset->drawable_handle);
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL != tower_preset_drawable, "[tower]: Failed to get tower drawable.");
+
+	tower_preset_drawable->visible = 0;
+
+	return 0;
+}
+
 int add_tower(int* handle_dest)
 {
 	CHECK_EXPR_FAIL_RET_TERMINATE(s_TowersCount < MAX_TOWER_CAPACITY, "[tower]: Max tower capacity has been reached.");

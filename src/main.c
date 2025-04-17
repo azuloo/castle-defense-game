@@ -57,14 +57,6 @@ void window_resize_hook(GWindow* window, int x, int y, int width, int height)
 	resize_towers();
 }
 
-void process_input(GWindow* window)
-{
-	if (KEY_PRESSED(window, K_ESCAPE))
-	{
-		close_window(window);
-	}
-}
-
 void free_sub_systems_resources()
 {
 	enemy_waves_free_resources();
@@ -82,7 +74,6 @@ int main(int argc, int* argv[])
 		APP_EXIT(TERMINATE_ERR_CODE);
 	}
 
-	bind_input_fn(&process_input);
 	bind_window_resize_fn(&window_resize_hook);
 	bind_player_controls();
 

@@ -135,7 +135,6 @@ int create_drawable_buffer_data(DrawableDef* drawable, DrawBufferData* src);
 // Graphics sub-module functions end
 
 void close_window(GWindow* window);
-void bind_input_fn(InputFnPtr ptr);
 void bind_window_resize_fn(WindowResizeFnPtr ptr);
 void bind_key_pressed_cb(KeyCbPtr ptr);
 void bind_mouse_button_cb(MouseButtonCbPtr ptr);

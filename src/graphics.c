@@ -11,7 +11,6 @@
 static int s_Initialized                        = 0;
 
 static GLFWwindow* s_Window                     = NULL;
-static InputFnPtr input_fn_ptr                  = NULL;
 static WindowResizeFnPtr window_resize_fn_ptr   = NULL;
 
 static int s_DrawableDataCapacity       = 32;
@@ -607,13 +606,6 @@ void close_window(GWindow* window)
 	glfwSetWindowShouldClose(window, CLOSE_GLFW_WINDOW);
 }
 
-void bind_input_fn(InputFnPtr ptr)
-{
-	ASSERT_GRAPHICS_INITIALIZED
-
-	input_fn_ptr = ptr;
-}
-
 void bind_window_resize_fn(WindowResizeFnPtr ptr)
 {
 	ASSERT_GRAPHICS_INITIALIZED
@@ -727,11 +719,6 @@ void sort_drawables()
 int graphics_draw()
 {
 	ASSERT_GRAPHICS_INITIALIZED
-
-	if (NULL != input_fn_ptr)
-	{
-		(*input_fn_ptr)(s_Window);
-	}
 
 	glDisable(GL_DEPTH_TEST);
 	glDepthMask(GL_FALSE);
