@@ -33,4 +33,7 @@ typedef struct ProjectileDef ProjectileDef;
 typedef struct ListNode ListNode;
 typedef struct List List;
 
+// Player
+typedef struct CurrencyDef CurrencyDef;
+
 #endif // _GLOBAL_DECL_H

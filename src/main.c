@@ -10,6 +10,7 @@
 #include "tower.h"
 #include "hud.h"
 #include "player_controls.h"
+#include "player.h"
 
 #include "map/map_mgr.h"
 #include "entity.h"
@@ -95,6 +96,7 @@ int main(int argc, int* argv[])
 	load_ascii_chars();
 
 	render_player_controls();
+	init_player_currency();
 
 	float tower_x_pos = 0.f;
 	float tower_y_pos = 0.f;
