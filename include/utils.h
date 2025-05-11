@@ -23,6 +23,7 @@ static char err_msg_buffer[ERR_MSG_BUFFER_LEN];
 
 void print_err(const char* format, ...);
 void str_concat(const char* s1, const char* s2, char** buf, size_t len);
+int get_num_digits(int num);
 
 #define PRINT_ERR(format, ...) fprintf(stderr, "ERR: %s:%d: %s\n", __FILE__, __LINE__, format)
 #define PRINT_ERR_VARGS(format, ...) print_err(format, __VA_ARGS__)

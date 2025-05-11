@@ -17,3 +17,25 @@ void print_err(char* format, ...)
 	memset(err_msg_buffer, 0, sizeof(err_msg_buffer));
 	va_end(args);
 }
+
+int get_num_digits(int num)
+{
+	int c = 0;
+	if (num == 0)
+	{
+		return 1;
+	}
+
+	if (num < 0)
+	{
+		num = -num;
+	}
+
+	while (num != 0)
+	{
+		num /= 10;
+		c++;
+	}
+
+	return c;
+}
