@@ -2,6 +2,7 @@
 #include "key_bindings.h"
 #include "graphics.h"
 #include "tower.h"
+#include "player.h"
 
 static int s_BuildingModeEnabled = 0;
 static int s_PlayerControlsEnabled = 1;
@@ -60,6 +61,8 @@ static void process_mouse_button_hook(GWindow* window, int button, int action, i
 			if (place_new_tower_at_cursor())
 			{
 				s_BuildingModeEnabled = !s_BuildingModeEnabled;
+				// TODO: Different towers should cost different amount of money
+				change_player_currency_amount(-50);
 			}
 		}
 	}

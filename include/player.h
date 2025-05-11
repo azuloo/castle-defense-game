@@ -3,8 +3,6 @@
 
 #include "global_decl.h"
 
-#define DEFAULT_PLAYER_CURRENCY_AMOUNT 250
-
 typedef struct CurrencyDef
 {
 	DrawableDef* currency_drawable;

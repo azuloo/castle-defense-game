@@ -32,9 +32,10 @@ static int build_ft_shaders(char** vertex_shader_dest, char** frag_shader_dest)
 	return 0;
 }
 
-int render_text(const char* text, int font_size, float x, float y, Vec3 color)
+int render_text(const char* text, int text_len, int font_size, float x, float y, Vec3 color, int* drawable_handles_dest, int handles_count)
 {
 	ASSERT_GRAPHICS_INITIALIZED
+	CHECK_EXPR_FAIL_RET_TERMINATE(NULL == drawable_handles_dest || handles_count >= strlen(text), "[freetype_renderer]: drawable_handles_dest array is too small.");
 
 	Mat4 ortho_mat = COMMON_ORTHO_MAT;
 
@@ -50,13 +51,18 @@ int render_text(const char* text, int font_size, float x, float y, Vec3 color)
 
 	char* glyph = text;
 	CharacterDef* char_def = NULL;
-	for (int i = 0; i < strlen(text); i++)
+	for (int i = 0; i < text_len; i++)
 	{
 		if (find_char_def(*glyph, font_size, &char_def))
 		{
 			DrawableDef* drawable = NULL;
 			create_drawable(&drawable);
 			CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[freetype_renderer]: Drawable is not defined.");
+
+			if (NULL != drawable_handles_dest)
+			{
+				drawable_handles_dest[i] = drawable->handle;
+			}
 
 			drawable->buffers.vao = vao;
 			drawable->buffers.vbo = vbo;
@@ -106,8 +112,56 @@ int render_text(const char* text, int font_size, float x, float y, Vec3 color)
 	free(vertex_shader_src);
 	free(fragment_shader_src);
 
-	glBindVertexArray(0);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	return 0;
+}
+
+int rerender_text(const char* text, int text_len, int font_size, float x, float y, int* drawable_handles, int handles_count)
+{
+	ASSERT_GRAPHICS_INITIALIZED
+
+	char* glyph = text;
+	CharacterDef* char_def = NULL;
+	for (int i = 0; i < text_len; i++)
+	{
+		if (find_char_def(*glyph, font_size, &char_def))
+		{
+			int handle = drawable_handles[i];
+			DrawableDef* drawable = NULL;
+			get_drawable_def(&drawable, handle);
+			CHECK_EXPR_FAIL_RET_TERMINATE(NULL != drawable, "[freetype_renderer]: Failed to find drawable.");
+
+			drawable->texture = char_def->tex_id;
+			drawable->visible = 1;
+
+			// TODO: Code dup of the code above.
+			float xpos = x + char_def->bearing.x * TEXT_DEFUALT_SCALE;
+			float ypos = y - (char_def->size.y - char_def->bearing.y) * TEXT_DEFUALT_SCALE;
+			float w = char_def->size.x * TEXT_DEFUALT_SCALE;
+			float h = char_def->size.y * TEXT_DEFUALT_SCALE;
+
+			float vertices[] = {
+				xpos,     ypos + h,   0.0f, 0.0f,
+				xpos,     ypos,       0.0f, 1.0f,
+				xpos + w, ypos,       1.0f, 1.0f,
+
+				xpos,     ypos + h,   0.0f, 0.0f,
+				xpos + w, ypos,       1.0f, 1.0f,
+				xpos + w, ypos + h,   1.0f, 0.0f
+			};
+
+			DrawBufferData buf_data;
+			buf_data.vertices = vertices;
+			buf_data.vertices_len = 24;
+			buf_data.indices = NULL;
+			buf_data.indices_len = 0;
+
+			rewrite_drawable_buffer_data(drawable, &buf_data);
+
+			x += (char_def->advance >> 6) * TEXT_DEFUALT_SCALE; // Bitshift by 6 to get value in pixels (2^6 = 64)
+
+			glyph++;
+		}
+	}
 
 	return 0;
 }
