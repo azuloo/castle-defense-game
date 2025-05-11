@@ -131,6 +131,7 @@ int compile_shaders(unsigned int* shader_prog, const char* vertex_shader_src, co
 char* get_shader_source(const char* name);
 // ! Allocates memory on heap !
 int create_drawable_buffer_data(DrawableDef* drawable, DrawBufferData* src);
+int rewrite_drawable_buffer_data(DrawableDef* drawable, DrawBufferData* src);
 
 // Graphics sub-module functions end
 

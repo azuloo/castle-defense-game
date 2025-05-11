@@ -233,6 +233,27 @@ int create_drawable_buffer_data(DrawableDef* drawable, DrawBufferData* src)
 	return 0;
 }
 
+int rewrite_drawable_buffer_data(DrawableDef* drawable, DrawBufferData* src)
+{
+	if (
+		(NULL != drawable->buffer_data.vertices && drawable->buffer_data.vertices_len != 0) &&
+		(NULL != src->vertices && src->vertices_len != 0)
+	)
+	{
+		memcpy(drawable->buffer_data.vertices, src->vertices, src->vertices_len * sizeof * src->vertices);
+	}
+
+	if (
+		(NULL != drawable->buffer_data.indices && drawable->buffer_data.indices_len != 0) &&
+		(NULL != src->indices && src->indices_len != 0)
+	)
+	{
+		memcpy(drawable->buffer_data.indices, src->indices, src->indices_len * sizeof * src->indices);
+	}
+
+	return 0;
+}
+
 // Graphics sub-module functions end
 
 // ! Allocates memory on heap !
