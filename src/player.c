@@ -14,16 +14,11 @@ static CurrencyDef s_PlayerCurrency;
 static char* s_CurrencyIconPath = "/res/static/textures/coin.png";
 static int s_CurrencyTextHandles[CURRENCY_TEXT_LENGTH];
 
-static int hide_trailing_zeros_drawables(const char* currency_str)
+static int hide_redundant_zeros_drawables(const char* currency_str)
 {
-	// If the player has 0 amount - show a single 0 at the beginning
-	int i = 0;
-	if (s_PlayerCurrency.amount == 0)
-	{
-		i = 1;
-	}
+	int num_digits = get_num_digits(s_PlayerCurrency.amount);
 
-	for (; i < strlen(currency_str); i++)
+	for (int i = num_digits; i < strlen(currency_str); i++)
 	{
 		char ch = currency_str[i];
 		if (ch == '0')
@@ -42,18 +37,16 @@ static int hide_trailing_zeros_drawables(const char* currency_str)
 	return 0;
 }
 
-static int popupale_str_with_trailing_zeros(char* currency_str)
+static int append_zeros_to_currency(char* currency_str)
 {
-
 	int num_digits = get_num_digits(s_PlayerCurrency.amount);
-	int trailing_zeros_num = CURRENCY_TEXT_LENGTH - num_digits - 1;
-	for (int i = 0; i < trailing_zeros_num; i++)
+	snprintf(currency_str, CURRENCY_TEXT_LENGTH, "%d", s_PlayerCurrency.amount);
+
+	for (int i = num_digits; i < CURRENCY_TEXT_LENGTH - 1; i++)
 	{
-		// Filling up with trailing zeros
+		// Appdening zeros
 		currency_str[i] = '0';
 	}
-
-	snprintf(&currency_str[trailing_zeros_num], sizeof(currency_str) - trailing_zeros_num, "%d", s_PlayerCurrency.amount);
 
 	return 0;
 }
@@ -61,11 +54,11 @@ static int popupale_str_with_trailing_zeros(char* currency_str)
 // ! Allocates memory on heap ! 
 static int render_currency_amount(int rerender)
 {
-	// 5 digits max
 	char coins_str[CURRENCY_TEXT_LENGTH];
+	coins_str[CURRENCY_TEXT_LENGTH - 1] = '\0';
 	Vec3 color = { 1.f, 1.f, 1.f };
 
-	popupale_str_with_trailing_zeros(coins_str);
+	append_zeros_to_currency(coins_str);
 
 	if (rerender)
 	{
@@ -77,7 +70,7 @@ static int render_currency_amount(int rerender)
 		render_text(coins_str, CURRENCY_TEXT_LENGTH - 1, FT_DEFAULT_FONT_SIZE, 75.f, wHeight - 60.f, color, s_CurrencyTextHandles, CURRENCY_TEXT_LENGTH - 1);
 	}
 
-	hide_trailing_zeros_drawables(coins_str);
+	hide_redundant_zeros_drawables(coins_str);
 
 	return 0;
 }
