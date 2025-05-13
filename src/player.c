@@ -105,3 +105,8 @@ void change_player_currency_amount(int amount)
 	s_PlayerCurrency.amount += amount;
 	render_currency_amount(1);
 }
+
+int get_player_currency_amount()
+{
+	return s_PlayerCurrency.amount;
+}

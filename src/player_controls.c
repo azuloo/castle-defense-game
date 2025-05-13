@@ -4,6 +4,8 @@
 #include "tower.h"
 #include "player.h"
 
+#define STATIC_TOWER_BUILT_COST 50
+
 static int s_BuildingModeEnabled = 0;
 static int s_PlayerControlsEnabled = 1;
 
@@ -58,11 +60,15 @@ static void process_mouse_button_hook(GWindow* window, int button, int action, i
 	{
 		if (button == MOUSE_BUTTON_LEFT && action == KEY_PRESS && s_BuildingModeEnabled)
 		{
-			if (place_new_tower_at_cursor())
+			if (get_player_currency_amount() >= STATIC_TOWER_BUILT_COST && place_new_tower_at_cursor())
 			{
 				s_BuildingModeEnabled = !s_BuildingModeEnabled;
 				// TODO: Different towers should cost different amount of money
-				change_player_currency_amount(-50);
+				change_player_currency_amount(-STATIC_TOWER_BUILT_COST);
+			}
+			else
+			{
+				// TODO: Display "not enought currency"
 			}
 		}
 	}
