@@ -16,7 +16,14 @@ static int s_CurrencyTextHandles[CURRENCY_TEXT_LENGTH];
 
 static int hide_trailing_zeros_drawables(const char* currency_str)
 {
-	for (int i = 0; i < strlen(currency_str); i++)
+	// If the player has 0 amount - show a single 0 at the beginning
+	int i = 0;
+	if (s_PlayerCurrency.amount == 0)
+	{
+		i = 1;
+	}
+
+	for (; i < strlen(currency_str); i++)
 	{
 		char ch = currency_str[i];
 		if (ch == '0')
